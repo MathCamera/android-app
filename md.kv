@@ -1,0 +1,312 @@
+#:import XCamera kivy_garden.xcamera.XCamera
+#:import Clipboard kivy.core.clipboard.Clipboard
+#:import is_android kivy_garden.xcamera.xcamera.is_android
+
+<Check@MDCheckbox>:
+    group: 'group'
+    size_hint: None, None
+    size: dp(48), dp(48)
+
+<DrawerClickableItem@MDNavigationDrawerItem>
+
+<DrawerLabelItem@MDNavigationDrawerItem>
+    focus_behavior: False
+    _no_ripple_effect: True
+
+MDScreen:
+    MDNavigationLayout:
+        MDTopAppBar:
+            id:tb
+            title: "Math Camera"
+            elevation: 4
+            pos_hint: {"top": 1}
+            md_bg_color: app.main_col
+            specific_text_color: "#ffffff"
+            left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+            right_action_items:[["home", lambda x: app.set_screen("sc_home","Главная"), "", "Главная"],["cog", lambda x: app.set_screen("sc_settings","Настройки"), "", "Настройки"]]
+
+        ScreenManager:
+            id:sm
+
+            Screen:
+                name:"sc_home"
+                BoxLayout:
+                    orientation:"vertical"
+                    padding:[50,tb.height + dp(30),50,30]
+                    spacing:30
+                    center_y: root.center_y
+
+                    MDLabel:
+                        #valign:"top"
+                        text: "Что вы хотите сделать?"
+                        halign:"center"
+                        font_style:"H6"
+                        adaptive_height:True
+
+                    MDRectangleFlatIconButton:
+                        icon: "text-recognition"
+                        pos_hint:{"center_x":.5}
+                        text: "Сканировать"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:
+                            app.set_screen("sc_photo","Сделать снимок")
+
+                    MDRectangleFlatIconButton:
+                        icon: "keyboard"
+                        pos_hint:{"center_x":.5}
+                        text: "Ввести уравнение"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:
+                            app.set_screen("sc_text","Ввести уравнение")
+
+                    MDRectangleFlatIconButton:
+                        icon: "file-image"
+                        pos_hint:{"center_x":.5}
+                        text: "Выбрать из галлереи"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        #on_release:
+                            #app.set_screen("sc_photo","Выбрать из галлереи")
+
+            MDScreen:
+                on_enter:app.handle_camera()
+                name:"sc_photo"
+                elevation:3
+
+                MDBoxLayout:
+                    spacing: 10
+                    padding: [0,tb.height+dp(10),0,30]
+                    rotation: 0
+                    id: proxy
+                    orientation:"vertical"
+                    BoxLayout:
+                        id:xcamera_main
+                        XCamera:
+                            id: xcamera
+                            play: True
+                            keep_ratio: True
+                            on_picture_taken: app.picture_taken(*args)
+                            center: self.size and proxy.center
+                            size:
+                                (proxy.height, proxy.width) if is_android() \
+                                else (proxy.width, proxy.height)
+                            canvas.before:
+                                PushMatrix
+                                Rotate:
+                                    angle: -90 if is_android() else 0
+                                    origin: self.center
+                            canvas.after:
+                                PopMatrix
+
+                    MDFloatingActionButton:
+                        pos_hint: {"center_x":.5}
+                        icon: "camera"
+                        icon_color:"white"
+                        md_bg_color:"black"
+                        on_press:
+                            if app.check_camera_perm() == True:app.make_photo()
+                            else: app.show_cam_alert_dialog()
+
+            Screen:
+                name:"sc_text"
+                MDBoxLayout:
+                    padding:[30,tb.height + dp(15),30,30]
+                    orientation:"horizontal"
+                    #spacing:20
+                    MDTextField:
+                        pos_hint: {"top": 1}
+                        id:textarea
+                        width:self.parent.width
+                        #required: True
+                        multiline: True
+                        hint_text: "Ввеедите уравнение"
+                        #helper_text_mode: "on_error"
+                        #helper_text: "Вы не ввели уравнение"
+                        max_height: "400dp"
+                        mode: "fill"
+
+                    MDRectangleFlatIconButton:
+                        id:send_btn
+                        icon: "send"
+                        text: "Отправить"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color:app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+
+            Screen:
+                name:"sc_about"
+                BoxLayout:
+                    orientation:"vertical"
+                    padding:[50,tb.height + dp(30),50,30]
+                    spacing:30
+                    center_y: root.center_y
+
+                    MDLabel:
+                        #valign:"top"
+                        text: "Math camera"
+                        halign:"center"
+                        font_style:"H4"
+                        adaptive_height:True
+
+                    MDLabel:
+                        #valign:"top"
+                        text: "Math camera - удобный сервис, в котором ты сможешь получить ответ на любое уравнение из математики или химии, просто сфотографировав его."
+                        halign:"center"
+                        font_style:"H6"
+                        adaptive_height:True
+
+                    MDRectangleFlatIconButton:
+                        icon: "web"
+                        pos_hint:{"center_x":.5}
+                        text: "Открыть сайт"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:
+                            app.open_browser("https://mathcamera.tilda.ws")
+
+                    MDRectangleFlatIconButton:
+                        icon: "account-group"
+                        pos_hint:{"center_x":.5}
+                        text: "Мы ВКонтакте"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:
+                            app.open_browser("https://vk.com/mathcamera")
+
+            Screen:
+                name:"sc_settings"
+                on_enter:app.setup()
+                BoxLayout:
+                    orientation:"vertical"
+                    padding:[50,tb.height + dp(30),50,30]
+                    adaptive_height:True
+                    spacing:30
+
+                    GridLayout:
+                        cols:2
+                        id:settings_grid
+                        MDLabel:
+                            text:"Тёмная тема\n"
+                            adaptive_height:True
+
+                        MDSwitch:
+                            id:dark_theme
+                            on_active: app.handle_switch("dark_theme",self.active)
+
+                        MDLabel:
+                            text:"Увеличить разрешение камеры\n"
+                            adaptive_height:True
+
+                        MDSwitch:
+                            id:cam_high_quality
+                            on_active: app.handle_switch("cam_high_quality",self.active)
+
+                        MDLabel:
+                            text:"Вспышка\n"
+                            adaptive_height:True
+
+                        MDSwitch:
+                            id:enable_flashlight
+                            on_active: app.handle_switch("enable_flashlight",self.active)
+
+                        MDLabel:
+                            text:"Авто вспышка\n"
+                            adaptive_height:True
+
+                        MDSwitch:
+                            id:auto_flashlight
+                            on_active: app.handle_switch("auto_flashlight",self.active)
+
+                        MDLabel:
+                            text:"Режим отладки\n"
+                            adaptive_height:True
+
+                        MDSwitch:
+                            id:debug_mode
+                            on_active: app.handle_switch("debug_mode",self.active)
+
+                    MDRectangleFlatButton:
+                        #pos_hint:{"center_x":.5}
+                        text: "Разрешить доступ камере"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        #on_release:Clipboard.copy(app.get_logs())
+
+                    MDRectangleFlatButton:
+                        #pos_hint:{"center_x":.5}
+                        text: "Скопировать логи"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        on_release:Clipboard.copy(app.get_logs())
+                            
+        MDNavigationDrawer:
+            id: nav_drawer
+            radius: (0, 16, 16, 0)
+
+            MDNavigationDrawerMenu:
+                MDNavigationDrawerHeader:
+                    title: "Math Camera"
+                    title_color: "#4a4939"
+                    #source: "media/logo.jpg"
+                    text: "Меню"
+                    spacing: "4dp"
+                    padding: "12dp", 0, 0, "56dp"
+
+                DrawerClickableItem:
+                    icon: "text-recognition"
+                    text: "Сканировать"
+                    on_release:
+                        app.set_screen('sc_photo',"Сделать снимок")
+
+                DrawerClickableItem:
+                    icon: "keyboard"
+                    text: "Ввести уравнение"
+                    on_release:
+                        app.set_screen('sc_text',"Ввести уравнение")
+
+                DrawerClickableItem:
+                    icon: "file-image"
+                    text: "Выбрать из галлереи"
+                    #on_release:
+                    #    app.set_screen('sc_photo',"Сделать снимок")
+
+                MDNavigationDrawerDivider:
+
+                DrawerClickableItem:
+                    icon: "cog"
+                    text: "Настройки"
+                    on_release:
+                        app.set_screen('sc_settings',"Настройки")
+
+                DrawerClickableItem:
+                    icon: "information-outline"
+                    text: "О нас"
+                    on_release:
+                        app.set_screen('sc_about',"О нас")
+
+                MDNavigationDrawerDivider:
+
+                DrawerLabelItem:
+                    icon: "information-outline"
+                    text: "Math Camera v 0.0.7a"

@@ -1,0 +1,16 @@
+<!-- http url scheme as http://mathcamera-api.vercel.app/app.launch -->
+<intent-filter>
+    <data android:scheme="https"
+          android:host="mathcamera-api.vercel.app"
+          android:pathPrefix="/app/launch"/>
+    <action android:name="android.intent.action.VIEW"/>
+    <category android:name="android.intent.category.BROWSABLE"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+</intent-filter>
+<!-- direct app scheme mathcamera:// -->
+<intent-filter>
+    <data android:scheme="mathcamera" android:host="*"/>
+    <action android:name="android.intent.action.VIEW"/>
+    <category android:name="android.intent.category.BROWSABLE"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+</intent-filter>
