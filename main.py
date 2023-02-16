@@ -31,16 +31,21 @@ class MathCamera(MDApp):
         if not os.path.exists('img'):
             os.makedirs('img')
 
-        self.settings = json.load(open('settings.json'))
+        self.settings = json.load(open('data/app_settings.json'))
 
         dark_theme = self.settings["dark_theme"]
         self.theme_cls.theme_style = "Dark" if dark_theme == True else "Light"
-        #self.theme_cls.theme_style = "Light"
+        self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Green"
+        self.theme_cls.theme_style = "Light"
 
         Window.bind(on_keyboard=self.key_handler)
 
         return Builder.load_file('md.kv')
+
+    def test(self):
+        popup = MDDialog(title='Test',text=str(os.listdir(".")))
+        popup.open() 
 
     def setup(self):
         ids = self.root.ids
@@ -80,21 +85,22 @@ class MathCamera(MDApp):
     def handle_camera(self):
         #auto/on/off
         #high_quality = self.settings["cam_high_quality"]
-        xcamera = self.root.ids['xcamera']
-        enable_flashlight = self.settings["enable_flashlight"]
-        auto_flashlight = self.settings["auto_flashlight"]
+        #xcamera = self.root.ids['xcamera']
+        #enable_flashlight = self.settings["enable_flashlight"]
+        #auto_flashlight = self.settings["auto_flashlight"]
 
-        state = "on" if enable_flashlight == True else "off"
-        if auto_flashlight == True:state = "auto"
+        #state = "on" if enable_flashlight == True else "off"
+        #if auto_flashlight == True:state = "auto"
 
-        xcamera.set_flashlight(state)
+        #xcamera.set_flashlight(state)
         #xcamera.resolution = 640, 480 if high_quality == False else 1920, 1080
-
+        pass
     def make_photo(self):
         try:
             self.root.ids['xcamera'].shoot()
         except Exception as e:
-            err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
+            err = e
+            #err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось подключиться к камере. Перезагрузите приложение {err}',buttons=[MDFlatButton(text="Перезагрузить",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:self.stop())])
             popup.open()
             

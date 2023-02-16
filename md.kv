@@ -194,7 +194,7 @@ MDScreen:
 
             Screen:
                 name:"sc_settings"
-                on_enter:app.setup()
+                #on_enter:app.setup()
                 BoxLayout:
                     orientation:"vertical"
                     padding:[50,tb.height + dp(30),50,30]
@@ -259,6 +259,14 @@ MDScreen:
                         text_color: "white"
                         md_bg_color: app.main_col
                         on_release:Clipboard.copy(app.get_logs())
+
+                    MDRectangleFlatButton:
+                        #pos_hint:{"center_x":.5}
+                        text: "Тест"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        on_release:app.test()
                             
         MDNavigationDrawer:
             id: nav_drawer
