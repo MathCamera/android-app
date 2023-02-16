@@ -7,7 +7,7 @@ title = Math Camera
 package.name = mathcamera
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.mathcamera
+package.domain = ru.mathcamera
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -29,7 +29,7 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,wav
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.0.7a
+version = 0.1.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
