@@ -4,6 +4,8 @@ from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 
+from kivymd.utils import asynckivy
+
 from kivy.clock import mainthread
 from kivy.network.urlrequest import UrlRequest
 from kivy.core.window import Window
@@ -39,10 +41,6 @@ class MathCamera(MDApp):
         Window.bind(on_keyboard=self.key_handler)
 
         return Builder.load_file('md.kv')
-
-    def test(self):
-        popup = MDDialog(title='Test',text=str(os.listdir("data")))
-        popup.open() 
 
     def setup(self):
         ids = self.root.ids
@@ -97,7 +95,7 @@ class MathCamera(MDApp):
             self.root.ids['xcamera'].shoot()
         except Exception as e:
             err = e
-            #err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
+            err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось подключиться к камере. Перезагрузите приложение {err}',buttons=[MDFlatButton(text="Перезагрузить",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:self.stop())])
             popup.open()
             
@@ -182,7 +180,8 @@ class MathCamera(MDApp):
             #Скрываем уведомление с загрузкой
             loading_popup.dismiss()
             result = str(result).replace("\n","")
-            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету\n\n{result}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
+            err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
             popup.open()
         
         req = UrlRequest(OCR_API_URL,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')

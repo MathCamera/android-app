@@ -262,11 +262,11 @@ MDScreen:
 
                     MDRectangleFlatButton:
                         #pos_hint:{"center_x":.5}
-                        text: "Тест"
+                        text: "Перезагрузить камеру"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color: app.main_col
-                        on_release:app.test()
+                        on_release:xcamera.resolution = xcamera.resolution
                             
         MDNavigationDrawer:
             id: nav_drawer
