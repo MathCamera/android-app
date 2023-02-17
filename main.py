@@ -22,7 +22,6 @@ XCamera.directory = 'img'
 OCR_API_URL = "https://mathcamera-api.vercel.app/api/ocr/tesseract"
 MATH_API_URL = ""
 
-
 class MathCamera(MDApp):
     main_col = "#02714C"
     perm_dialog = None
@@ -31,20 +30,18 @@ class MathCamera(MDApp):
         if not os.path.exists('img'):
             os.makedirs('img')
 
-        self.settings = json.load(open('data/app_settings.json'))
+        self.settings = json.load(open('settings.json'))
 
         dark_theme = self.settings["dark_theme"]
         self.theme_cls.theme_style = "Dark" if dark_theme == True else "Light"
-        self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Green"
-        self.theme_cls.theme_style = "Light"
 
         Window.bind(on_keyboard=self.key_handler)
 
         return Builder.load_file('md.kv')
 
     def test(self):
-        popup = MDDialog(title='Test',text=str(os.listdir(".")))
+        popup = MDDialog(title='Test',text=str(os.listdir("data")))
         popup.open() 
 
     def setup(self):
@@ -84,17 +81,17 @@ class MathCamera(MDApp):
 
     def handle_camera(self):
         #auto/on/off
-        #high_quality = self.settings["cam_high_quality"]
-        #xcamera = self.root.ids['xcamera']
-        #enable_flashlight = self.settings["enable_flashlight"]
-        #auto_flashlight = self.settings["auto_flashlight"]
+        high_quality = self.settings["cam_high_quality"]
+        xcamera = self.root.ids['xcamera']
+        enable_flashlight = self.settings["enable_flashlight"]
+        auto_flashlight = self.settings["auto_flashlight"]
 
-        #state = "on" if enable_flashlight == True else "off"
-        #if auto_flashlight == True:state = "auto"
+        state = "on" if enable_flashlight == True else "off"
+        if auto_flashlight == True:state = "auto"
 
-        #xcamera.set_flashlight(state)
+        xcamera.set_flashlight(state)
         #xcamera.resolution = 640, 480 if high_quality == False else 1920, 1080
-        pass
+
     def make_photo(self):
         try:
             self.root.ids['xcamera'].shoot()
