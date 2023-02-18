@@ -70,7 +70,7 @@ MDScreen:
                     MDRectangleFlatIconButton:
                         icon: "file-image"
                         pos_hint:{"center_x":.5}
-                        text: "Выбрать из галлереи"
+                        text: "Выбрать из галереи"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color: app.main_col
@@ -245,12 +245,11 @@ MDScreen:
                             on_active: app.handle_switch("debug_mode",self.active)
 
                     MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
                         text: "Разрешить доступ камере"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color: app.main_col
-                        #on_release:Clipboard.copy(app.get_logs())
+                        on_release:app.request_camera_perm()
 
                     MDRectangleFlatButton:
                         #pos_hint:{"center_x":.5}
@@ -262,11 +261,25 @@ MDScreen:
 
                     MDRectangleFlatButton:
                         #pos_hint:{"center_x":.5}
-                        text: "Перезагрузить камеру"
+                        text: "Перезагрузить камеру (index)"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color: app.main_col
-                        on_release:xcamera.resolution = xcamera.resolution
+                        on_release:
+                            #xcamera.resolution = xcamera.resolution
+                            xcamera.index = 0
+
+                    MDRectangleFlatButton:
+                        #pos_hint:{"center_x":.5}
+                        text: "Перезагрузить камеру (play)"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        on_release:
+                            #xcamera.resolution = xcamera.resolution
+                            xcamera.play = False
+                            xcamera.play = True
+                        
                             
         MDNavigationDrawer:
             id: nav_drawer
@@ -295,7 +308,7 @@ MDScreen:
 
                 DrawerClickableItem:
                     icon: "file-image"
-                    text: "Выбрать из галлереи"
+                    text: "Выбрать из галереи"
                     #on_release:
                     #    app.set_screen('sc_photo',"Сделать снимок")
 

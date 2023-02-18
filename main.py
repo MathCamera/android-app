@@ -4,8 +4,6 @@ from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 
-from kivymd.utils import asynckivy
-
 from kivy.clock import mainthread
 from kivy.network.urlrequest import UrlRequest
 from kivy.core.window import Window
