@@ -259,26 +259,6 @@ MDScreen:
                         md_bg_color: app.main_col
                         on_release:Clipboard.copy(app.get_logs())
 
-                    MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
-                        text: "Play camera"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:
-                            #xcamera.resolution = xcamera.resolution
-                            xcamera._camera.init_camera()
-                        
-                    MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
-                        text: "Pause camera"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:
-                            #xcamera.resolution = xcamera.resolution
-                            xcamera._camera._release_camera()
-                            
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)

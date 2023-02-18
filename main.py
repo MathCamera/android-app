@@ -77,6 +77,7 @@ class MathCamera(MDApp):
 
     def handle_camera(self):
         #auto/on/off
+        self.restart_camera()
         high_quality = self.settings["cam_high_quality"]
         xcamera = self.root.ids['xcamera']
         enable_flashlight = self.settings["enable_flashlight"]
@@ -91,11 +92,24 @@ class MathCamera(MDApp):
     def make_photo(self):
         try:
             self.root.ids['xcamera'].shoot()
-        except Exception as e:
-            err = e
-            err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удалось подключиться к камере. Перезагрузите приложение {err}',buttons=[MDFlatButton(text="Перезагрузить",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:self.stop())])
-            popup.open()
+        except:
+            self.restart_camera()
+
+    def restart_camera(self):
+        if self.check_camera_perm() == True:
+            try:
+                xcamera = self.root.ids['xcamera']
+                xcamera.play = False
+                xcamera._camera._release_camera()
+                xcamera._camera.init_camera()
+                xcamera.play = True
+            except Exception as e:
+                err = e
+                err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
+                popup = MDDialog(title='Ошибка',text=f'Не удалось подключиться к камере. Перезагрузите приложение {err}',buttons=[MDFlatButton(text="Перезагрузить",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:self.stop())])
+                popup.open()
+        else:
+            self.show_cam_alert_dialog()
             
     def check_camera_perm(self):
         return check_camera_permission()
