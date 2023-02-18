@@ -81,9 +81,7 @@ def check_flashlight_permission():
     return flash_available
 
 def toggle_flashlight(camera_widget,state):
-    Logger.info('set flashlight')
     if check_flashlight_permission() == True:
-        Logger.info('set flashlight permission: True')
         try:
             CameraParameters = autoclass('android.hardware.Camera$Parameters')
             camera = camera_widget._camera._android_camera
@@ -94,7 +92,6 @@ def toggle_flashlight(camera_widget,state):
                 params.setFlashMode(CameraParameters.FLASH_MODE_ON)
             if state == "off":
                 params.setFlashMode(CameraParameters.FLASH_MODE_OFF)
-            Logger.info('set flashlight state : %s',state)
 
             camera.setParameters(params)
 
