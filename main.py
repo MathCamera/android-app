@@ -160,7 +160,7 @@ class MathCamera(MDApp):
         f.close()
         return file_contents
 
-    def get_response(self,b64):
+    def send_b64(self,b64):
         loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
         loading_popup.open()
 
@@ -200,21 +200,16 @@ class MathCamera(MDApp):
 
     @mainthread
     def picture_taken(self,obj,filename):
-        #Получаем бинарные данные картинки
         image_data = obj.texture.pixels
         size = obj.texture.size
-        #Загружаем фото в переменную pil_image
         pil_image = Image.frombytes(mode='RGBA', size=size,data=image_data)
-        #Вертикально отзеркаливаем картинку
         pil_image = pil_image.rotate(180)
         pil_image = pil_image.transpose(method=Image.FLIP_TOP_BOTTOM)
         buffered = BytesIO()
         pil_image.save(buffered,format='png')
-        #Переводим картинку в base64 для отправки на сервер
         img = base64.b64encode(buffered.getvalue())
-        #Удаляем картинку из директории приложения
         os.remove(filename)
-        self.get_response(img)
+        self.send_b64(img)
 
 if __name__ == "__main__":
     MathCamera().run()
