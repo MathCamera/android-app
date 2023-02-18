@@ -261,24 +261,13 @@ MDScreen:
 
                     MDRectangleFlatButton:
                         #pos_hint:{"center_x":.5}
-                        text: "Перезагрузить камеру (index)"
+                        text: "Перезагрузить камеру"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color: app.main_col
                         on_release:
                             #xcamera.resolution = xcamera.resolution
-                            xcamera.index = 0
-
-                    MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
-                        text: "Перезагрузить камеру (play)"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:
-                            #xcamera.resolution = xcamera.resolution
-                            xcamera.play = False
-                            xcamera.play = True
+                            xcamera._camera.init_camera()
                         
                             
         MDNavigationDrawer:
