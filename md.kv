@@ -128,7 +128,7 @@ MDScreen:
                         pos_hint: {"top": 1}
                         id:textarea
                         width:self.parent.width
-                        #required: True
+                        required: True
                         multiline: True
                         hint_text: "Ввеедите уравнение"
                         #helper_text_mode: "on_error"
@@ -258,6 +258,9 @@ MDScreen:
                         text_color: "white"
                         md_bg_color: app.main_col
                         on_release:Clipboard.copy(app.get_logs())
+
+                    MDLabel:
+                        text:app.user_data_dir
 
         MDNavigationDrawer:
             id: nav_drawer

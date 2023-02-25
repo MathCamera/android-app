@@ -5,7 +5,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 
 from kivy.clock import mainthread
-from kivy.network.urlrequest import UrlRequest
+from modules.urlrequest import UrlRequest
 from kivy.core.window import Window
 
 import base64,os,certifi,urllib.parse,json,webbrowser
@@ -20,7 +20,7 @@ XCamera._previous_orientation = set_orientation(PORTRAIT)
 XCamera.directory = 'img'
 
 OCR_API_URL = "https://mathcamera-api.vercel.app/api/ocr/tesseract"
-MATH_API_URL = ""
+MATH_API_URL = "https://mathcamera-api.vercel.app/api/math/solve"
 
 class MathCamera(MDApp):
     main_col = "#02714C"
@@ -29,7 +29,7 @@ class MathCamera(MDApp):
     def build(self):
         if not os.path.exists('img'):
             os.makedirs('img')
-
+            
         self.settings = json.load(open('settings.json'))
 
         dark_theme = self.settings["dark_theme"]
@@ -76,9 +76,8 @@ class MathCamera(MDApp):
         return False
 
     def handle_camera(self):
-        #auto/on/off
-        self.restart_camera()
-        high_quality = self.settings["cam_high_quality"]
+        #self.restart_camera()
+        #high_quality = self.settings["cam_high_quality"]
         xcamera = self.root.ids['xcamera']
         enable_flashlight = self.settings["enable_flashlight"]
         auto_flashlight = self.settings["auto_flashlight"]
@@ -149,6 +148,29 @@ class MathCamera(MDApp):
         
         self.root.ids['sm'].current = screen_name
         self.root.ids['tb'].title = title
+
+    def send_equation(self,equation):
+        loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
+        loading_popup.open()
+
+        params = urllib.parse.urlencode({'src':equation})
+        headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
+
+        def success(req, result):
+            global result_text
+            loading_popup.dismiss()
+            result = json.loads(result)
+            status_code = result['status_code']
+            result = result["message"]
+
+        def error(req, result):
+            loading_popup.dismiss()
+            result = str(result).replace("\n","")
+            err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
+            popup.open()
+        
+        req = UrlRequest(MATH_API_URL,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
 
     def get_logs(self):
         logs_path = '.kivy/logs'

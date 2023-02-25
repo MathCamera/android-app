@@ -102,6 +102,7 @@ android.permissions = CAMERA,INTERNET
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
+android.api = 31
 #android.api = 27
 
 # (int) Minimum API your APK / AAB will support.
@@ -117,7 +118,7 @@ android.permissions = CAMERA,INTERNET
 #android.ndk_api = 21
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
-#android.private_storage = True
+#android.private_storage = False
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
 #android.ndk_path =
