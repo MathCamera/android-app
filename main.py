@@ -35,6 +35,7 @@ class MathCamera(MDApp):
         dark_theme = self.settings["dark_theme"]
         self.theme_cls.theme_style = "Dark" if dark_theme == True else "Light"
         self.theme_cls.primary_palette = "Green"
+        self.theme_cls.material_style = "M3"
 
         Window.bind(on_keyboard=self.key_handler)
 

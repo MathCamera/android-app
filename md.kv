@@ -195,69 +195,63 @@ MDScreen:
             Screen:
                 name:"sc_settings"
                 on_enter:app.setup()
-                BoxLayout:
-                    orientation:"vertical"
+
+                GridLayout:
                     padding:[50,tb.height + dp(30),50,30]
-                    adaptive_height:True
-                    spacing:30
+                    cols:2
+                    id:settings_grid
+                    MDLabel:
+                        text:"Тёмная тема\n"
+                        adaptive_height:True
 
-                    GridLayout:
-                        cols:2
-                        id:settings_grid
-                        MDLabel:
-                            text:"Тёмная тема\n"
-                            adaptive_height:True
+                    MDSwitch:
+                        adaptive_width:True
+                        id:dark_theme
+                        on_active: app.handle_switch("dark_theme",self.active)
 
-                        MDSwitch:
-                            id:dark_theme
-                            on_active: app.handle_switch("dark_theme",self.active)
+                    MDLabel:
+                        text:"Расширить камеру\n"
+                        adaptive_height:True
 
-                        MDLabel:
-                            text:"Увеличить разрешение камеры\n"
-                            adaptive_height:True
+                    MDSwitch:
+                        adaptive_width:True
+                        id:cam_high_quality
+                        on_active: app.handle_switch("cam_high_quality",self.active)
 
-                        MDSwitch:
-                            id:cam_high_quality
-                            on_active: app.handle_switch("cam_high_quality",self.active)
+                    MDLabel:
+                        text:"Вспышка\n"
+                        adaptive_height:True
 
-                        MDLabel:
-                            text:"Вспышка\n"
-                            adaptive_height:True
+                    MDSwitch:
+                        adaptive_width:True
+                        id:enable_flashlight
+                        on_active: app.handle_switch("enable_flashlight",self.active)
 
-                        MDSwitch:
-                            id:enable_flashlight
-                            on_active: app.handle_switch("enable_flashlight",self.active)
+                    MDLabel:
+                        text:"Авто вспышка\n"
+                        adaptive_height:True
 
-                        MDLabel:
-                            text:"Авто вспышка\n"
-                            adaptive_height:True
+                    MDSwitch:
+                        adaptive_width:True
+                        id:auto_flashlight
+                        on_active: app.handle_switch("auto_flashlight",self.active)
 
-                        MDSwitch:
-                            id:auto_flashlight
-                            on_active: app.handle_switch("auto_flashlight",self.active)
+                    MDLabel:
+                        text:"Режим отладки\n"
+                        adaptive_height:True
 
-                        MDLabel:
-                            text:"Режим отладки\n"
-                            adaptive_height:True
+                    MDSwitch:
+                        adaptive_width:True
+                        id:debug_mode
+                        on_active: app.handle_switch("debug_mode",self.active)
 
-                        MDSwitch:
-                            id:debug_mode
-                            on_active: app.handle_switch("debug_mode",self.active)
-
-                    MDRectangleFlatButton:
-                        text: "Разрешить доступ камере"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:app.request_camera_perm()
-
-                    MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
-                        text: "Скопировать логи"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:Clipboard.copy(app.get_logs())
+                    #MDRectangleFlatButton:
+                    #    #pos_hint:{"center_x":.5}
+                    #    text: "Скопировать логи"
+                    #    theme_text_color: "Custom"
+                    #    text_color: "white"
+                    #    md_bg_color: app.main_col
+                    #    on_release:Clipboard.copy(app.get_logs())
 
         MDNavigationDrawer:
             id: nav_drawer
