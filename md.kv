@@ -122,19 +122,24 @@ MDScreen:
                 name:"sc_text"
                 MDBoxLayout:
                     padding:[30,tb.height + dp(15),30,30]
-                    orientation:"horizontal"
-                    #spacing:20
-                    MDTextField:
-                        pos_hint: {"top": 1}
+                    orientation:"vertical"
+                    spacing:20
+                    #MDTextField:
+                    #    pos_hint: {"top": 1}
+                    #    id:textarea
+                    #    width:self.parent.width
+                    #    required: True
+                    #    multiline: True
+                    #    hint_text: "Ввеедите уравнение"
+                    #    #helper_text_mode: "on_error"
+                    #    #helper_text: "Вы не ввели уравнение"
+                    #    max_height: "400dp"
+                    #    mode: "fill"
+                    TextInput:
                         id:textarea
-                        width:self.parent.width
-                        required: True
-                        multiline: True
-                        hint_text: "Ввеедите уравнение"
-                        #helper_text_mode: "on_error"
-                        #helper_text: "Вы не ввели уравнение"
-                        max_height: "400dp"
-                        mode: "fill"
+                        hint_text:"Введите уравнение"
+                        multiline:True
+                        max_height:"400dp"
 
                     MDRectangleFlatIconButton:
                         id:send_btn
@@ -145,7 +150,26 @@ MDScreen:
                         md_bg_color:app.main_col
                         theme_icon_color: "Custom"
                         icon_color: "white"
+                        on_release:
+                            if textarea.text != "":app.send_equation(textarea.text)
 
+            Screen:
+                name:"sc_solve"
+                BoxLayout:
+                    orientation:"vertical"
+                    padding:[50,tb.height + dp(40),50,30]
+                    spacing:10
+
+                    MDLabel:
+                        pos_hint:{"top":1}
+                        text:"Решение уравнения"
+                    
+                    MDLabel:
+                        id:equation
+                        text:""
+
+                    MDLabel:
+                        text:"[текст решения]"
             Screen:
                 name:"sc_about"
                 BoxLayout:
@@ -195,63 +219,73 @@ MDScreen:
             Screen:
                 name:"sc_settings"
                 on_enter:app.setup()
-
-                GridLayout:
+                BoxLayout:
+                    orientation:"vertical"
                     padding:[50,tb.height + dp(30),50,30]
-                    cols:2
-                    id:settings_grid
-                    MDLabel:
-                        text:"Тёмная тема\n"
-                        adaptive_height:True
+                    spacing:15
+                    GridLayout:
+                        cols:2
+                        id:settings_grid
 
-                    MDSwitch:
-                        adaptive_width:True
-                        id:dark_theme
-                        on_active: app.handle_switch("dark_theme",self.active)
+                        MDLabel:
+                            text:"Тёмная тема\n"
+                            adaptive_height:True
 
-                    MDLabel:
-                        text:"Расширить камеру\n"
-                        adaptive_height:True
+                        MDSwitch:
+                            adaptive_width:True
+                            id:dark_theme
+                            on_active: app.handle_switch("dark_theme",self.active)
 
-                    MDSwitch:
-                        adaptive_width:True
-                        id:cam_high_quality
-                        on_active: app.handle_switch("cam_high_quality",self.active)
+                        MDLabel:
+                            text:"Вспышка\n"
+                            adaptive_height:True
 
-                    MDLabel:
-                        text:"Вспышка\n"
-                        adaptive_height:True
+                        MDSwitch:
+                            adaptive_width:True
+                            id:enable_flashlight
+                            on_active: app.handle_switch("enable_flashlight",self.active)
 
-                    MDSwitch:
-                        adaptive_width:True
-                        id:enable_flashlight
-                        on_active: app.handle_switch("enable_flashlight",self.active)
+                        MDLabel:
+                            text:"Авто вспышка\n"
+                            adaptive_height:True
 
-                    MDLabel:
-                        text:"Авто вспышка\n"
-                        adaptive_height:True
+                        MDSwitch:
+                            adaptive_width:True
+                            id:auto_flashlight
+                            on_active: app.handle_switch("auto_flashlight",self.active)
 
-                    MDSwitch:
-                        adaptive_width:True
-                        id:auto_flashlight
-                        on_active: app.handle_switch("auto_flashlight",self.active)
+                        MDLabel:
+                            text:"Режим отладки\n"
+                            adaptive_height:True
 
-                    MDLabel:
-                        text:"Режим отладки\n"
-                        adaptive_height:True
-
-                    MDSwitch:
-                        adaptive_width:True
-                        id:debug_mode
-                        on_active: app.handle_switch("debug_mode",self.active)
+                        MDSwitch:
+                            adaptive_width:True
+                            id:debug_mode
+                            on_active: app.handle_switch("debug_mode",self.active)
 
                     #MDRectangleFlatButton:
-                    #    #pos_hint:{"center_x":.5}
+                    #    pos_hint:{"center_x":.5}
                     #    text: "Скопировать логи"
                     #    theme_text_color: "Custom"
                     #    text_color: "white"
                     #    md_bg_color: app.main_col
                     #    on_release:Clipboard.copy(app.get_logs())
+
+                    MDRectangleFlatButton:
+                        #pos_hint:{"center_x":.5}
+                        text: "On index"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        on_release:xcamera._on_index
+
+                    MDRectangleFlatButton:
+                        #pos_hint:{"center_x":.5}
+                        text: "On index dispatch"
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color: app.main_col
+                        on_release:xcamera._on_index_dispatch
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -260,9 +294,7 @@ MDScreen:
             MDNavigationDrawerMenu:
                 MDNavigationDrawerHeader:
                     title: "Math Camera"
-                    title_color: "#4a4939"
-                    #source: "media/logo.jpg"
-                    text: "Меню"
+                    source: "media/icon.png"
                     spacing: "4dp"
                     padding: "12dp", 0, 0, "56dp"
 

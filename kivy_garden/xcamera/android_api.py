@@ -74,6 +74,9 @@ def take_picture(camera_widget, filename, on_success):
         camera.autoFocus(cb)
     except JavaException as e:
         Logger.info('Error when calling autofocus: {}'.format(e))
+    
+    except Exception as e:
+        Logger.info("Error in autofocus {}".format(e))
 
 def check_flashlight_permission():
     pm = AndroidPythonActivity.mActivity.getPackageManager()

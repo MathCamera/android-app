@@ -14,7 +14,7 @@ from io import BytesIO
 
 from kivy_garden.xcamera import XCamera
 from kivy_garden.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
-from kivy_garden.xcamera.platform_api import LANDSCAPE,PORTRAIT, set_orientation,check_flashlight_permission
+from kivy_garden.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
 
 XCamera._previous_orientation = set_orientation(PORTRAIT)
 XCamera.directory = 'img'
@@ -35,7 +35,7 @@ class MathCamera(MDApp):
         dark_theme = self.settings["dark_theme"]
         self.theme_cls.theme_style = "Dark" if dark_theme == True else "Light"
         self.theme_cls.primary_palette = "Green"
-        self.theme_cls.material_style = "M3"
+        self.theme_cls.material_style = "M2"
 
         Window.bind(on_keyboard=self.key_handler)
 
@@ -48,9 +48,8 @@ class MathCamera(MDApp):
             ids[elem_id].active = settings[elem_id]
 
         #Убираем переключение темы
-        #Пока не добаыим тёмную тему
+        #Пока не добавим тёмную тему
         ids["dark_theme"].disabled = True
-        ids["cam_high_quality"].disabled = True
 
         ids["auto_flashlight"].disabled = not(ids["enable_flashlight"].active)
 
@@ -160,9 +159,11 @@ class MathCamera(MDApp):
         def success(req, result):
             global result_text
             loading_popup.dismiss()
-            result = json.loads(result)
+            #result = json.loads(result)
             status_code = result['status_code']
             result = result["message"]
+            self.set_screen("sc_solve","Решение")
+            self.root.ids["equation"].text = result
 
         def error(req, result):
             loading_popup.dismiss()
