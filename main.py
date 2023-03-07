@@ -1,7 +1,7 @@
 from kivy.lang import Builder
 from kivy.clock import mainthread
 from kivy.core.window import Window
-from kivy.properties import StringProperty,DictProperty
+from kivy.properties import StringProperty
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
