@@ -1,24 +1,39 @@
-#:import XCamera kivy_garden.xcamera.XCamera
+#:import XCamera modules.xcamera.XCamera
+#:import is_android modules.xcamera.xcamera.is_android
 #:import Clipboard kivy.core.clipboard.Clipboard
-#:import is_android kivy_garden.xcamera.xcamera.is_android
-
-<Check@MDCheckbox>:
-    group: 'group'
-    size_hint: None, None
-    size: dp(48), dp(48)
 
 <DrawerClickableItem@MDNavigationDrawerItem>
+    #_no_ripple_effect: True
+    focus_behavior: False
 
 <DrawerLabelItem@MDNavigationDrawerItem>
     focus_behavior: False
     _no_ripple_effect: True
 
+<ClickableTextFieldRound>:
+    size_hint_y: None
+    height: text_field.height
+
+    MDTextField:
+        id: text_field
+        hint_text: root.hint_text
+        text: root.text
+        helper_text: root.helper_text
+        helper_text_mode: "on_error"
+
+    MDIconButton:
+        icon: "close-circle-outline"
+        pos_hint: {"center_y": .5}
+        pos: text_field.width - self.width + dp(8), 0
+        theme_text_color: "Hint"
+        on_release: text_field.text = ""
+
 MDScreen:
     MDNavigationLayout:
         MDTopAppBar:
             id:tb
-            title: "Math Camera"
-            elevation: 4
+            title: "Главная"
+            #elevation: 4
             pos_hint: {"top": 1}
             md_bg_color: app.main_col
             specific_text_color: "#ffffff"
@@ -27,7 +42,6 @@ MDScreen:
 
         ScreenManager:
             id:sm
-
             Screen:
                 name:"sc_home"
                 BoxLayout:
@@ -37,7 +51,6 @@ MDScreen:
                     center_y: root.center_y
 
                     MDLabel:
-                        #valign:"top"
                         text: "Что вы хотите сделать?"
                         halign:"center"
                         font_style:"H6"
@@ -53,19 +66,19 @@ MDScreen:
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         on_release:
-                            app.set_screen("sc_photo","Сделать снимок")
+                            app.set_screen("sc_photo","Сканировать")
 
                     MDRectangleFlatIconButton:
-                        icon: "keyboard"
+                        icon: "calculator"
                         pos_hint:{"center_x":.5}
-                        text: "Ввести уравнение"
+                        text: "Калькулятор"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color: app.main_col
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         on_release:
-                            app.set_screen("sc_text","Ввести уравнение")
+                            app.set_screen("sc_text","Калькулятор")
 
                     MDRectangleFlatIconButton:
                         icon: "file-image"
@@ -124,34 +137,25 @@ MDScreen:
                     padding:[30,tb.height + dp(15),30,30]
                     orientation:"vertical"
                     spacing:20
-                    #MDTextField:
-                    #    pos_hint: {"top": 1}
-                    #    id:textarea
-                    #    width:self.parent.width
-                    #    required: True
-                    #    multiline: True
-                    #    hint_text: "Ввеедите уравнение"
-                    #    #helper_text_mode: "on_error"
-                    #    #helper_text: "Вы не ввели уравнение"
-                    #    max_height: "400dp"
-                    #    mode: "fill"
-                    TextInput:
+
+                    ClickableTextFieldRound:
                         id:textarea
                         hint_text:"Введите уравнение"
-                        multiline:True
-                        max_height:"400dp"
+                        pos_hint: {"top": 1}
+                        required: True
+                        helper_text: 'Это поле не должно быть пустым'
 
                     MDRectangleFlatIconButton:
                         id:send_btn
-                        icon: "send"
-                        text: "Отправить"
+                        icon: "arrow-right"
+                        text: "Решить"
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color:app.main_col
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         on_release:
-                            if textarea.text != "":app.send_equation(textarea.text)
+                            app.send_equation(textarea.ids.text_field.text)
 
             Screen:
                 name:"sc_solve"
@@ -170,51 +174,6 @@ MDScreen:
 
                     MDLabel:
                         text:"[текст решения]"
-            Screen:
-                name:"sc_about"
-                BoxLayout:
-                    orientation:"vertical"
-                    padding:[50,tb.height + dp(30),50,30]
-                    spacing:30
-                    center_y: root.center_y
-
-                    MDLabel:
-                        #valign:"top"
-                        text: "Math camera"
-                        halign:"center"
-                        font_style:"H4"
-                        adaptive_height:True
-
-                    MDLabel:
-                        #valign:"top"
-                        text: "Math camera - удобный сервис, в котором ты сможешь получить ответ на любое уравнение из математики или химии, просто сфотографировав его."
-                        halign:"center"
-                        font_style:"H6"
-                        adaptive_height:True
-
-                    MDRectangleFlatIconButton:
-                        icon: "web"
-                        pos_hint:{"center_x":.5}
-                        text: "Открыть сайт"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        theme_icon_color: "Custom"
-                        icon_color: "white"
-                        on_release:
-                            app.open_browser("https://mathcamera.tilda.ws")
-
-                    MDRectangleFlatIconButton:
-                        icon: "account-group"
-                        pos_hint:{"center_x":.5}
-                        text: "Мы ВКонтакте"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        theme_icon_color: "Custom"
-                        icon_color: "white"
-                        on_release:
-                            app.open_browser("https://vk.com/mathcamera")
 
             Screen:
                 name:"sc_settings"
@@ -271,22 +230,6 @@ MDScreen:
                     #    md_bg_color: app.main_col
                     #    on_release:Clipboard.copy(app.get_logs())
 
-                    MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
-                        text: "On index"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:xcamera._on_index
-
-                    MDRectangleFlatButton:
-                        #pos_hint:{"center_x":.5}
-                        text: "On index dispatch"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:xcamera._on_index_dispatch
-
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)
@@ -295,24 +238,27 @@ MDScreen:
                 MDNavigationDrawerHeader:
                     title: "Math Camera"
                     source: "media/icon.png"
-                    spacing: "4dp"
-                    padding: "12dp", 0, 0, "56dp"
+                    spacing:"4dp"
+                    padding: "12dp", 0, 0, "28dp"
+
+                MDNavigationDrawerDivider:
 
                 DrawerClickableItem:
                     icon: "text-recognition"
                     text: "Сканировать"
                     on_release:
-                        app.set_screen('sc_photo',"Сделать снимок")
+                        app.set_screen('sc_photo',"Сканировать")
 
                 DrawerClickableItem:
-                    icon: "keyboard"
-                    text: "Ввести уравнение"
+                    icon: "calculator"
+                    text: "Калькулятор"
                     on_release:
-                        app.set_screen('sc_text',"Ввести уравнение")
+                        app.set_screen('sc_text',"Калькулятор")
 
                 DrawerClickableItem:
                     icon: "file-image"
                     text: "Выбрать из галереи"
+                    _no_ripple_effect: True
                     #on_release:
                     #    app.set_screen('sc_photo',"Сделать снимок")
 
@@ -328,10 +274,10 @@ MDScreen:
                     icon: "information-outline"
                     text: "О нас"
                     on_release:
-                        app.set_screen('sc_about',"О нас")
+                        app.open_browser("https://mathcamera.tilda.ws")
 
                 MDNavigationDrawerDivider:
 
                 DrawerLabelItem:
                     icon: "information-outline"
-                    text: "Math Camera v 0.1.0a"
+                    text: "Math Camera v 0.1.5"

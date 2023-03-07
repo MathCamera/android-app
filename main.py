@@ -1,20 +1,21 @@
 from kivy.lang import Builder
-from kivymd.app import MDApp
+from kivy.clock import mainthread
+from kivy.core.window import Window
+from kivy.properties import StringProperty,DictProperty
 
+from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.relativelayout import MDRelativeLayout
 
-from kivy.clock import mainthread
-from modules.urlrequest import UrlRequest
-from kivy.core.window import Window
+from modules.xcamera import XCamera
+from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
+from modules.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
+from modules.urlrequest.urlrequest import UrlRequest
 
 import base64,os,certifi,urllib.parse,json,webbrowser
 from PIL import Image
 from io import BytesIO
-
-from kivy_garden.xcamera import XCamera
-from kivy_garden.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
-from kivy_garden.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
 
 XCamera._previous_orientation = set_orientation(PORTRAIT)
 XCamera.directory = 'img'
@@ -22,14 +23,20 @@ XCamera.directory = 'img'
 OCR_API_URL = "https://mathcamera-api.vercel.app/api/ocr/tesseract"
 MATH_API_URL = "https://mathcamera-api.vercel.app/api/math/solve"
 
+class ClickableTextFieldRound(MDRelativeLayout):
+    text = StringProperty()
+    hint_text = StringProperty()
+    helper_text = StringProperty()
+
 class MathCamera(MDApp):
     main_col = "#02714C"
     perm_dialog = None
     prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
+
     def build(self):
         if not os.path.exists('img'):
             os.makedirs('img')
-            
+
         self.settings = json.load(open('settings.json'))
 
         dark_theme = self.settings["dark_theme"]
@@ -148,31 +155,36 @@ class MathCamera(MDApp):
         
         self.root.ids['sm'].current = screen_name
         self.root.ids['tb'].title = title
+        self.root.ids['nav_drawer'].set_state("closed")
 
     def send_equation(self,equation):
-        loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
-        loading_popup.open()
+        if self.root.ids.textarea.ids.text_field.text != "":
+            loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
+            loading_popup.open()
 
-        params = urllib.parse.urlencode({'src':equation})
-        headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
+            params = urllib.parse.urlencode({'src':equation})
+            headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
 
-        def success(req, result):
-            global result_text
-            loading_popup.dismiss()
-            #result = json.loads(result)
-            status_code = result['status_code']
-            result = result["message"]
-            self.set_screen("sc_solve","Решение")
-            self.root.ids["equation"].text = result
+            def success(req, result):
+                global result_text
+                loading_popup.dismiss()
+                #result = json.loads(result)
+                status_code = result['status_code']
+                result = result["message"]
+                self.set_screen("sc_solve","Решение")
+                self.root.ids["equation"].text = result
 
-        def error(req, result):
-            loading_popup.dismiss()
-            result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
-            popup.open()
+            def error(req, result):
+                loading_popup.dismiss()
+                result = str(result).replace("\n","")
+                err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+                popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
+                popup.open()
+            
+            req = UrlRequest(MATH_API_URL,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
         
-        req = UrlRequest(MATH_API_URL,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
+        else:
+            self.root.ids.textarea.ids.text_field.error = True
 
     def get_logs(self):
         logs_path = '.kivy/logs'
