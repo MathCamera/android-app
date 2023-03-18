@@ -69,6 +69,9 @@ class XCamera(Camera):
             XCamera.kv_loaded = True
         super().__init__(**kwargs)
 
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+
     def _on_index(self, *largs):
         """
         Overrides `kivy.uix.camera.Camera._on_index()` to make sure

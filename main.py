@@ -1,12 +1,10 @@
 from kivy.lang import Builder
 from kivy.clock import mainthread
 from kivy.core.window import Window
-from kivy.properties import StringProperty
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
-from kivymd.uix.relativelayout import MDRelativeLayout
 
 from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
@@ -23,30 +21,23 @@ XCamera.directory = 'img'
 OCR_API_URL = "https://mathcamera-api.vercel.app/api/ocr/tesseract"
 MATH_API_URL = "https://mathcamera-api.vercel.app/api/math/solve"
 
-class ClickableTextFieldRound(MDRelativeLayout):
-    text = StringProperty()
-    hint_text = StringProperty()
-    helper_text = StringProperty()
-
 class MathCamera(MDApp):
     main_col = "#02714C"
-    perm_dialog = None
     prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
+    settings = json.load(open('settings.json'))
 
     def build(self):
-        if not os.path.exists('img'):
-            os.makedirs('img')
-
-        self.settings = json.load(open('settings.json'))
-
-        dark_theme = self.settings["dark_theme"]
-        self.theme_cls.theme_style = "Dark" if dark_theme == True else "Light"
+        self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
         self.theme_cls.primary_palette = "Green"
         self.theme_cls.material_style = "M2"
 
         Window.bind(on_keyboard=self.key_handler)
 
         return Builder.load_file('md.kv')
+    
+    #Функция вызывается при окончании загрузки
+    def on_start(self):
+        pass
 
     def setup(self):
         ids = self.root.ids
@@ -54,9 +45,9 @@ class MathCamera(MDApp):
         for elem_id in settings.keys():
             ids[elem_id].active = settings[elem_id]
 
-        #Убираем переключение темы
-        #Пока не добавим тёмную тему
+        #Убираем переключение темы, пока не добавим тёмную тему
         ids["dark_theme"].disabled = True
+        ids["enable_flashlight"].disabled = check_flashlight_permission()
 
         ids["auto_flashlight"].disabled = not(ids["enable_flashlight"].active)
 
@@ -157,6 +148,19 @@ class MathCamera(MDApp):
         self.root.ids['tb'].title = title
         self.root.ids['nav_drawer'].set_state("closed")
 
+    def edit_textfield(self,text,move_cursor=0):
+        textfield = self.root.ids.textarea.ids.text_field
+        cursor_index = int(textfield.cursor[0])
+        textfield.text = textfield.text[:textfield.cursor[0]] + text + textfield.text[textfield.cursor[0]:]
+        textfield.cursor = (cursor_index+len(text)-move_cursor,0)
+
+    def delete_textfield(self):
+        textfield = self.root.ids.textarea.ids.text_field
+        cursor_index = int(textfield.cursor[0])
+        if cursor_index > 0:
+            textfield.text = textfield.text[:(cursor_index-1)] + textfield.text[cursor_index:]
+        textfield.cursor = (cursor_index-1,0)
+
     def send_equation(self,equation):
         if self.root.ids.textarea.ids.text_field.text != "":
             loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
@@ -166,13 +170,14 @@ class MathCamera(MDApp):
             headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
 
             def success(req, result):
-                global result_text
                 loading_popup.dismiss()
                 #result = json.loads(result)
                 status_code = result['status_code']
                 result = result["message"]
                 self.set_screen("sc_solve","Решение")
-                self.root.ids["equation"].text = result
+
+                self.root.ids["equation"].text = f"Задача: {equation}"
+                self.root.ids["result"].text = f"Ответ: {result}"
 
             def error(req, result):
                 loading_popup.dismiss()
@@ -210,19 +215,22 @@ class MathCamera(MDApp):
             result = json.loads(result)
             status_code = result['status_code']
             result = result["message"]
-            #Убираем лишние пробелы и переносы строк
-            result = " ".join(str(result).split())
 
-            if result == "":
-                result_text = "Не удалось распознать текст на фото"
-                alert_title = "Ошибка"
+            if status_code == 0:
+                #Убираем лишние пробелы и переносы строк
+                result = " ".join(str(result).split())
+
+                if result == "":
+                    popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
+                    popup.open()
                 
-                popup = MDDialog(title=alert_title,text='{}'.format(result_text),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
-                popup.open()
-                
+                else:
+                    self.set_screen("sc_text","Ввести уравнение")
+                    self.root.ids['textarea'].text = result
+            
             else:
-                self.set_screen("sc_text","Ввести уравнение")
-                self.root.ids['textarea'].text = result
+                popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
+                popup.open()
 
         def error(req, result):
             #Скрываем уведомление с загрузкой
