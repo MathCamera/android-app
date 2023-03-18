@@ -159,6 +159,9 @@ MDScreen:
 
             Screen:
                 name:"sc_text"
+                on_enter:
+                    textarea.ids.text_field.disabled=False
+                    textarea.ids.text_field.focus=True
                 MDBoxLayout:
                     padding:[0,tb.height + dp(15),0,0]
                     orientation:"vertical"

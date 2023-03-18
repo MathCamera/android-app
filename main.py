@@ -148,6 +148,10 @@ class MathCamera(MDApp):
         self.root.ids['tb'].title = title
         self.root.ids['nav_drawer'].set_state("closed")
 
+        #Костыль для деактивации поля ввода задачи (sc_text>text_field)
+        self.root.ids.textarea.ids.text_field.disabled = True
+        self.root.ids.textarea.ids.text_field.focus = False
+
     def edit_textfield(self,text,move_cursor=0):
         textfield = self.root.ids.textarea.ids.text_field
         cursor_index = int(textfield.cursor[0])
