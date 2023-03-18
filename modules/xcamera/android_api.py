@@ -64,19 +64,17 @@ def take_picture(camera_widget, filename, on_success):
     # retrieve it from the camera widget, so we need to dig into internal
     # attributes :-( This works at least on kivy 1.9.1, but it might break any
     # time soon.
+    camera = camera_widget._camera._android_camera
+    params = camera.getParameters()
+    params.setFocusMode("auto")
+    camera.setParameters(params)
+    cb = AutoFocusCallback(filename, on_success)
+    Logger.info('xcamera: starting autofocus...')
     try:
-        camera = camera_widget._camera._android_camera
-        params = camera.getParameters()
-        params.setFocusMode("auto")
-        camera.setParameters(params)
-        cb = AutoFocusCallback(filename, on_success)
-        Logger.info('xcamera: starting autofocus...')
-        try:
-            camera.autoFocus(cb)
+        camera.autoFocus(cb)
         
-        except Exception as e:
-            Logger.info('Error when calling autofocus: {}'.format(e))
-    except:pass
+    except Exception as e:
+        Logger.info('Error when calling autofocus: {}'.format(e))
 
 def check_flashlight_permission():
     pm = AndroidPythonActivity.mActivity.getPackageManager()

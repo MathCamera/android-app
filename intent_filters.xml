@@ -1,4 +1,4 @@
-<!-- http url scheme as http://mathcamera-api.vercel.app/app.launch -->
+<!-- http url scheme as http://mathcamera-api.vercel.app/app/launch -->
 <intent-filter>
     <data android:scheme="https"
           android:host="mathcamera-api.vercel.app"

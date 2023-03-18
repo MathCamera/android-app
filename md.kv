@@ -239,7 +239,7 @@ MDScreen:
 
                             CustomFlatIconButton:
                                 icon: 'square-root'
-                                on_press: app.edit_textfield(self.text+"sqr()",1)
+                                on_press: app.edit_textfield(self.text+"√()",1)
 
                             KeyboardFlatButton:
                                 text: '÷'
@@ -258,7 +258,7 @@ MDScreen:
                                 on_press: app.edit_textfield(self.text)
 
                             MultiModeFlatButton:
-                                modes: ['sin','cos','tg','ctg']
+                                modes: ['sin','cos','tan']
                                 on_short_press: app.edit_textfield(self.text+"()",1)
 
                             KeyboardFlatButton:
@@ -295,7 +295,7 @@ MDScreen:
 
                             CustomFlatIconButton:
                                 icon: 'pi'
-                                on_press: app.edit_textfield("3.14")
+                                on_press: app.edit_textfield("π")
 
                             CustomFlatIconButton:
                                 icon: 'equal'
