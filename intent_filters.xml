@@ -1,8 +1,8 @@
 <!-- http url scheme as http://mathcamera-api.vercel.app/app/launch -->
 <intent-filter>
     <data android:scheme="https"
-          android:host="mathcamera-api.vercel.app"
-          android:pathPrefix="/app/launch"/>
+          android:host="mathcamera-redirect.vercel.app"
+          android:pathPrefix="/launch/intent"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>

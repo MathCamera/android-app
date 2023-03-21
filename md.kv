@@ -4,6 +4,7 @@
 #:import CustomFlatIconButton modules.custom.button.CustomFlatIconButton
 #:import MultiModeFlatButton modules.custom.button.MultiModeFlatButton
 #:import ClickableTextFieldRound modules.custom.textfield.ClickableTextFieldRound
+#:import LeftLabel modules.custom.leftlabel.LeftLabel
 
 <DrawerClickableItem@MDNavigationDrawerItem>
     _no_ripple_effect: True
@@ -160,7 +161,6 @@ MDScreen:
             Screen:
                 name:"sc_text"
                 on_enter:
-                    textarea.ids.text_field.disabled=False
                     textarea.ids.text_field.focus=True
                 MDBoxLayout:
                     padding:[0,tb.height + dp(15),0,0]
@@ -301,29 +301,52 @@ MDScreen:
                                 icon: 'equal'
                                 on_press: app.edit_textfield("=")
 
-                            #MultiModeFlatButton:
-                            #    modes: ['НОД','НОК']
-
             Screen:
                 name:"sc_solve"
-                BoxLayout:
-                    orientation:"vertical"
-                    padding:[50,tb.height + dp(40),50,30]
-                    spacing:10
 
-                    MDLabel:
-                        pos_hint:{"top":1}
-                        text:"Решение уравнения"
-                    
+                GridLayout:
+                    cols:1
+                    padding:[20,tb.height + dp(5),20,20]
 
-                    MDLabel:
-                        id:equation
+                    MDIconButton:
+                        icon: "arrow-left"
+                        on_release:app.set_screen('sc_text',"Калькулятор")
 
-                    ScrollView:
-                        do_scroll_y: True
-                        MDLabel:
-                            id:result
+                    MDCard:
+                        orientation:"vertical"
+                        size_hint_x: 1
+                        pos_hint: {"top":1}
+                        md_bg_color:"#039866"
+                        padding:[15,5,15,15]
+                        size_hint_y: None
+                        height:200
 
+                        LeftLabel:
+                            adaptive_size: True
+                            bold:True
+                            text:"Задача:"
+                                    
+                        LeftLabel:
+                            adaptive_size: True
+                            id:equation_label
+
+                        LeftLabel:
+                            adaptive_size: True
+                            bold:True
+                            text:"Ответ:"
+                        
+                        ScrollView:
+                            do_scroll_x: False
+                            do_scroll_y: True
+                            height:200
+
+                            Label:
+                                id:solution_label
+                                size_hint_y: None
+                                height: self.texture_size[1]
+                                text_size: self.width, None
+                                padding: 10, 10
+                        
             Screen:
                 name:"sc_settings"
                 on_enter:app.setup()
@@ -371,14 +394,6 @@ MDScreen:
                             id:debug_mode
                             on_active: app.handle_switch("debug_mode",self.active)
 
-                    MDRectangleFlatButton:
-                        pos_hint:{"center_x":.5}
-                        text: "Скопировать логи"
-                        theme_text_color: "Custom"
-                        text_color: "white"
-                        md_bg_color: app.main_col
-                        on_release:Clipboard.copy(app.get_logs())
-
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)
@@ -386,7 +401,7 @@ MDScreen:
             MDNavigationDrawerMenu:
                 MDNavigationDrawerHeader:
                     title: "Math Camera"
-                    source: "media/icon.png"
+                    source: "media/transparent-icon.png"
                     spacing:"4dp"
                     padding: "12dp", 0, 0, "28dp"
 

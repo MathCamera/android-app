@@ -1,6 +1,7 @@
 from kivy.lang import Builder
 from kivy.clock import mainthread
 from kivy.core.window import Window
+from kivy.utils import platform
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
@@ -20,6 +21,9 @@ XCamera.directory = 'img'
 
 OCR_API_URL = "https://mathcamera-api.vercel.app/api/ocr/tesseract"
 MATH_API_URL = "https://mathcamera-api.vercel.app/api/math/solve"
+
+if platform != "android":
+    Window.size = (360,600)
 
 class MathCamera(MDApp):
     main_col = "#02714C"
@@ -46,8 +50,7 @@ class MathCamera(MDApp):
             ids[elem_id].active = settings[elem_id]
 
         #Убираем переключение темы, пока не добавим тёмную тему
-        ids["dark_theme"].disabled = True
-        ids["enable_flashlight"].disabled = check_flashlight_permission()
+        #ids["dark_theme"].disabled = True
 
         ids["auto_flashlight"].disabled = not(ids["enable_flashlight"].active)
 
@@ -149,7 +152,6 @@ class MathCamera(MDApp):
         self.root.ids['nav_drawer'].set_state("closed")
 
         #Костыль для деактивации поля ввода задачи (sc_text>text_field)
-        self.root.ids.textarea.ids.text_field.disabled = True
         self.root.ids.textarea.ids.text_field.focus = False
 
     def edit_textfield(self,text,move_cursor=0):
@@ -167,6 +169,7 @@ class MathCamera(MDApp):
 
     def send_equation(self,equation):
         if self.root.ids.textarea.ids.text_field.text != "":
+            self.root.ids.textarea.ids.text_field.focus = False
             loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
             loading_popup.open()
 
@@ -180,8 +183,8 @@ class MathCamera(MDApp):
                 result = result["message"]
                 self.set_screen("sc_solve","Решение")
 
-                self.root.ids["equation"].text = f"Задача: {equation}"
-                self.root.ids["result"].text = f"Ответ: {result}"
+                self.root.ids["equation_label"].text = equation
+                self.root.ids["solution_label"].text = result
 
             def error(req, result):
                 loading_popup.dismiss()
