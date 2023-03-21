@@ -308,7 +308,7 @@ MDScreen:
                     id:gl
                     cols:1
                     padding:[20,tb.height + dp(5),20,20]
-
+                    
                     MDIconButton:
                         icon: "arrow-left"
                         on_release:app.set_screen('sc_text',"Калькулятор")
@@ -319,9 +319,10 @@ MDScreen:
                         size_hint_x: 1
                         pos_hint: {"top":1}
                         md_bg_color:"#039866"
-                        padding:[15,5,15,15]
+                        padding:[30,5,15,10]
                         size_hint_y: None
-                        height:gl.height/3
+                        height:gl.height/2.5
+                        spacing:10 
 
                         LeftLabel:
                             adaptive_size: True
@@ -341,14 +342,24 @@ MDScreen:
                             do_scroll_x: False
                             do_scroll_y: True
                             size_hint_y:None
-                            height:mdc.height/3
+                            height:mdc.height/4
 
                             Label:
                                 id:solution_label
                                 size_hint_y: None
                                 height: self.texture_size[1]
                                 text_size: self.width, None
-                                padding: 10, 10
+
+                        MDRectangleFlatIconButton:
+                            icon: "content-copy"
+                            text: "Скопировать ответ"
+                            pos_hint:{"center_x":.5}
+                            theme_text_color: "Custom"
+                            text_color: "white"
+                            md_bg_color:app.main_col
+                            theme_icon_color: "Custom"
+                            icon_color: "white"
+                            on_release:Clipboard.copy(solution_label.text)
                         
             Screen:
                 name:"sc_settings"
