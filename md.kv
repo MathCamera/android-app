@@ -305,6 +305,7 @@ MDScreen:
                 name:"sc_solve"
 
                 GridLayout:
+                    id:gl
                     cols:1
                     padding:[20,tb.height + dp(5),20,20]
 
@@ -313,13 +314,14 @@ MDScreen:
                         on_release:app.set_screen('sc_text',"Калькулятор")
 
                     MDCard:
+                        id:mdc
                         orientation:"vertical"
                         size_hint_x: 1
                         pos_hint: {"top":1}
                         md_bg_color:"#039866"
                         padding:[15,5,15,15]
                         size_hint_y: None
-                        height:200
+                        height:gl.height/3
 
                         LeftLabel:
                             adaptive_size: True
@@ -338,7 +340,8 @@ MDScreen:
                         ScrollView:
                             do_scroll_x: False
                             do_scroll_y: True
-                            height:200
+                            size_hint_y:None
+                            height:mdc.height/3
 
                             Label:
                                 id:solution_label
@@ -438,7 +441,7 @@ MDScreen:
                     icon: "information-outline"
                     text: "О нас"
                     on_release:
-                        app.open_browser("https://mathcamera-api.vercel.app/website")
+                        app.open_browser("https://mathcamera-redirect.vercel.app/website")
 
                 MDNavigationDrawerDivider:
 
