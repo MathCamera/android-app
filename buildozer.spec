@@ -47,7 +47,7 @@ requirements = python3,certifi,pillow,kivy==master, https://github.com/kivymd/Ki
 presplash.filename = %(source.dir)s/media/presplash.png
 
 # (str) Icon of the application
-icon.filename = %(source.dir)s/media/icon.png
+icon.filename = %(source.dir)s/media/app-favicon.png
 
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
