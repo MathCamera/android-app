@@ -310,6 +310,7 @@ MDScreen:
                     padding:[20,tb.height + dp(5),20,20]
                     
                     MDIconButton:
+                        id:mcd_btn
                         icon: "arrow-left"
                         on_release:app.set_screen('sc_text',"Калькулятор")
 
@@ -319,12 +320,13 @@ MDScreen:
                         size_hint_x: 1
                         pos_hint: {"top":1}
                         md_bg_color:"#039866"
-                        padding:[30,5,15,10]
+                        padding:[30,15,30,15]
                         size_hint_y: None
-                        height:gl.height/2.5
-                        spacing:10 
+                        height:(gl.height-mcd_btn.height)/2.5
+                        spacing:10
 
                         LeftLabel:
+                            id:equ_type_label
                             adaptive_size: True
                             bold:True
                             text:"Задача:"

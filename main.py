@@ -180,11 +180,20 @@ class MathCamera(MDApp):
                 loading_popup.dismiss()
                 #result = json.loads(result)
                 status_code = result['status_code']
-                result = result["message"]
-                self.set_screen("sc_solve","Решение")
+                codes_list = {"equation":"Решить уравнение","digital":"Решить пример"}
+                if status_code == 0:
+                    res = result["message"]
+                    equ_type = result['type']
+                    self.set_screen("sc_solve","Решение")
 
-                self.root.ids["equation_label"].text = equation
-                self.root.ids["solution_label"].text = result
+                    self.root.ids["equation_label"].text = equation
+                    self.root.ids["equ_type_label"].text = codes_list[equ_type]+":"
+                    self.root.ids["solution_label"].text = res
+                
+                else:
+                    err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+                    popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])
+                    popup.open()     
 
             def error(req, result):
                 loading_popup.dismiss()
