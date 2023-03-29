@@ -11,6 +11,7 @@ from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
 from modules.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
 from modules.urlrequest.urlrequest import UrlRequest
+from modules.plotting import Plotting
 
 import base64,os,certifi,urllib.parse,json,webbrowser
 from PIL import Image
@@ -185,11 +186,15 @@ class MathCamera(MDApp):
                     res = result["message"]
                     equ_type = result['type']
                     self.set_screen("sc_solve","Решение")
+                    
+                    if "plot" in result.keys():
+                        plot_path = Plotting().generate_plot(result['plot'])
 
                     self.root.ids["equation_label"].text = equation
                     self.root.ids["equ_type_label"].text = codes_list[equ_type]+":"
                     self.root.ids["solution_label"].text = res
-                
+                    self.root.ids["equ_img"].source = plot_path
+    
                 else:
                     err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
                     popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_col,on_release=lambda *args:popup.dismiss())])

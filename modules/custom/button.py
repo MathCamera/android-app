@@ -26,7 +26,6 @@ Builder.load_string('''
         theme_text_color: 'Primary'
 ''')
 
-
 class CustomFlatIconButton(MDFlatButton):
     icon = StringProperty('android')
     bg_color = ListProperty((1, 1, 1, 0))

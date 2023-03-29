@@ -125,6 +125,7 @@ MDScreen:
                 elevation:3
 
                 MDBoxLayout:
+                    elevation:0
                     spacing: 10
                     padding: [0,tb.height+dp(10),0,30]
                     rotation: 0
@@ -201,13 +202,12 @@ MDScreen:
                             padding: dp(1.5)
                             spacing: dp(1.5)
 
+                            CustomFlatIconButton:
+                                icon: 'keyboard-tab'
+
                             KeyboardFlatButton:
                                 text: '^'
                                 on_press: app.edit_textfield(self.text)
-
-                            CustomFlatIconButton:
-                                icon: 'percent'
-                                on_press: app.edit_textfield("%")
 
                             MultiModeFlatButton:
                                 modes: ['<','>']
@@ -308,6 +308,7 @@ MDScreen:
                     id:gl
                     cols:1
                     padding:[20,tb.height + dp(5),20,20]
+                    spacing:10
                     
                     MDIconButton:
                         id:mcd_btn
@@ -362,7 +363,24 @@ MDScreen:
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:Clipboard.copy(solution_label.text)
-                        
+
+                    MDCard:
+                        orientation:"vertical"
+                        size_hint_x: 1
+                        pos_hint: {"top":1}
+                        md_bg_color:"#039866"
+                        padding:[30,15,30,15]
+                        size_hint_y: None
+                        height:(gl.height-mcd_btn.height)/2.5
+                        spacing:10
+
+                        FitImage:
+                            id:equ_img
+                            #source: "sympy_tmp/image.png"
+                            size_hint_y: .35
+                            pos_hint: {"top": 1}
+                            radius: 10, 10, 10, 10
+        
             Screen:
                 name:"sc_settings"
                 on_enter:app.setup()
