@@ -187,10 +187,10 @@ class MathCamera(MDApp):
                     self.set_screen("sc_solve","Решение")
                     
                     if "plot" in result.keys():
-                        plot_widget = render_plot(result['plot'])
-                        #self.root.ids["plot_img"].source = plot_widget
+                        plot_filename = render_plot(result['plot'])
+                        self.root.ids["plot_img"].source = plot_filename
                         #self.root.ids['plot_card'].visible = True
-                        self.root.ids.plot_card.add_widget(plot_widget)
+                        
                     else:
                         #self.root.ids['plot_card'].visible = False
                         pass

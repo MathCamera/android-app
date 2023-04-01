@@ -378,12 +378,12 @@ MDScreen:
                         #opacity: 1 if self.visible else 0
                         #disabled: not self.visible
 
-                        #FitImage:
-                        #    id:plot_img
+                        FitImage:
+                            id:plot_img
                             #source: "sympy_tmp/image.png"
-                        #    size_hint_y: .35
-                        #    pos_hint: {"top": 1}
-                        #    radius: 10, 10, 10, 10
+                            size_hint_y: .35
+                            pos_hint: {"top": 1}
+                            radius: 10, 10, 10, 10
                             #visible: slider.visible
                             #size_hint_x: 1 if self.visible else 0
                             #opacity: 1 if self.visible else 0
@@ -486,4 +486,4 @@ MDScreen:
 
                 DrawerLabelItem:
                     icon: "information-outline"
-                    text: "Math Camera v 0.2.9"
+                    text: "Math Camera v 0.3.5"
