@@ -1,14 +1,22 @@
-from sympy import sympify
-from sympy.plotting import plot
-import os,datetime
 
-class Plotting:
-    def generate_plot(self,equation):
-        if not os.path.exists("sympy_tmp"):
-            os.makedirs("sympy_tmp")
+#import matplotlib.pyplot as plt  
+import datetime,os
 
-        graph = plot(sympify(str(equation)), show=False)
-        filename = "sympy_tmp/{}".format(datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S.png'))
-        graph.save(filename)
+from matplotlib import pyplot as plt
+import numpy as np
 
-        return filename
+from modules.plotting.mpl import FigureCanvasKivyAgg
+
+def render_plot(equation):
+    x = np.array(range(-10, 11))  
+    y = eval(str(equation))
+    plt.plot(x, y)  
+    plt.grid(alpha =.6, linestyle ='--')
+
+    #plot_filename = f"{dir_name}/{datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S.png')}"#"sympy_tmp/{}".format()
+    
+    #plt.savefig(plot_filename)
+
+    result = FigureCanvasKivyAgg(plt.gcf())
+
+    return result

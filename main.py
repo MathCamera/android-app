@@ -11,7 +11,7 @@ from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
 from modules.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
 from modules.urlrequest.urlrequest import UrlRequest
-from modules.plotting import Plotting
+from modules.plotting import render_plot
 
 import base64,os,certifi,urllib.parse,json,webbrowser
 from PIL import Image
@@ -179,7 +179,6 @@ class MathCamera(MDApp):
 
             def success(req, result):
                 loading_popup.dismiss()
-                #result = json.loads(result)
                 status_code = result['status_code']
                 codes_list = {"equation":"Решить уравнение","digital":"Решить пример"}
                 if status_code == 0:
@@ -188,12 +187,17 @@ class MathCamera(MDApp):
                     self.set_screen("sc_solve","Решение")
                     
                     if "plot" in result.keys():
-                        plot_path = Plotting().generate_plot(result['plot'])
+                        plot_widget = render_plot(result['plot'])
+                        #self.root.ids["plot_img"].source = plot_widget
+                        #self.root.ids['plot_card'].visible = True
+                        self.root.ids.plot_card.add_widget(plot_widget)
+                    else:
+                        #self.root.ids['plot_card'].visible = False
+                        pass
 
                     self.root.ids["equation_label"].text = equation
                     self.root.ids["equ_type_label"].text = codes_list[equ_type]+":"
                     self.root.ids["solution_label"].text = res
-                    self.root.ids["equ_img"].source = plot_path
     
                 else:
                     err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""

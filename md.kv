@@ -365,21 +365,29 @@ MDScreen:
                             on_release:Clipboard.copy(solution_label.text)
 
                     MDCard:
+                        id:plot_card
                         orientation:"vertical"
-                        size_hint_x: 1
                         pos_hint: {"top":1}
                         md_bg_color:"#039866"
                         padding:[30,15,30,15]
                         size_hint_y: None
                         height:(gl.height-mcd_btn.height)/2.5
                         spacing:10
+                        
+                        #size_hint_x: 1 if self.visible else 0
+                        #opacity: 1 if self.visible else 0
+                        #disabled: not self.visible
 
-                        FitImage:
-                            id:equ_img
+                        #FitImage:
+                        #    id:plot_img
                             #source: "sympy_tmp/image.png"
-                            size_hint_y: .35
-                            pos_hint: {"top": 1}
-                            radius: 10, 10, 10, 10
+                        #    size_hint_y: .35
+                        #    pos_hint: {"top": 1}
+                        #    radius: 10, 10, 10, 10
+                            #visible: slider.visible
+                            #size_hint_x: 1 if self.visible else 0
+                            #opacity: 1 if self.visible else 0
+                            #disabled: not self.visible
         
             Screen:
                 name:"sc_settings"
