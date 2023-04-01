@@ -188,12 +188,12 @@ class MathCamera(MDApp):
                     
                     if "plot" in result.keys():
                         plot_filename = render_plot(result['plot'])
-                        self.root.ids["plot_img"].source = plot_filename
-                        #self.root.ids['plot_card'].visible = True
+                        if plot_filename != None:
+                            self.root.ids["plot_img"].source = plot_filename
+                            self.root.ids['plot_card'].visible = True
                         
                     else:
-                        #self.root.ids['plot_card'].visible = False
-                        pass
+                        self.root.ids['plot_card'].visible = False
 
                     self.root.ids["equation_label"].text = equation
                     self.root.ids["equ_type_label"].text = codes_list[equ_type]+":"

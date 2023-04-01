@@ -373,10 +373,11 @@ MDScreen:
                         size_hint_y: None
                         height:(gl.height-mcd_btn.height)/2.5
                         spacing:10
+                        visible:False
                         
-                        #size_hint_x: 1 if self.visible else 0
-                        #opacity: 1 if self.visible else 0
-                        #disabled: not self.visible
+                        size_hint_x: 1 if self.visible else 0
+                        opacity: 1 if self.visible else 0
+                        disabled: not self.visible
 
                         FitImage:
                             id:plot_img
@@ -384,10 +385,10 @@ MDScreen:
                             size_hint_y: .35
                             pos_hint: {"top": 1}
                             radius: 10, 10, 10, 10
-                            #visible: slider.visible
-                            #size_hint_x: 1 if self.visible else 0
-                            #opacity: 1 if self.visible else 0
-                            #disabled: not self.visible
+                            visible: plot_card.visible
+                            size_hint_x: 1 if plot_card.visible else 0
+                            opacity: 1 if plot_card.visible else 0
+                            disabled: not plot_card.visible
         
             Screen:
                 name:"sc_settings"
