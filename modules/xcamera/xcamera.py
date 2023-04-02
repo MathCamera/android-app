@@ -58,7 +58,7 @@ class XCameraIconButton(ButtonBehavior, Label):
 
 
 class XCamera(Camera):
-    directory = ObjectProperty(None)
+    directory = ObjectProperty("xcamera_tmp")
     kv_loaded = False
     _previous_orientation = None
     __events__ = ('on_picture_taken', 'on_camera_ready')
@@ -68,9 +68,6 @@ class XCamera(Camera):
             Builder.load_file(os.path.join(ROOT, "xcamera.kv"))
             XCamera.kv_loaded = True
         super().__init__(**kwargs)
-
-        if not os.path.exists(self.directory):
-            os.makedirs(self.directory)
 
     def _on_index(self, *largs):
         """
@@ -108,6 +105,8 @@ class XCamera(Camera):
         toggle_flashlight(self,state)
 
     def shoot(self):
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
         def on_success(filename):
             self.dispatch('on_picture_taken', filename)
         filename = get_filename()

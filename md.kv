@@ -122,7 +122,7 @@ MDScreen:
             MDScreen:
                 on_enter:app.handle_camera()
                 name:"sc_photo"
-                elevation:3
+                #elevation:3
 
                 MDBoxLayout:
                     elevation:0
@@ -436,6 +436,17 @@ MDScreen:
                             adaptive_width:True
                             id:debug_mode
                             on_active: app.handle_switch("debug_mode",self.active)
+
+                    MDRectangleFlatIconButton:
+                        icon: "broom"
+                        text: "Очистить кеш"
+                        #pos_hint:{"center_x":.5}
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color:app.main_col
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:app.clear_cache()
 
         MDNavigationDrawer:
             id: nav_drawer

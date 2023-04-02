@@ -6,6 +6,7 @@ from kivy.utils import platform
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
+from kivymd.toast import toast
 
 from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
@@ -13,12 +14,12 @@ from modules.xcamera.platform_api import PORTRAIT, set_orientation,check_flashli
 from modules.urlrequest.urlrequest import UrlRequest
 from modules.plotting import render_plot
 
-import base64,os,certifi,urllib.parse,json,webbrowser
+import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from PIL import Image
 from io import BytesIO
 
 XCamera._previous_orientation = set_orientation(PORTRAIT)
-XCamera.directory = 'img'
+#XCamera.directory = 'xcamera_tmp'
 
 OCR_API_URL = "https://mathcamera-api.vercel.app/api/ocr/tesseract"
 MATH_API_URL = "https://mathcamera-api.vercel.app/api/math/solve"
@@ -43,6 +44,15 @@ class MathCamera(MDApp):
     #Функция вызывается при окончании загрузки
     def on_start(self):
         pass
+
+    def clear_cache(self):
+        paths = ['mpl_tmp','xcamera_tmp']
+        total_size = 0
+        for path_name in paths:
+            if os.path.exists(path_name):
+                shutil.rmtree(path_name, ignore_errors=True)
+        
+        toast("Кеш очищен")
 
     def setup(self):
         ids = self.root.ids
@@ -251,6 +261,10 @@ class MathCamera(MDApp):
                 
                 else:
                     self.set_screen("sc_text","Ввести уравнение")
+
+                    #Обрезаем текст, если его длина больше 34 символов
+                    if len(result) > 34: result = result[-34:]
+
                     self.root.ids['textarea'].text = result
             
             else:
@@ -277,7 +291,6 @@ class MathCamera(MDApp):
         buffered = BytesIO()
         pil_image.save(buffered,format='png')
         img = base64.b64encode(buffered.getvalue())
-        os.remove(filename)
         self.send_b64(img)
 
 if __name__ == "__main__":

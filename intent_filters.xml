@@ -2,7 +2,7 @@
 <intent-filter>
     <data android:scheme="https"
           android:host="mathcamera-redirect.vercel.app"
-          android:pathPrefix="/launch/intent"/>
+          android:pathPrefix="app/launch/intent"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>
