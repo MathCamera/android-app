@@ -1,0 +1,48 @@
+
+<SC_HOME@BoxLayout>:
+    orientation:"vertical"
+    padding:[50,root.ids.tb.height + dp(30),50,30]
+    spacing:30
+    center_y: root.center_y
+
+    MDLabel:
+        text: "Что вы хотите сделать?"
+        halign:"center"
+        font_style:"H6"
+        adaptive_height:True
+
+    MDRectangleFlatIconButton:
+        icon: "text-recognition"
+        pos_hint:{"center_x":.5}
+        text: "Сканировать"
+        theme_text_color: "Custom"
+        text_color: "white"
+        md_bg_color: app.main_col
+        theme_icon_color: "Custom"
+        icon_color: "white"
+        on_release:
+            app.set_screen("sc_photo","Сканировать")
+
+    MDRectangleFlatIconButton:
+        icon: "calculator"
+        pos_hint:{"center_x":.5}
+        text: "Калькулятор"
+        theme_text_color: "Custom"
+        text_color: "white"
+        md_bg_color: app.main_col
+        theme_icon_color: "Custom"
+        icon_color: "white"
+        on_release:
+            app.set_screen("sc_text","Калькулятор")
+
+    MDRectangleFlatIconButton:
+        icon: "file-image"
+        pos_hint:{"center_x":.5}
+        text: "Выбрать из галереи"
+        theme_text_color: "Custom"
+        text_color: "white"
+        md_bg_color: app.main_col
+        theme_icon_color: "Custom"
+        icon_color: "white"
+        #on_release:
+            #app.set_screen("sc_photo","Выбрать из галлереи")
