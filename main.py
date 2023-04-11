@@ -30,16 +30,19 @@ if platform != "android":
 class MathCamera(MDApp):
     main_col = "#02714C"
     prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
+
     def build(self):
         self.theme_cls.primary_palette = "Green"
-        self.theme_cls.material_style = "M2"
+        #self.theme_cls.material_style = "M2"
+
+        self.settings = json.load(open('settings.json'))
+        self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
+        Window.bind(on_keyboard=self.key_handler)
 
         return Builder.load_file('md.kv')
     
     def on_start(self):
-        self.settings = json.load(open('settings.json'))
-        self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
-        Window.bind(on_keyboard=self.key_handler)
+        pass
 
     def clear_cache(self):
         paths = ['mpl_tmp','xcamera_tmp']
@@ -171,16 +174,16 @@ class MathCamera(MDApp):
 
     def send_equation(self,equation):
         if equation != "":
+            self.root.ids.textarea.ids.text_field.focus = False
             try:
                 #Преобразуем уравнение
-                res = eval(str(equation).replace("√","sqrt").replace("π","math.pi").replace("sin","math.sin").replace("cos","math.cos").replace("tan","math.tan"))
+                res = eval(str(equation).replace("√","math.sqrt").replace("π","math.pi").replace("sin","math.sin").replace("cos","math.cos").replace("tan","math.tan"))
                 self.root.ids["equation_label"].text = str(equation)
                 self.root.ids["equ_type_label"].text = "Решить пример:"
                 self.root.ids["solution_label"].text = str(res)
                 self.set_screen("sc_solve","Решение")
 
             except:
-                self.root.ids.textarea.ids.text_field.focus = False
                 loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
                 loading_popup.open()
 
