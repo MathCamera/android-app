@@ -6,11 +6,21 @@
 #:import CustomFlatIconButton modules.custom.button.CustomFlatIconButton
 #:import MultiModeFlatButton modules.custom.button.MultiModeFlatButton
 
+#:include modules/keyboard/main_kb.kv
+#:include modules/keyboard/letters_kb.kv
+#:include modules/keyboard/top_kb.kv
+
 <KeyboardFlatButton@MDFlatButton>:
     size_hint: 1, 1
     md_bg_color: (255,255,255,1)
     on_parent:
         self.font_size *= 2
+
+<LetterFlatButton@MDFlatButton>:
+    size_hint: 0.5,0.5
+    md_bg_color: (255,255,255,1)
+    on_parent:
+        self.font_size *= 1.5
 
 <CustomFlatIconButton>:
     size_hint: 1, 1
@@ -62,7 +72,7 @@ MDScreen:
             title: "Главная"
             #elevation: 4
             pos_hint: {"top": 1}
-            md_bg_color: app.main_col
+            md_bg_color: app.config["main_color"]
             specific_text_color: "#ffffff"
             left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
             right_action_items:[["home", lambda x: app.set_screen("sc_home","Главная"), "", "Главная"],["cog", lambda x: app.set_screen("sc_settings","Настройки"), "", "Настройки"]]
@@ -89,7 +99,7 @@ MDScreen:
                         text: "Сканировать"
                         theme_text_color: "Custom"
                         text_color: "white"
-                        md_bg_color: app.main_col
+                        md_bg_color: app.config["main_color"]
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         on_release:
@@ -101,7 +111,7 @@ MDScreen:
                         text: "Калькулятор"
                         theme_text_color: "Custom"
                         text_color: "white"
-                        md_bg_color: app.main_col
+                        md_bg_color: app.config["main_color"]
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         on_release:
@@ -113,7 +123,7 @@ MDScreen:
                         text: "Выбрать из галереи"
                         theme_text_color: "Custom"
                         text_color: "white"
-                        md_bg_color: app.main_col
+                        md_bg_color: app.config["main_color"]
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         #on_release:
@@ -165,10 +175,11 @@ MDScreen:
                     padding:[0,tb.height + dp(15),0,0]
                     orientation:"vertical"
                     MDBoxLayout:
-                        padding:[20,0,20,20]
+                        size_hint_y: 0.8
+                        padding:[20,0,20,10]
                         orientation:"vertical"
-                        spacing:20
-
+                        #spacing:10
+                        
                         ClickableTextFieldRound:
                             id:textarea
 
@@ -179,124 +190,25 @@ MDScreen:
                             pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.main_col
+                            md_bg_color:app.config["main_color"]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
                                 app.send_equation(textarea.ids.text_field.text)
 
+                    TOP_KB:
+
                     MDBoxLayout:
-                        GridLayout:
-                            cols:5
-                            canvas:
-                                Color:
-                                    rgba: .20,.20,.20, .25
-                                Rectangle:
-                                    pos: self.pos
-                                    size: self.size
-                                                            
-                            size_hint_y: 1
-                            padding: dp(1.5)
-                            spacing: dp(1.5)
+                        orientation:"vertical"
+                        ScreenManager:
+                            id:kb_manager
+                            MDScreen:
+                                name:"main_kb"
+                                MAIN_KB:
 
-                            CustomFlatIconButton:
-                                icon: 'keyboard-tab'
-
-                            KeyboardFlatButton:
-                                text: '^'
-                                on_press: app.edit_textfield(self.text)
-
-                            MultiModeFlatButton:
-                                modes: ['<','>']
-                                on_short_press: app.edit_textfield(self.text)
-
-                            MultiModeFlatButton:
-                                modes: ['x','y','z']
-                                on_short_press: app.edit_textfield(self.text)
-
-                            CustomFlatIconButton:
-                                icon: 'backspace'
-                                on_press: app.delete_textfield()
-
-                            CustomFlatIconButton:
-                                icon: 'close'
-                                on_press: app.edit_textfield("*")
-
-                            KeyboardFlatButton:
-                                text: '7'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '8'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '9'
-                                on_press: app.edit_textfield(self.text)
-
-                            CustomFlatIconButton:
-                                icon: 'square-root'
-                                on_press: app.edit_textfield(self.text+"√()",1)
-
-                            KeyboardFlatButton:
-                                text: '÷'
-                                on_press: app.edit_textfield("/")
-
-                            KeyboardFlatButton:
-                                text: '4'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '5'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '6'
-                                on_press: app.edit_textfield(self.text)
-
-                            MultiModeFlatButton:
-                                modes: ['sin','cos','tan']
-                                on_short_press: app.edit_textfield(self.text+"()",1)
-
-                            KeyboardFlatButton:
-                                text: '+'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '1'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '2'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '3'
-                                on_press: app.edit_textfield(self.text)
-
-                            MultiModeFlatButton:
-                                modes: ['(',')']
-                                on_short_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '-'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '.'
-                                on_press: app.edit_textfield(self.text)
-
-                            KeyboardFlatButton:
-                                text: '0'
-                                on_press: app.edit_textfield(self.text)
-
-                            CustomFlatIconButton:
-                                icon: 'pi'
-                                on_press: app.edit_textfield("π")
-
-                            CustomFlatIconButton:
-                                icon: 'equal'
-                                on_press: app.edit_textfield("=")
+                            MDScreen:
+                                name:"letters_kb"
+                                LETTERS_KB:
 
             Screen:
                 name:"sc_solve"
@@ -311,7 +223,7 @@ MDScreen:
                         id:mcd_btn
                         icon: "arrow-left"
                         on_release:app.set_screen('sc_text',"Калькулятор")
-
+                        
                     MDCard:
                         id:mdc
                         orientation:"vertical"
@@ -356,7 +268,7 @@ MDScreen:
                             pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.main_col
+                            md_bg_color:app.config["main_color"]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:Clipboard.copy(solution_label.text)
@@ -440,7 +352,7 @@ MDScreen:
                         #pos_hint:{"center_x":.5}
                         theme_text_color: "Custom"
                         text_color: "white"
-                        md_bg_color:app.main_col
+                        md_bg_color:app.config["main_color"]
                         theme_icon_color: "Custom"
                         icon_color: "white"
                         on_release:app.clear_cache()
@@ -489,10 +401,10 @@ MDScreen:
                     icon: "information-outline"
                     text: "О нас"
                     on_release:
-                        app.open_browser("https://mathcamera-redirect.vercel.app/website")
+                        app.open_browser("https://mathcamera-api.vercel.app/redirect/website")
 
                 MDNavigationDrawerDivider:
 
                 DrawerLabelItem:
                     icon: "information-outline"
-                    text: "Math Camera v 0.3.5"
+                    text: "Math Camera v"+app.config["current_version"]

@@ -29,7 +29,7 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,wav,json
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.3.5
+version = 0.4.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -37,7 +37,7 @@ version = 0.3.5
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,certifi,pillow,numpy,matplotlib,kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
+requirements = python3,certifi,pillow,numpy,matplotlib,packaging,kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -237,7 +237,7 @@ android.accept_sdk_license = True
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
-android.manifest.intent_filters = intent_filters.xml
+android.manifest.intent_filters = data/intent_filters.xml
 
 # (list) Copy these files to src/main/res/xml/ (used for example with intent-filters)
 #android.res_xml = PATH_TO_FILE,

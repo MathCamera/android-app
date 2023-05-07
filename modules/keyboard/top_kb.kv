@@ -1,0 +1,31 @@
+<TOP_KB@BoxLayout>:
+    canvas:
+        Color:
+            rgba: .20,.20,.20, .25
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            
+    size_hint_y: 0.2
+    padding: dp(1.5)
+    spacing: dp(1.5)
+
+    CustomFlatIconButton:
+        icon: 'keyboard-tab'
+        on_press: app.set_kb("next")
+
+    CustomFlatIconButton:
+        icon: 'arrow-left'
+        on_press: app.move_cursor("left")
+
+    CustomFlatIconButton:
+        icon: 'arrow-right'
+        on_press: app.move_cursor("right")
+
+    CustomFlatIconButton:
+        icon: 'arrow-left-bottom'
+        on_press: pass
+
+    CustomFlatIconButton:
+        icon: 'backspace'
+        on_press: app.delete_textfield()
