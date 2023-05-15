@@ -12,31 +12,32 @@
     size_hint_y: 1
     padding: dp(1.5)
     spacing: dp(1.5)
-    
+
+    MultiModeFlatButton:
+        modes: ['<','>',">=","<="]
+        values: ['<','>',">=","<="]
+        on_short_press: app.edit_textfield(self.value)
+
+    CustomFlatIconButton:
+        icon: 'pi'
+        on_press: app.edit_textfield("π")
+
+    KeyboardFlatButton:
+        text: 'G'
+        on_press: app.edit_textfield("G")
+
+    CustomFlatIconButton:
+        icon: 'square-root'
+        on_press: app.edit_textfield("√()",1)
 
     KeyboardFlatButton:
         text: 'x!'
         on_press: app.edit_textfield("!")
 
     MultiModeFlatButton:
-        modes: ['x','y','z']
-        on_short_press: app.edit_textfield(self.text)
-
-    MultiModeFlatButton:
-        modes: ['sin','cos','tan']
-        on_short_press: app.edit_textfield(self.text+"()",1)
-
-    MultiModeFlatButton:
-        modes: ['<','>',">=","<="]
-        on_short_press: app.edit_textfield(self.text)
-
-    CustomFlatIconButton:
-        icon: 'code-parentheses'
-        on_press: app.edit_textfield("()",1)
-
-    CustomFlatIconButton:
-        icon: 'pi'
-        on_press: app.edit_textfield("π")
+        modes: ['( )','[ ]','{ }']
+        values: ['()','[]','{}']
+        on_short_press: app.edit_textfield(self.value,1)
 
     KeyboardFlatButton:
         text: '7'
@@ -54,9 +55,10 @@
         text: '÷'
         on_press: app.edit_textfield("/")
 
-    CustomFlatIconButton:
-        icon: 'square-root'
-        on_press: app.edit_textfield("√()",1)
+    MultiModeFlatButton:
+        modes: ['x','y','z']
+        values: ['x','y','z']
+        on_short_press: app.edit_textfield(self.value)
 
     KeyboardFlatButton:
         text: '4'
@@ -74,9 +76,18 @@
         icon: 'close'
         on_press: app.edit_textfield("*")
 
-    CustomFlatIconButton:
-        icon:"exponent"
-        on_press: app.edit_textfield("^()",1)
+    #MultiModeFlatButton:
+    #    modes: ['<','>',">="]
+    #    on_short_press: app.edit_textfield(self.text)
+
+    MultiModeFlatButton:
+        modes: ['x²','x-¹']
+        values: ['^(2)','^(-1)']
+        on_short_press: app.edit_textfield(self.value)
+
+    #CustomFlatIconButton:
+    #    icon:"x²"
+    #    on_press: app.edit_textfield("^()",1)
 
     KeyboardFlatButton:
         text: '1'
@@ -94,13 +105,15 @@
         text: '-'
         on_press: app.edit_textfield(self.text)
 
-    KeyboardFlatButton:
-        text: 'x-¹'
-        on_press: app.edit_textfield("^(-1)")
+    MultiModeFlatButton:
+        modes: ['sin','cos','tan']
+        values: ['sin()','cos()','tan()']
+        on_short_press: app.edit_textfield(self.value,1)
 
-    KeyboardFlatButton:
-        text: '.'
-        on_press: app.edit_textfield(self.text)
+    MultiModeFlatButton:
+        modes: ['.',',']
+        values: ['.',',']
+        on_short_press: app.edit_textfield(self.value)
 
     KeyboardFlatButton:
         text: '0'

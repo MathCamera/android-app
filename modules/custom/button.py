@@ -1,7 +1,7 @@
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import StringProperty, ListProperty,DictProperty
 
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.button import MDFlatButton
@@ -67,9 +67,13 @@ class LongPressIconButton(LongPressButton, MDIconButton):
 
 class MultiModeFlatButton(LongPressButton, MDFlatButton):
     modes = ListProperty(['', ''])
+    values = ListProperty(['',''])
     mode = 0
 
     def on_long_press(self):
         self.mode = (self.mode + 1) % len(self.modes)
+
         self.text = self.modes[self.mode]
+        self.value = self.values[self.mode]
+
         super(MultiModeFlatButton, self).on_long_press()

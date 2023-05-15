@@ -28,6 +28,7 @@
 
 <MultiModeFlatButton>:
     text: self.modes[0]
+    value: self.values[0]
     size_hint: 1, 1
     md_bg_color: (255,255,255,.4)
     on_parent:
@@ -55,6 +56,7 @@
         helper_text_mode: "on_error"
         pos_hint:{"top":1}
         keyboard_mode:"managed"
+        max_height: "140dp"
 
     MDIconButton:
         icon: "close-circle-outline"
@@ -171,14 +173,21 @@ MDScreen:
                 name:"sc_text"
                 on_enter:
                     textarea.ids.text_field.focus=True
+                    app.on_text_screen()
                 MDBoxLayout:
                     padding:[0,tb.height + dp(15),0,0]
                     orientation:"vertical"
                     MDBoxLayout:
                         size_hint_y: 0.8
-                        padding:[20,0,20,10]
+                        padding:[20,0,20,30]
                         orientation:"vertical"
-                        #spacing:10
+                        spacing:10
+
+                        MDDropDownItem:
+                            id: drop_item
+                            pos_hint: {'center_x': .5, 'center_y': .5}
+                            text: 'Выберите действие'
+                            on_release: app.menu.open()
                         
                         ClickableTextFieldRound:
                             id:textarea
@@ -401,7 +410,7 @@ MDScreen:
                     icon: "information-outline"
                     text: "О нас"
                     on_release:
-                        app.open_browser("https://mathcamera-api.vercel.app/redirect/website")
+                        app.open_browser("https://mathcamera.page.link/website")
 
                 MDNavigationDrawerDivider:
 

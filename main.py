@@ -1,12 +1,13 @@
+from kivymd.app import MDApp
 from kivy.lang import Builder
 from kivy.clock import mainthread
-from kivy.core.window import Window
 from kivy.utils import platform
+from kivymd.toast import toast
+from kivy.core.window import Window
 
-from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
-from kivymd.toast import toast
+from kivymd.uix.menu import MDDropdownMenu
 
 from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
@@ -20,19 +21,16 @@ from PIL import Image
 from io import BytesIO
 
 XCamera._previous_orientation = set_orientation(PORTRAIT)
-#XCamera.directory = 'xcamera_tmp'
-
-#OCR_API_URL = "https://mathcamera-ocr-api.vercel.app/api/ocr/tesseract"
-#MATH_API_URL = "https://mathcamera-solver-api.vercel.app/api/solve/math"
-CONFIG_URL = "https://mathcamera-api.vercel.app/config"
 
 if platform != "android":
     Window.size = (360,600)
 
 class MathCamera(MDApp):
-    #main_col = "#02714C"
-    #app.config["main_color"]
-    prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
+        self.menu_items = {"digit":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение"}
+        self.solver_type = None
 
     def build(self):
         self.config = json.load(open('data/config.json'))
@@ -46,18 +44,19 @@ class MathCamera(MDApp):
         headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
 
         def success(req,result):
+            result = json.loads(result)
             self.config["math_solve_url"] = result["math_solve_url"]
             self.config["ocr_url"] = result["ocr_url"]
-            download_url = result["download_url"]
-
+            self.config['download_url'] = result["download_url"]
+        
             if version.parse(self.config["current_version"]) < version.parse(result["latest_version"]):
-                popup = MDDialog(title='Обновление',text=f'Доступна новая версия приложения. Загрузить?',buttons=[MDFlatButton(text="Загрузить",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(download_url)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config['download_url'])),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
                 popup.open()  
             
             with open("data/config.json","w") as file:
                 file.write(json.dumps(self.config))            
 
-        req = UrlRequest(CONFIG_URL,on_success=success,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
+        req = UrlRequest(self.config['config_url'],on_success=success,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
 
     def on_start(self):
         self.settings = json.load(open('data/settings.json'))
@@ -222,15 +221,37 @@ class MathCamera(MDApp):
 
         self.root.ids.textarea.ids.text_field.cursor = (cursor_pos,0)
 
+    def on_text_screen(self):
+        menu_items = [
+            {
+                "viewclass": "OneLineListItem",
+                "text": i,
+                "height": 56,
+                "on_release": lambda x=i: set_item(x),
+            } for i in self.menu_items.values()]
+
+        self.menu = MDDropdownMenu(
+            caller=self.root.ids.drop_item,
+            items=menu_items,
+            position="bottom",
+            width_mult=4,
+        )
+        self.menu.bind()
+
+        def set_item(text_item):
+            self.root.ids.drop_item.set_item(text_item)
+            self.menu.dismiss()
+            self.solver_type = list(self.menu_items.keys())[list(self.menu_items.values()).index(text_item)]
+
     def send_equation(self,equation):
-        if equation != "":
+        if equation != "" and self.solver_type!= None:
             self.root.ids.textarea.ids.text_field.focus = False
             try:
                 #Оффлайн решение
                 #Преобразуем уравнение
-                res = eval(str(equation).replace("√","math.sqrt").replace("π","math.pi").replace("sin","math.sin").replace("cos","math.cos").replace("tan","math.tan").replace("^","**"))
+                res = eval(str(equation).replace("√","math.sqrt").replace("π","math.pi").replace("sin","math.sin").replace("cos","math.cos").replace("tan","math.tan").replace("^","**").replace("G","9.80665"))
                 self.root.ids["equation_label"].text = str(equation)
-                self.root.ids["equ_type_label"].text = "Решить пример:"
+                #self.root.ids["equ_type_label"].text = "Решить пример:"
                 self.root.ids["solution_label"].text = str(res)
                 self.set_screen("sc_solve","Решение")
                 self.root.ids['plot_card'].visible = False
@@ -239,16 +260,13 @@ class MathCamera(MDApp):
                 loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
                 loading_popup.open()
 
-                params = urllib.parse.urlencode({'src':equation})
+                params = urllib.parse.urlencode({'src':equation,"type":self.solver_type})
                 headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
 
                 def success(req, result):
                     loading_popup.dismiss()
                     status_code = result['status_code']
-                    codes_list = {"equation":"Решить уравнение","digital":"Решить пример"}
                     if status_code == 0:
-                        res = result["message"].replace("sqrt","√").replace("pi","π")
-                        equ_type = result['type']
                         
                         if "plot" in result.keys():
                             plot_filename = render_plot(result['plot'])
@@ -262,15 +280,16 @@ class MathCamera(MDApp):
                             self.root.ids['plot_card'].visible = False
 
                         self.root.ids["equation_label"].text = equation
-                        self.root.ids["equ_type_label"].text = codes_list[equ_type]+":"
-                        self.root.ids["solution_label"].text = res
+                        self.root.ids["solution_label"].text = result["message"]
 
                         self.set_screen("sc_solve","Решение")
         
                     else:
                         err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-                        popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
-                        popup.open()     
+                        popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Помощь",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+self.solver_type)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                        popup.open()   
+
+                self.root.ids["equ_type_label"].text = self.menu_items[self.solver_type]
 
                 def error(req, result):
                     loading_popup.dismiss()
