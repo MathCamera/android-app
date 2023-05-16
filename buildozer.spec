@@ -7,7 +7,7 @@ title = Math Camera
 package.name = mathcamera
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = ru.mathcamera
+package.domain = ru
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -29,7 +29,7 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,wav,json
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.4.5
+version = 0.4.6
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -37,7 +37,8 @@ version = 0.4.5
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,certifi,pillow,numpy,matplotlib,packaging,kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
+requirements = python3,certifi,pillow,numpy,matplotlib,packaging,kivy,kivymd
+#kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
