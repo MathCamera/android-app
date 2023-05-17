@@ -226,7 +226,7 @@ class MathCamera(MDApp):
             {
                 "viewclass": "OneLineListItem",
                 "text": i,
-                "height": 56,
+                "height": 80,
                 "on_release": lambda x=i: set_item(x),
             } for i in self.menu_items.values()]
 
@@ -235,6 +235,7 @@ class MathCamera(MDApp):
             items=menu_items,
             position="bottom",
             width_mult=4,
+            elevation=0,
         )
         self.menu.bind()
 

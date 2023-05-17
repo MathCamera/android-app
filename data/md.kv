@@ -161,6 +161,7 @@ MDScreen:
                             PopMatrix
 
                     MDFloatingActionButton:
+                        elevation:0
                         pos_hint: {"center_x":.5}
                         icon: "camera"
                         icon_color:"white"
@@ -326,6 +327,7 @@ MDScreen:
                         MDSwitch:
                             adaptive_width:True
                             id:dark_theme
+                            elevation:0
                             on_active: app.handle_switch("dark_theme",self.active)
 
                         MDLabel:
