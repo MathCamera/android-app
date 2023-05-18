@@ -72,7 +72,7 @@ MDScreen:
         MDTopAppBar:
             id:tb
             title: "Главная"
-            elevation: 0
+            elevation: 4
             pos_hint: {"top": 1}
             md_bg_color: app.config["main_color"]
             specific_text_color: "#ffffff"
@@ -175,6 +175,7 @@ MDScreen:
                 on_enter:
                     textarea.ids.text_field.focus=True
                     app.on_text_screen()
+
                 MDBoxLayout:
                     padding:[0,tb.height + dp(15),0,0]
                     orientation:"vertical"
@@ -308,7 +309,7 @@ MDScreen:
                             size_hint_x: 1 if plot_card.visible else 0
                             opacity: 1 if plot_card.visible else 0
                             disabled: not plot_card.visible
-        
+
             Screen:
                 name:"sc_settings"
                 on_enter:app.setup()
@@ -327,7 +328,6 @@ MDScreen:
                         MDSwitch:
                             adaptive_width:True
                             id:dark_theme
-                            elevation:0
                             on_active: app.handle_switch("dark_theme",self.active)
 
                         MDLabel:

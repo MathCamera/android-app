@@ -235,7 +235,8 @@ class MathCamera(MDApp):
             items=menu_items,
             position="bottom",
             width_mult=4,
-            elevation=0,
+            border_margin=24,
+            hor_growth="left",
         )
         self.menu.bind()
 

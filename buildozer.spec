@@ -37,7 +37,7 @@ version = 0.4.6
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,certifi,pillow,numpy,matplotlib,packaging,kivy,kivymd
+requirements = python3,certifi,pillow,numpy,matplotlib,packaging,kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
 #kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
 
 # (str) Custom source folders for requirements
