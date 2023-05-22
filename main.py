@@ -29,8 +29,9 @@ class MathCamera(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
-        self.menu_items = {"digit":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение"}
+        self.menu_items = {"digital":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение"}
         self.solver_type = None
+        self.flashlight_modes = {"on":"flash","auto":"flash-auto","off":"flash-off"}
 
     def build(self):
         self.config = json.load(open('data/config.json'))
@@ -66,9 +67,12 @@ class MathCamera(MDApp):
 
         self.update_config()
 
+    def on_resume(self):
+        self.restart_camera()
+
     def set_kb(self,kb_name):
         kb_manager = self.root.ids.kb_manager
-        screens_list = ["main_kb","letters_kb"]
+        screens_list = ["main_kb","letters_kb","functions_kb"]
         if kb_name == "next":
             if screens_list.index(kb_manager.current)+1 < len(screens_list):
                 next_screen = screens_list[screens_list.index(kb_manager.current)+1]
@@ -130,7 +134,37 @@ class MathCamera(MDApp):
         if auto_flashlight == True:state = "auto"
 
         xcamera.set_flashlight(state)
+        #xcamera.flashlight_mode = state
+        self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
         #xcamera.resolution = 640, 480 if high_quality == False else 1920, 1080
+
+    def switch_flashlight_mode(self):
+        max_len = len(self.flashlight_modes.keys())-1
+
+        if list(self.flashlight_modes.keys()).index(self.root.ids.xcamera.flashlight_mode)+1 <= max_len:
+            val = list(self.flashlight_modes.keys()).index(self.root.ids.xcamera.flashlight_mode)+1
+        else:
+            val = 0
+        
+        res = list(self.flashlight_modes.keys())[val]
+        self.root.ids['xcamera'].set_flashlight(res)
+
+        self.root.ids.flashlight_btn.icon = self.flashlight_modes[res]
+        
+        if res == "auto":
+            self.settings["auto_flashlight"] = True
+            self.settings["enable_flashlight"] = True
+
+        elif res== "on":
+            self.settings["enable_flashlight"] = True
+            self.settings["auto_flashlight"] = False
+
+        elif res == "off":
+            self.settings["enable_flashlight"] = False
+            self.settings["auto_flashlight"] = False
+
+        with open("data/settings.json","w") as file:
+            file.write(json.dumps(self.settings))
 
     def make_photo(self):
         try:
@@ -196,6 +230,8 @@ class MathCamera(MDApp):
 
         self.root.ids.textarea.ids.text_field.focus = False
 
+        #Window.clearcolor = (0,0,0,0) if screen_name == "sc_photo" else (1,1,1,1)
+    
     def edit_textfield(self,text,move_cursor=0):
         textfield = self.root.ids.textarea.ids.text_field
         cursor_index = int(textfield.cursor[0])
@@ -226,7 +262,7 @@ class MathCamera(MDApp):
             {
                 "viewclass": "OneLineListItem",
                 "text": i,
-                "height": 80,
+                "height": ((self.root.ids.text_inp_bl.height/3)*2)/len(self.menu_items.values()),
                 "on_release": lambda x=i: set_item(x),
             } for i in self.menu_items.values()]
 
@@ -234,9 +270,8 @@ class MathCamera(MDApp):
             caller=self.root.ids.drop_item,
             items=menu_items,
             position="bottom",
-            width_mult=4,
+            width_mult=5,
             border_margin=24,
-            hor_growth="left",
         )
         self.menu.bind()
 

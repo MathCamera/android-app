@@ -18,13 +18,14 @@
         values: ['<','>',">=","<="]
         on_short_press: app.edit_textfield(self.value)
 
+    MultiModeFlatButton:
+        modes: ['G','E']
+        values: ['G','E']
+        on_short_press: app.edit_textfield(self.value)
+
     CustomFlatIconButton:
         icon: 'pi'
         on_press: app.edit_textfield("π")
-
-    KeyboardFlatButton:
-        text: 'G'
-        on_press: app.edit_textfield("G")
 
     CustomFlatIconButton:
         icon: 'square-root'

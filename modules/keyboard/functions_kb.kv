@@ -1,0 +1,54 @@
+
+
+<FUNCTIONS_KB@GridLayout>:
+    cols:5
+    canvas:
+        Color:
+            rgba: .20,.20,.20, .25
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            
+    size_hint_y: 1
+    padding: dp(1.5)
+    spacing: dp(1.5)
+
+    KeyboardFlatButton:
+        text: 'sin'
+        on_press: app.edit_textfield("sin()",1)
+
+    KeyboardFlatButton:
+        text: 'cos'
+        on_press: app.edit_textfield("cos()",1)
+
+    KeyboardFlatButton:
+        text: 'tan'
+        on_press: app.edit_textfield("tan()",1)
+
+    KeyboardFlatButton:
+        text: 'exp'
+        on_press: app.edit_textfield("exp()",1)
+
+    KeyboardFlatButton:
+        text: 'fct'
+        on_press: app.edit_textfield("fct()",1)
+
+    KeyboardFlatButton:
+        text: 'φ(x)'
+        on_press: app.edit_textfield("tot()",1)
+
+    KeyboardFlatButton:
+        text: 'нод'
+        on_press: app.edit_textfield("gcd()",1)
+
+    KeyboardFlatButton:
+        text: 'нок'
+        on_press: app.edit_textfield("lcm()",1)
+
+    KeyboardFlatButton:
+        text: 'огр'
+        on_press: app.edit_textfield("lmt()",1)
+
+    KeyboardFlatButton:
+        text: 'srs'
+        on_press: app.edit_textfield("srs()",1)

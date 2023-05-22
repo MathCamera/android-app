@@ -102,6 +102,7 @@ class XCamera(Camera):
         pass
 
     def set_flashlight(self,state):
+        self.flashlight_mode = state
         toggle_flashlight(self,state)
 
     def shoot(self):

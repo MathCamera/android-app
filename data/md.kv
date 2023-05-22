@@ -8,6 +8,7 @@
 
 #:include modules/keyboard/main_kb.kv
 #:include modules/keyboard/letters_kb.kv
+#:include modules/keyboard/functions_kb.kv
 #:include modules/keyboard/top_kb.kv
 
 <KeyboardFlatButton@MDFlatButton>:
@@ -134,13 +135,9 @@ MDScreen:
             MDScreen:
                 on_enter:app.handle_camera()
                 name:"sc_photo"
-                #elevation:3
 
-                MDBoxLayout:
-                    elevation:0
-                    spacing: 10
+                BoxLayout:
                     padding: [0,tb.height+dp(10),0,30]
-                    rotation: 0
                     id: proxy
                     orientation:"vertical"
                     XCamera:
@@ -159,16 +156,30 @@ MDScreen:
                                 origin: self.center
                         canvas.after:
                             PopMatrix
+                
+                MDIconButton:
+                    pos_hint: {"center_x":.25,"center_y":.10}
+                    icon: "calculator"
+                    icon_size: "30sp"
+                    on_press:app.set_screen("sc_text","Калькулятор")
 
-                    MDFloatingActionButton:
-                        elevation:0
-                        pos_hint: {"center_x":.5}
-                        icon: "camera"
-                        icon_color:"white"
-                        md_bg_color:"black"
-                        on_press:
-                            if app.check_camera_perm() == True:app.make_photo()
-                            else: app.show_cam_alert_dialog()
+                MDIconButton:
+                    pos_hint: {"center_x":.5,"center_y":.10}
+                    icon: "camera-iris"
+                    icon_color:"white"
+                    icon_size: "30sp"
+                    theme_icon_color: "Custom"
+                    md_bg_color:"black"
+                    on_press:
+                        if app.check_camera_perm() == True:app.make_photo()
+                        else: app.show_cam_alert_dialog()
+
+                MDIconButton:
+                    id:flashlight_btn
+                    pos_hint: {"center_x":.75,"center_y":.10}
+                    icon_size: "30sp"
+                    icon: "flash"
+                    on_press:app.switch_flashlight_mode()
 
             Screen:
                 name:"sc_text"
@@ -180,6 +191,7 @@ MDScreen:
                     padding:[0,tb.height + dp(15),0,0]
                     orientation:"vertical"
                     MDBoxLayout:
+                        id:text_inp_bl
                         size_hint_y: 0.8
                         padding:[20,0,20,30]
                         orientation:"vertical"
@@ -220,6 +232,10 @@ MDScreen:
                             MDScreen:
                                 name:"letters_kb"
                                 LETTERS_KB:
+
+                            MDScreen:
+                                name:"functions_kb"
+                                FUNCTIONS_KB:
 
             Screen:
                 name:"sc_solve"
