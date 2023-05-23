@@ -78,7 +78,7 @@ MDScreen:
             md_bg_color: app.config["main_color"]
             specific_text_color: "#ffffff"
             left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
-            right_action_items:[["home", lambda x: app.set_screen("sc_home","Главная"), "", "Главная"],["cog", lambda x: app.set_screen("sc_settings","Настройки"), "", "Настройки"]]
+            right_action_items:[["history", lambda x: app.set_screen("sc_history","История"), "", "История"],["cog", lambda x: app.set_screen("sc_settings","Настройки"), "", "Настройки"]]
 
         ScreenManager:
             id:sm
@@ -136,15 +136,14 @@ MDScreen:
                 on_enter:app.handle_camera()
                 name:"sc_photo"
 
-                BoxLayout:
-                    padding: [0,tb.height+dp(10),0,30]
-                    id: proxy
+                MDBoxLayout:
+                    id:proxy
+                    padding: [0,tb.height+dp(10),0,250]
                     orientation:"vertical"
                     XCamera:
                         id: xcamera
                         play: True
                         keep_ratio: True
-                        on_picture_taken: app.picture_taken(*args)
                         center: self.size and proxy.center
                         size:
                             (proxy.height, proxy.width) if is_android() \
@@ -156,15 +155,17 @@ MDScreen:
                                 origin: self.center
                         canvas.after:
                             PopMatrix
-                
+
                 MDIconButton:
-                    pos_hint: {"center_x":.25,"center_y":.10}
+                    pos_hint: {"center_x":.2,"center_y":.1}
                     icon: "calculator"
                     icon_size: "30sp"
+                    _no_ripple_effect: True
                     on_press:app.set_screen("sc_text","Калькулятор")
 
                 MDIconButton:
-                    pos_hint: {"center_x":.5,"center_y":.10}
+                    _no_ripple_effect: True
+                    pos_hint: {"center_x":.5,"center_y":.1}
                     icon: "camera-iris"
                     icon_color:"white"
                     icon_size: "30sp"
@@ -176,7 +177,8 @@ MDScreen:
 
                 MDIconButton:
                     id:flashlight_btn
-                    pos_hint: {"center_x":.75,"center_y":.10}
+                    _no_ripple_effect: True
+                    pos_hint: {"center_x":.8,"center_y":.1}
                     icon_size: "30sp"
                     icon: "flash"
                     on_press:app.switch_flashlight_mode()
@@ -217,7 +219,7 @@ MDScreen:
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
-                                app.send_equation(textarea.ids.text_field.text)
+                                app.send_equation(textarea.ids.text_field.text,app.solver_type)
 
                     TOP_KB:
 
@@ -249,7 +251,7 @@ MDScreen:
                     MDIconButton:
                         id:mcd_btn
                         icon: "arrow-left"
-                        on_release:app.set_screen('sc_text',"Калькулятор")
+                        on_release:app.set_screen(app.prev_screen_data["sc_name"],app.prev_screen_data["sc_title"])
                         
                     MDCard:
                         id:mdc
@@ -325,6 +327,27 @@ MDScreen:
                             size_hint_x: 1 if plot_card.visible else 0
                             opacity: 1 if plot_card.visible else 0
                             disabled: not plot_card.visible
+
+            Screen:
+                name:"sc_history"
+                on_enter:app.load_history()
+                BoxLayout:
+                    orientation:"vertical"
+                    padding:[15,tb.height + dp(15),15,30]
+                    MDScrollView:
+                        MDList:
+                            id:history_sw
+
+                    MDRectangleFlatIconButton:
+                        icon: "broom"
+                        text: "Очистить историю"
+                        #pos_hint:{"center_x":.5}
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color:app.config["main_color"]
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:app.clear_history()
 
             Screen:
                 name:"sc_settings"
@@ -412,9 +435,13 @@ MDScreen:
                 DrawerClickableItem:
                     icon: "file-image"
                     text: "Выбрать из галереи"
-                    _no_ripple_effect: True
                     #on_release:
                     #    app.set_screen('sc_photo',"Сделать снимок")
+
+                DrawerClickableItem:
+                    icon: "history"
+                    text: "История"
+                    on_release:app.set_screen('sc_history',"История")
 
                 MDNavigationDrawerDivider:
 

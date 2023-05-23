@@ -8,6 +8,7 @@ from kivy.core.window import Window
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.menu import MDDropdownMenu
+from kivymd.uix.list import TwoLineListItem
 
 from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
@@ -85,6 +86,20 @@ class MathCamera(MDApp):
         else:
             kb_manager.current = kb_name
 
+    def load_history(self):
+        history = json.load(open('data/history.json'))[::-1]
+        history_sw = self.root.ids.history_sw
+        history_sw.clear_widgets()
+
+        for elem in history:
+            for equ_type,equ_text in elem.items():
+                history_sw.add_widget(TwoLineListItem(text=self.menu_items[equ_type],secondary_text=equ_text,on_release=lambda s:self.send_equation(equ_text,equ_type)))
+
+    def clear_history(self):
+        with open("data/history.json","w") as file:
+            json.dump([],file)
+        self.load_history()
+
     def clear_cache(self):
         paths = ['mpl_tmp','xcamera_tmp']
         for path_name in paths:
@@ -124,6 +139,7 @@ class MathCamera(MDApp):
         return False
 
     def handle_camera(self):
+        #self.root.ids.proxy.add_widget(Builder.load_file("modules/xcamera/xc.kv"))
         #self.restart_camera()
         #high_quality = self.settings["cam_high_quality"]
         xcamera = self.root.ids['xcamera']
@@ -270,7 +286,7 @@ class MathCamera(MDApp):
             caller=self.root.ids.drop_item,
             items=menu_items,
             position="bottom",
-            width_mult=5,
+            width_mult=10,
             border_margin=24,
         )
         self.menu.bind()
@@ -280,8 +296,8 @@ class MathCamera(MDApp):
             self.menu.dismiss()
             self.solver_type = list(self.menu_items.keys())[list(self.menu_items.values()).index(text_item)]
 
-    def send_equation(self,equation):
-        if equation != "" and self.solver_type!= None:
+    def send_equation(self,equation,solver_type):
+        if equation != "" and solver_type!= None:
             self.root.ids.textarea.ids.text_field.focus = False
             try:
                 #Оффлайн решение
@@ -297,7 +313,7 @@ class MathCamera(MDApp):
                 loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
                 loading_popup.open()
 
-                params = urllib.parse.urlencode({'src':equation,"type":self.solver_type})
+                params = urllib.parse.urlencode({'src':equation,"type":solver_type})
                 headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
 
                 def success(req, result):
@@ -320,13 +336,19 @@ class MathCamera(MDApp):
                         self.root.ids["solution_label"].text = result["message"]
 
                         self.set_screen("sc_solve","Решение")
+
+                        self.root.ids["equ_type_label"].text = self.menu_items[solver_type]
+
+                        with open("data/history.json","r+") as file:
+                            json_data = json.load(file)
+                            json_data.append({solver_type:equation})
+                            file.seek(0)
+                            json.dump(json_data,file)
         
                     else:
                         err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-                        popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Помощь",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+self.solver_type)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                        popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Помощь",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+solver_type)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
                         popup.open()   
-
-                self.root.ids["equ_type_label"].text = self.menu_items[self.solver_type]
 
                 def error(req, result):
                     loading_popup.dismiss()
