@@ -4,6 +4,7 @@ from kivy.clock import mainthread
 from kivy.utils import platform
 from kivymd.toast import toast
 from kivy.core.window import Window
+from kivy.metrics import dp
 
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
@@ -23,23 +24,27 @@ from io import BytesIO
 
 XCamera._previous_orientation = set_orientation(PORTRAIT)
 
-if platform != "android":
+if platform == "andorid":
+    from androidstorage4kivy import Chooser,SharedStorage
+else:
     Window.size = (360,600)
 
 class MathCamera(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.theme_cls.primary_palette = "Green"
+        self.theme_cls.material_style = "M2"
         self.prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
-        self.menu_items = {"digital":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение"}
+        self.menu_items = {"digital":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение","inequality":"Решить неравенство"}
         self.solver_type = None
         self.flashlight_modes = {"on":"flash","auto":"flash-auto","off":"flash-off"}
 
     def build(self):
+        if platform == "android":
+            self.chooser = Chooser(self.chooser_callback)
         self.config = json.load(open('data/config.json'))
-
-        self.theme_cls.primary_palette = "Green"
-        self.theme_cls.material_style = "M2"
-
+        self.settings = json.load(open('data/settings.json'))
+        
         return Builder.load_file('data/md.kv')
     
     def update_config(self):
@@ -61,15 +66,30 @@ class MathCamera(MDApp):
         req = UrlRequest(self.config['config_url'],on_success=success,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
 
     def on_start(self):
-        self.settings = json.load(open('data/settings.json'))
-
         self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
         Window.bind(on_keyboard=self.key_handler)
 
         self.update_config()
 
-    def on_resume(self):
-        self.restart_camera()
+    #def on_resume(self):
+    #    self.restart_camera()
+
+    def chooser_callback(self, shared_file_list):
+        self.private_files = []
+        ss = SharedStorage()
+        for shared_file in shared_file_list:
+            self.private_files.append(ss.copy_from_shared(shared_file))
+
+    def choose(self):
+        self.chooser.choose_content('image/*', multiple = False)
+        if self.private_files or self.private_files != None:
+            image_path = self.private_files[0].split("/")[-1]
+            img = Image.open(f"cache/FromSharedStorage/{image_path}")
+            output_buffer = BytesIO()
+            img.save(output_buffer, format='PNG')
+            byte_data = output_buffer.getvalue()
+            base64_str = base64.b64encode(byte_data).decode('utf-8')
+            self.send_b64(base64_str)
 
     def set_kb(self,kb_name):
         kb_manager = self.root.ids.kb_manager
@@ -161,7 +181,7 @@ class MathCamera(MDApp):
             val = list(self.flashlight_modes.keys()).index(self.root.ids.xcamera.flashlight_mode)+1
         else:
             val = 0
-        
+            
         res = list(self.flashlight_modes.keys())[val]
         self.root.ids['xcamera'].set_flashlight(res)
 
@@ -276,9 +296,7 @@ class MathCamera(MDApp):
     def on_text_screen(self):
         menu_items = [
             {
-                "viewclass": "OneLineListItem",
                 "text": i,
-                "height": ((self.root.ids.text_inp_bl.height/3)*2)/len(self.menu_items.values()),
                 "on_release": lambda x=i: set_item(x),
             } for i in self.menu_items.values()]
 
@@ -286,7 +304,6 @@ class MathCamera(MDApp):
             caller=self.root.ids.drop_item,
             items=menu_items,
             position="bottom",
-            width_mult=10,
             border_margin=24,
         )
         self.menu.bind()
@@ -371,6 +388,8 @@ class MathCamera(MDApp):
         file_contents = f.read()
         f.close()
         return file_contents
+    
+    #def
 
     def send_b64(self,b64):
         loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')

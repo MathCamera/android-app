@@ -129,7 +129,7 @@ MDScreen:
                         md_bg_color: app.config["main_color"]
                         theme_icon_color: "Custom"
                         icon_color: "white"
-                        #on_release:
+                        on_release:app.choose()
                             #app.set_screen("sc_photo","Выбрать из галлереи")
 
             MDScreen:
@@ -144,6 +144,7 @@ MDScreen:
                         id: xcamera
                         play: True
                         keep_ratio: True
+                        on_picture_taken: app.picture_taken(*args)
                         center: self.size and proxy.center
                         size:
                             (proxy.height, proxy.width) if is_android() \
@@ -197,7 +198,7 @@ MDScreen:
                         size_hint_y: 0.8
                         padding:[20,0,20,30]
                         orientation:"vertical"
-                        spacing:10
+                        #spacing:10
 
                         MDDropDownItem:
                             id: drop_item
@@ -330,10 +331,13 @@ MDScreen:
 
             Screen:
                 name:"sc_history"
-                on_enter:app.load_history()
+                on_enter:
+                    app.load_history()
+
                 BoxLayout:
                     orientation:"vertical"
                     padding:[15,tb.height + dp(15),15,30]
+
                     MDScrollView:
                         MDList:
                             id:history_sw
@@ -341,7 +345,7 @@ MDScreen:
                     MDRectangleFlatIconButton:
                         icon: "broom"
                         text: "Очистить историю"
-                        #pos_hint:{"center_x":.5}
+                        pos_hint:{"center_x":.5}
                         theme_text_color: "Custom"
                         text_color: "white"
                         md_bg_color:app.config["main_color"]
@@ -435,8 +439,7 @@ MDScreen:
                 DrawerClickableItem:
                     icon: "file-image"
                     text: "Выбрать из галереи"
-                    #on_release:
-                    #    app.set_screen('sc_photo',"Сделать снимок")
+                    on_release:app.choose()
 
                 DrawerClickableItem:
                     icon: "history"
