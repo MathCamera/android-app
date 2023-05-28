@@ -411,6 +411,17 @@ MDScreen:
                         icon_color: "white"
                         on_release:app.clear_cache()
 
+                    MDRectangleFlatIconButton:
+                        icon: "content-copy"
+                        text: "Скопировать логи"
+                        #pos_hint:{"center_x":.5}
+                        theme_text_color: "Custom"
+                        text_color: "white"
+                        md_bg_color:app.config["main_color"]
+                        theme_icon_color: "Custom"
+                        icon_color: "white"
+                        on_release:Clipboard.copy(app.get_logs())
+
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)

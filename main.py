@@ -24,7 +24,7 @@ from io import BytesIO
 
 XCamera._previous_orientation = set_orientation(PORTRAIT)
 
-if platform == "andorid":
+if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
 else:
     Window.size = (360,600)
@@ -42,6 +42,8 @@ class MathCamera(MDApp):
     def build(self):
         if platform == "android":
             self.chooser = Chooser(self.chooser_callback)
+        if not os.path.exists("img_tmp"):
+            os.makedirs("img_tmp")
         self.config = json.load(open('data/config.json'))
         self.settings = json.load(open('data/settings.json'))
         
@@ -71,25 +73,28 @@ class MathCamera(MDApp):
 
         self.update_config()
 
-    #def on_resume(self):
-    #    self.restart_camera()
-
     def chooser_callback(self, shared_file_list):
-        self.private_files = []
         ss = SharedStorage()
         for shared_file in shared_file_list:
-            self.private_files.append(ss.copy_from_shared(shared_file))
+            path = ss.copy_from_shared(shared_file)
+            if path:
+                self.handle_choose(path)
+
+    @mainthread
+    def handle_choose(self,image_path):
+        try:
+            img = Image.open(image_path)
+            output_buffer = BytesIO()
+            img.save(output_buffer, format='PNG' if image_path.split(".")[-1] == "png" else "JPEG")
+            base64_str = base64.b64encode(output_buffer.getvalue())
+            self.send_b64(base64_str)
+        except Exception as e:
+            err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
+            popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+            popup.open()  
 
     def choose(self):
         self.chooser.choose_content('image/*', multiple = False)
-        if self.private_files or self.private_files != None:
-            image_path = self.private_files[0].split("/")[-1]
-            img = Image.open(f"cache/FromSharedStorage/{image_path}")
-            output_buffer = BytesIO()
-            img.save(output_buffer, format='PNG')
-            byte_data = output_buffer.getvalue()
-            base64_str = base64.b64encode(byte_data).decode('utf-8')
-            self.send_b64(base64_str)
 
     def set_kb(self,kb_name):
         kb_manager = self.root.ids.kb_manager
@@ -388,8 +393,6 @@ class MathCamera(MDApp):
         file_contents = f.read()
         f.close()
         return file_contents
-    
-    #def
 
     def send_b64(self,b64):
         loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
