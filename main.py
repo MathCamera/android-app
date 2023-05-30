@@ -5,6 +5,7 @@ from kivy.utils import platform
 from kivymd.toast import toast
 from kivy.core.window import Window
 from kivy.metrics import dp
+from kivy.network.urlrequest import UrlRequest
 
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
@@ -14,7 +15,7 @@ from kivymd.uix.list import TwoLineListItem
 from modules.xcamera import XCamera
 from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
 from modules.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
-from modules.urlrequest.urlrequest import UrlRequest
+#from modules.urlrequest.urlrequest import UrlRequest
 from modules.plotting import render_plot
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil,math
@@ -398,46 +399,42 @@ class MathCamera(MDApp):
         loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
         loading_popup.open()
 
-        params = urllib.parse.urlencode({'src':b64,'lang':'eng'})
-        headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
-
+        params = urllib.parse.urlencode({'src':b64})
         def success(req, result):
-            global result_text
-            #Скрываем уведомление с загрузкой
             loading_popup.dismiss()
-            result = json.loads(result)
             status_code = result['status_code']
             result = result["message"]
 
-            if status_code == 0:
-                #Убираем лишние пробелы и переносы строк
-                result = " ".join(str(result).split())
+            try:
+                if status_code == 0:
+                    result = " ".join(str(result).split())
 
-                if result == "":
-                    popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
-                    popup.open()
+                    if result == "":
+                        popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                        popup.open()
+                    
+                    else:
+                        self.set_screen("sc_text","Ввести уравнение")
+
+                        if len(result) > 50: result = result[-50:]
+                        self.root.ids['textarea'].text = result
                 
                 else:
-                    self.set_screen("sc_text","Ввести уравнение")
-
-                    #Обрезаем текст, если его длина больше 50 символов
-                    if len(result) > 50: result = result[-50:]
-
-                    self.root.ids['textarea'].text = result
-            
-            else:
-                popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
-                popup.open()
+                    popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                    popup.open()
+                    
+            except:
+                popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                popup.open()   
 
         def error(req, result):
-            #Скрываем уведомление с загрузкой
             loading_popup.dismiss()
             result = str(result).replace("\n","")
             err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
             popup.open()
         
-        req = UrlRequest(self.config["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
+        req = UrlRequest(self.config["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     @mainthread
     def picture_taken(self,obj,filename):
