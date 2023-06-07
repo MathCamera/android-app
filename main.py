@@ -1,78 +1,110 @@
-from kivymd.app import MDApp
 from kivy.lang import Builder
 from kivy.clock import mainthread
 from kivy.utils import platform
-from kivymd.toast import toast
-from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.network.urlrequest import UrlRequest
+from kivy.core.window import Window
+from kivy.core.clipboard import Clipboard
 
+from kivymd.app import MDApp
+from kivymd.toast import toast
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.menu import MDDropdownMenu
-from kivymd.uix.list import TwoLineListItem
+from kivymd.uix.list import TwoLineListItem,OneLineListItem
 
-from modules.xcamera import XCamera
-from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission,is_android
-from modules.xcamera.platform_api import PORTRAIT, set_orientation,check_flashlight_permission
-#from modules.urlrequest.urlrequest import UrlRequest
+from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission
 from modules.plotting import render_plot
 
-import base64,os,certifi,urllib.parse,json,webbrowser,shutil,math
+import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from packaging import version
 from PIL import Image
 from io import BytesIO
 
-XCamera._previous_orientation = set_orientation(PORTRAIT)
-
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
+    from modules.android_api import StorageManager
 else:
     Window.size = (360,600)
 
 class MathCamera(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        #app config
         self.theme_cls.primary_palette = "Green"
         self.theme_cls.material_style = "M2"
-        self.prev_screen_data = {"sc_name":"sc_text","sc_title":"Главная"}
-        self.menu_items = {"digital":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение","inequality":"Решить неравенство"}
-        self.solver_type = None
+        #root variables
+        self.last_screen,self.solver_type = None,None
         self.flashlight_modes = {"on":"flash","auto":"flash-auto","off":"flash-off"}
+
+        self.menu_items = {"digital":"Решить пример",
+                           "equation":"Решить уравнение",
+                           "system":"Решить систему уравнений",
+                           "simplify":"Упростить выражение",
+                           "inequality":"Решить неравенство"}
+        
+        self.screen_names = {"sc_home":"Главная",
+                        "sc_photo":"Сканировать",
+                        "sc_text":"Калькулятор",
+                        "sc_solve":"Решение",
+                        "sc_history":"История",
+                        "sc_logs":"Логи",
+                        "sc_settings":"Настройки"}
 
     def build(self):
         if platform == "android":
             self.chooser = Chooser(self.chooser_callback)
-        if not os.path.exists("img_tmp"):
-            os.makedirs("img_tmp")
+            
         self.config = json.load(open('data/config.json'))
         self.settings = json.load(open('data/settings.json'))
         
         return Builder.load_file('data/md.kv')
     
     def update_config(self):
-        headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
-
         def success(req,result):
             result = json.loads(result)
             self.config["math_solve_url"] = result["math_solve_url"]
             self.config["ocr_url"] = result["ocr_url"]
-            self.config['download_url'] = result["download_url"]
         
             if version.parse(self.config["current_version"]) < version.parse(result["latest_version"]):
-                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config['download_url'])),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                download_url = result["download_url"]
+                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:launch_update()),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
                 popup.open()  
+
+                def launch_update():
+                    self.root.current = "update_sc"
+                    popup.dismiss()
+                    self.download_content(download_url)
             
             with open("data/config.json","w") as file:
                 file.write(json.dumps(self.config))            
 
-        req = UrlRequest(self.config['config_url'],on_success=success,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
+        req = UrlRequest(self.config['config_url'],on_success=success,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     def on_start(self):
         self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
         Window.bind(on_keyboard=self.key_handler)
 
         self.update_config()
+
+    #Обновление
+    def download_content(self,download_url):
+        filename = download_url.replace("?","/").split("/")[7]
+        def update_progress(request, current_size, total_size):
+            update_progress = round((current_size / total_size)*100)
+            self.root.ids.update_progress.value = update_progress
+            self.root.ids.update_percent.text='{}%'.format(update_progress)
+
+        def unzip_content(req, result):  
+            if platform == 'android':
+                StorageManager.send_to_downloads(filename)
+            
+            popup = MDDialog(title='Загрузка завершена',text=f'Для обновления приложения следуйте инструкциям',buttons=[MDFlatButton(text="Открыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+"update"))],auto_dismiss=False)
+            popup.open()
+
+        req = UrlRequest(download_url, on_progress=update_progress,
+                         chunk_size=1024, on_success=unzip_content,
+                         file_path=filename)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -121,6 +153,22 @@ class MathCamera(MDApp):
             for equ_type,equ_text in elem.items():
                 history_sw.add_widget(TwoLineListItem(text=self.menu_items[equ_type],secondary_text=equ_text,on_release=lambda s:self.send_equation(equ_text,equ_type)))
 
+    def load_logs(self):
+        logs_sw = self.root.ids.logs_sw
+
+        logs_path = 'C:/Users/1/.kivy/logs'
+        logs = os.listdir(logs_path)[::-1]
+
+        def copy_logs(filename):
+            f = open(f"{logs_path}/{filename}", 'r')
+            file_contents = f.read()
+            f.close()
+            Clipboard.copy(file_contents)
+            toast("Скопировано")
+
+        for elem in logs:
+            logs_sw.add_widget(OneLineListItem(text=elem,on_release=lambda s:copy_logs(elem)))
+
     def clear_history(self):
         with open("data/history.json","w") as file:
             json.dump([],file)
@@ -160,14 +208,11 @@ class MathCamera(MDApp):
         manager = self.root.ids["sm"]
         if keycode in [27, 1001]:
             if manager.current != 'sc_home':
-                self.set_screen(self.prev_screen_data["sc_name"],self.prev_screen_data["sc_title"])
+                self.set_screen(self.last_screen)
             return True
         return False
 
     def handle_camera(self):
-        #self.root.ids.proxy.add_widget(Builder.load_file("modules/xcamera/xc.kv"))
-        #self.restart_camera()
-        #high_quality = self.settings["cam_high_quality"]
         xcamera = self.root.ids['xcamera']
         enable_flashlight = self.settings["enable_flashlight"]
         auto_flashlight = self.settings["auto_flashlight"]
@@ -176,9 +221,7 @@ class MathCamera(MDApp):
         if auto_flashlight == True:state = "auto"
 
         xcamera.set_flashlight(state)
-        #xcamera.flashlight_mode = state
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
-        #xcamera.resolution = 640, 480 if high_quality == False else 1920, 1080
 
     def switch_flashlight_mode(self):
         max_len = len(self.flashlight_modes.keys())-1
@@ -262,15 +305,15 @@ class MathCamera(MDApp):
         )
         self.perm_dialog.open()
 
-    def set_screen(self,screen_name,title):
-        self.prev_screen_data["sc_name"] = self.root.ids['sm'].current
-        self.prev_screen_data["sc_title"] = self.root.ids['tb'].title
-        
-        self.root.ids['sm'].current = screen_name
-        self.root.ids['tb'].title = title
-        self.root.ids['nav_drawer'].set_state("closed")
+    def set_screen(self,screen_name,*screen_title):
+        if self.root.current == "main_sc":
+            self.last_screen = self.root.ids['sm'].current
+            
+            self.root.ids['sm'].current = screen_name
+            self.root.ids['tb'].title = self.screen_names[screen_name] if not screen_title else screen_title[0]
+            self.root.ids['nav_drawer'].set_state("closed")
 
-        self.root.ids.textarea.ids.text_field.focus = False
+            self.root.ids.textarea.ids.text_field.focus = False
 
         #Window.clearcolor = (0,0,0,0) if screen_name == "sc_photo" else (1,1,1,1)
     
@@ -322,81 +365,60 @@ class MathCamera(MDApp):
     def send_equation(self,equation,solver_type):
         if equation != "" and solver_type!= None:
             self.root.ids.textarea.ids.text_field.focus = False
-            try:
-                #Оффлайн решение
-                #Преобразуем уравнение
-                res = eval(str(equation).replace("√","math.sqrt").replace("π","math.pi").replace("sin","math.sin").replace("cos","math.cos").replace("tan","math.tan").replace("^","**").replace("G","9.80665"))
-                self.root.ids["equation_label"].text = str(equation)
-                #self.root.ids["equ_type_label"].text = "Решить пример:"
-                self.root.ids["solution_label"].text = str(res)
-                self.set_screen("sc_solve","Решение")
-                self.root.ids['plot_card'].visible = False
 
-            except:
-                loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
-                loading_popup.open()
+            loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...',auto_dismiss=False)
+            loading_popup.open()
 
-                params = urllib.parse.urlencode({'src':equation,"type":solver_type})
-                headers = {'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'}
+            params = urllib.parse.urlencode({'src':equation,"type":solver_type})
 
-                def success(req, result):
-                    loading_popup.dismiss()
-                    status_code = result['status_code']
-                    if status_code == 0:
-                        
-                        if "plot" in result.keys():
-                            plot_filename = render_plot(result['plot'])
-                            if plot_filename != None:
-                                self.root.ids["plot_img"].source = plot_filename
-                                self.root.ids['plot_card'].visible = True
+            def success(req, result):
+                loading_popup.dismiss()
+                status_code = result['status_code']
+                if status_code == 0:
+                    
+                    if "plot" in result.keys():
+                        plot_filename = render_plot(result['plot'])
+                        if plot_filename != None:
+                            self.root.ids["plot_img"].source = plot_filename
+                            self.root.ids['plot_card'].visible = True
 
-                            else:
-                                self.root.ids['plot_card'].visible = False
                         else:
                             self.root.ids['plot_card'].visible = False
-
-                        self.root.ids["equation_label"].text = equation
-                        self.root.ids["solution_label"].text = result["message"]
-
-                        self.set_screen("sc_solve","Решение")
-
-                        self.root.ids["equ_type_label"].text = self.menu_items[solver_type]
-
-                        with open("data/history.json","r+") as file:
-                            json_data = json.load(file)
-                            json_data.append({solver_type:equation})
-                            file.seek(0)
-                            json.dump(json_data,file)
-        
                     else:
-                        err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-                        popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Помощь",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+solver_type)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
-                        popup.open()   
+                        self.root.ids['plot_card'].visible = False
 
-                def error(req, result):
-                    loading_popup.dismiss()
-                    result = str(result).replace("\n","")
+                    self.root.ids["equation_label"].text = equation
+                    self.root.ids["solution_label"].text = result["message"]
+
+                    self.set_screen("sc_solve")
+
+                    self.root.ids["equ_type_label"].text = self.menu_items[solver_type]
+
+                    with open("data/history.json","r+") as file:
+                        json_data = json.load(file)
+                        json_data.append({solver_type:equation})
+                        file.seek(0)
+                        json.dump(json_data,file)
+        
+                else:
                     err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-                    popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
-                    popup.open()
+                    popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Помощь",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+solver_type)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                    popup.open()   
+
+            def error(req, result):
+                loading_popup.dismiss()
+                result = str(result).replace("\n","")
+                err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+                popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:popup.dismiss())])
+                popup.open()
                 
-                req = UrlRequest(self.config["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers=headers,ca_file=certifi.where(),verify=True,method='POST')
+            req = UrlRequest(self.config["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
             
         else:
             self.root.ids.textarea.ids.text_field.error = True
 
-    def get_logs(self):
-        logs_path = '.kivy/logs'
-        r = os.listdir(logs_path)
-        last_log = len(r)-2
-
-        f = open(f"{logs_path}/{r[last_log]}", 'r')
-        file_contents = f.read()
-        f.close()
-        return file_contents
-
     def send_b64(self,b64):
-        loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...')
+        loading_popup = MDDialog(title='Загружаем данные',text='Загрузка...',auto_dismiss=False)
         loading_popup.open()
 
         params = urllib.parse.urlencode({'src':b64})
@@ -414,7 +436,7 @@ class MathCamera(MDApp):
                         popup.open()
                     
                     else:
-                        self.set_screen("sc_text","Ввести уравнение")
+                        self.set_screen("sc_text")
 
                         if len(result) > 50: result = result[-50:]
                         self.root.ids['textarea'].text = result
