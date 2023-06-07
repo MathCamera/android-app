@@ -156,7 +156,7 @@ class MathCamera(MDApp):
     def load_logs(self):
         logs_sw = self.root.ids.logs_sw
 
-        logs_path = 'C:/Users/1/.kivy/logs'
+        logs_path = '.kivy/logs'
         logs = os.listdir(logs_path)[::-1]
 
         def copy_logs(filename):
