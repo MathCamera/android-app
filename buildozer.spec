@@ -45,7 +45,7 @@ requirements = python3, certifi, pillow, numpy, matplotlib, packaging, kivy, htt
 # requirements.source.kivy = ../../kivy
 
 # (str) Presplash of the application
-presplash.filename = %(source.dir)s/media/presplashv2.png
+presplash.filename = %(source.dir)s/media/presplash.png
 
 # (str) Icon of the application
 icon.filename = %(source.dir)s/media/app-favicon.png

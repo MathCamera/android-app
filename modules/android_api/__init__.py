@@ -11,11 +11,6 @@ Environment = autoclass('android.os.Environment')
 #Portrait orientation
 AndroidPythonActivity.mActivity.setRequestedOrientation(AndroidActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
-class StorageManager:
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.ss = SharedStorage()
-
-    def send_to_downloads(self,filename):
-        path = self.ss.copy_to_shared(filename, collection = Environment.DIRECTORY_DOWNLOADS)
-        return path
+def send_to_downloads(filename):
+    ss = SharedStorage()
+    ss.copy_to_shared(filename, collection = Environment.DIRECTORY_DOWNLOADS)

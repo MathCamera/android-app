@@ -23,7 +23,7 @@ from io import BytesIO
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
-    from modules.android_api import StorageManager
+    from modules.android_api import send_to_downloads
 else:
     Window.size = (360,600)
 
@@ -89,22 +89,22 @@ class MathCamera(MDApp):
 
     #Обновление
     def download_content(self,download_url):
-        filename = download_url.replace("?","/").split("/")[7]
+        filename = "mathcamera.apk"#download_url.replace("?","/").split("/")[4]
+
         def update_progress(request, current_size, total_size):
             update_progress = round((current_size / total_size)*100)
             self.root.ids.update_progress.value = update_progress
             self.root.ids.update_percent.text='{}%'.format(update_progress)
 
         def unzip_content(req, result):  
+            print(filename)
             if platform == 'android':
-                StorageManager.send_to_downloads(filename)
+                send_to_downloads(filename)
             
             popup = MDDialog(title='Загрузка завершена',text=f'Для обновления приложения следуйте инструкциям',buttons=[MDFlatButton(text="Открыть",theme_text_color="Custom",text_color=self.config["main_color"],on_release=lambda *args:webbrowser.open(self.config["help_url"]+"update"))],auto_dismiss=False)
             popup.open()
 
-        req = UrlRequest(download_url, on_progress=update_progress,
-                         chunk_size=1024, on_success=unzip_content,
-                         file_path=filename)
+        req = UrlRequest(download_url, on_progress=update_progress,chunk_size=1024, on_success=unzip_content,file_path=filename)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
