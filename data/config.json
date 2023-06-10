@@ -1,1 +1,1 @@
-{"current_version": "0.6.0", "config_url": "https://mathcamera-api.web.app/", "math_solve_url": "https://mathcamera-solver-api.vercel.app/api/solve/math", "ocr_url": "https://mathcamera-ocr-api.vercel.app/api/ocr/tesseract", "main_color": "#02714C", "help_url": "https://mathcamera.page.link/help-"}
+{"config_url": "https://mathcamera-api.web.app/", "math_solve_url": "https://mathcamera-solver-api.vercel.app/api/solve/math", "ocr_url": "https://mathcamera-ocr-api.vercel.app/api/ocr/tesseract", "help_url": "https://mathcamera.page.link/help-"}

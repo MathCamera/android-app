@@ -13,4 +13,5 @@ AndroidPythonActivity.mActivity.setRequestedOrientation(AndroidActivityInfo.SCRE
 
 def send_to_downloads(filename):
     ss = SharedStorage()
-    ss.copy_to_shared(filename, collection = Environment.DIRECTORY_DOWNLOADS)
+    path = ss.copy_to_shared(filename, collection = Environment.DIRECTORY_DOWNLOADS)
+    return path

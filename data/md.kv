@@ -13,43 +13,44 @@
 
 <KeyboardFlatButton@MDFlatButton>:
     size_hint: 1, 1
-    md_bg_color: (255,255,255,1)
+    md_bg_color:app.theme_cls.bg_light
     on_parent:
         self.font_size *= 2
+    ripple_duration_in_fast: .1
 
 <LetterFlatButton@MDFlatButton>:
     size_hint: 0.5,0.5
-    md_bg_color: (255,255,255,1)
+    md_bg_color:app.theme_cls.bg_light
     on_parent:
         self.font_size *= 1.5
+    ripple_duration_in_fast: .1
 
 <CustomFlatIconButton>:
     size_hint: 1, 1
-    md_bg_color: (255,255,255,1)
+    md_bg_color:app.theme_cls.bg_light
+    ripple_duration_in_fast: .1
 
 <MultiModeFlatButton>:
     text: self.modes[0]
     value: self.values[0]
     size_hint: 1, 1
-    md_bg_color: (255,255,255,.4)
+    md_bg_color:app.theme_cls.divider_color
     on_parent:
         self.font_size *= 2
+    ripple_duration_in_fast: .1
 
 <DrawerClickableItem@MDNavigationDrawerItem>
     _no_ripple_effect: True
     focus_behavior: False
-
-<DrawerLabelItem@MDNavigationDrawerItem>
-    focus_behavior: False
-    _no_ripple_effect: True
-
-<Text_Field@MDTextField>:
+    selected_color:app.theme_cls.text_color
+    icon_color:app.theme_cls.text_color
+    text_color:app.theme_cls.text_color
 
 <ClickableTextFieldRound>:
     #size_hint_y: None
     height: text_field.height
 
-    Text_Field:
+    MDTextField:
         id: text_field
         hint_text:"Введите уравнение"
         text: root.text
@@ -74,19 +75,17 @@ ScreenManager:
         MDNavigationLayout:
             MDTopAppBar:
                 id:tb
-                title: "Главная"
-                elevation: 4
+                title:"Главная"
                 pos_hint: {"top": 1}
-                md_bg_color: app.config["main_color"]
-                specific_text_color: "#ffffff"
+                md_bg_color: app.main_colors[0]
                 left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
                 right_action_items:[["history", lambda x: app.set_screen("sc_history"), "", "История"],["cog", lambda x: app.set_screen("sc_settings"), "", "Настройки"]]
 
             ScreenManager:
                 id:sm
-                Screen:
-                    name:"sc_home"
 
+                MDScreen:
+                    name:"sc_home"
                     BoxLayout:
                         orientation:"vertical"
                         padding:[50,tb.height + dp(30),50,30]
@@ -105,7 +104,7 @@ ScreenManager:
                             text: "Сканировать"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color: app.config["main_color"]
+                            md_bg_color: app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
@@ -117,7 +116,7 @@ ScreenManager:
                             text: "Калькулятор"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color: app.config["main_color"]
+                            md_bg_color: app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
@@ -129,14 +128,16 @@ ScreenManager:
                             text: "Выбрать из галереи"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color: app.config["main_color"]
+                            md_bg_color: app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:app.choose()
 
                 MDScreen:
-                    on_enter:app.handle_camera()
                     name:"sc_photo"
+                    on_enter:
+                        app.handle_camera()
+                        tb.title="Сканировать"
 
                     MDBoxLayout:
                         id:proxy
@@ -218,7 +219,7 @@ ScreenManager:
                                 pos_hint:{"center_x":.5}
                                 theme_text_color: "Custom"
                                 text_color: "white"
-                                md_bg_color:app.config["main_color"]
+                                md_bg_color:app.main_colors[0]
                                 theme_icon_color: "Custom"
                                 icon_color: "white"
                                 on_release:
@@ -254,14 +255,14 @@ ScreenManager:
                         MDIconButton:
                             id:mcd_btn
                             icon: "arrow-left"
-                            on_release:app.set_screen(app.prev_screen_data["sc_name"])
+                            on_release:app.set_screen(app.last_screen)
                             
                         MDCard:
                             id:mdc
                             orientation:"vertical"
                             size_hint_x: 1
                             pos_hint: {"top":1}
-                            md_bg_color:"#039866"
+                            md_bg_color:app.main_colors[1]
                             padding:[30,15,30,15]
                             size_hint_y: None
                             height:(gl.height-mcd_btn.height)/2.5
@@ -300,7 +301,7 @@ ScreenManager:
                                 pos_hint:{"center_x":.5}
                                 theme_text_color: "Custom"
                                 text_color: "white"
-                                md_bg_color:app.config["main_color"]
+                                md_bg_color:app.main_colors[0]
                                 theme_icon_color: "Custom"
                                 icon_color: "white"
                                 on_release:Clipboard.copy(solution_label.text)
@@ -309,7 +310,7 @@ ScreenManager:
                             id:plot_card
                             orientation:"vertical"
                             pos_hint: {"top":1}
-                            md_bg_color:"#039866"
+                            md_bg_color:app.main_colors[1]
                             padding:[30,15,30,15]
                             size_hint_y: None
                             height:(gl.height-mcd_btn.height)/2.5
@@ -350,23 +351,10 @@ ScreenManager:
                             pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.config["main_color"]
+                            md_bg_color:app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:app.clear_history()
-
-                Screen:
-                    name:"sc_logs"
-                    on_enter:
-                        app.load_logs()
-
-                    BoxLayout:
-                        orientation:"vertical"
-                        padding:[15,tb.height + dp(15),15,30]
-
-                        MDScrollView:
-                            MDList:
-                                id:logs_sw
 
                 Screen:
                     name:"sc_settings"
@@ -421,7 +409,7 @@ ScreenManager:
                             #pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.config["main_color"]
+                            md_bg_color:app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:app.clear_cache()
@@ -432,11 +420,11 @@ ScreenManager:
                             #pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.config["main_color"]
+                            md_bg_color:app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
-                            on_release:app.set_screen('sc_logs')
-                            #on_release:Clipboard.copy(app.get_logs())
+                            #on_release:app.set_screen('sc_logs')
+                            on_release:Clipboard.copy(app.get_logs())
 
             MDNavigationDrawer:
                 id: nav_drawer
@@ -489,9 +477,10 @@ ScreenManager:
 
                     MDNavigationDrawerDivider:
 
-                    DrawerLabelItem:
+                    DrawerClickableItem:
+                        id:version_label
                         icon: "information-outline"
-                        text: "Math Camera v"+app.config["current_version"]
+                        #text: "Math Camera v"+app.config_["current_version"]
     
     MDScreen:
         name:"update_sc"
@@ -518,4 +507,4 @@ ScreenManager:
                 size_hint_y:None
                 height:10
                 #type: "indeterminate"
-                color:"#039866"
+                color:app.main_colors[1]

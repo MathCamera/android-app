@@ -29,16 +29,15 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,wav,json
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.6.0
+#version = 0.6.0
 
 # (str) Application versioning (method 2)
-# version.regex = __version__ = ['"](.*)['"]
-# version.filename = %(source.dir)s/main.py
+version.regex = __version__ = ['"](.*)['"]
+version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3, certifi, pillow, numpy, matplotlib, packaging, kivy, https://github.com/kivymd/KivyMD/archive/master.zip, androidstorage4kivy
-#kivy==master, https://github.com/kivymd/KivyMD/archive/master.zip
+requirements = python3, certifi, pillow, numpy, matplotlib, packaging, kivy, https://github.com/kivymd/KivyMD/archive/master.zip, androidstorage4kivy,webp
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -96,8 +95,7 @@ android.presplash_color = #044A33
 
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the supported syntaxes and properties)
-android.permissions = android.permission.INTERNET,android.permission.CAMERA
-#, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
+android.permissions = android.permission.INTERNET,android.permission.CAMERA, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
