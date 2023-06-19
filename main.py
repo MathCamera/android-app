@@ -1,4 +1,4 @@
-__version__ = "0.6.5"
+__version__ = "6.5.0"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -40,22 +40,14 @@ class MathCamera(MDApp):
 
         self.last_screen,self.solver_type = None,None
         self.flashlight_modes = {"on":"flash","auto":"flash-auto","off":"flash-off"}
-
         self.menu_items = {"digital":"Решить пример",
                            "equation":"Решить уравнение",
                            "system":"Решить систему уравнений",
                            "simplify":"Упростить выражение",
                            "inequality":"Решить неравенство"}
-        
-        self.screen_names = {"sc_home":"Главная",
-                        "sc_photo":"Сканировать",
-                        "sc_text":"Калькулятор",
-                        "sc_solve":"Решение",
-                        "sc_history":"История",
-                        "sc_logs":"Логи",
-                        "sc_settings":"Настройки"}
 
     def build(self):
+        self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
         if platform == "android":
             self.chooser = Chooser(self.chooser_callback)
         
@@ -78,12 +70,11 @@ class MathCamera(MDApp):
                     self.download_content(download_url)
             
             with open("data/config.json","w") as file:
-                file.write(json.dumps(self.config_))            
+                file.write(json.dumps(self.config_))           
 
-        req = UrlRequest(self.config_['config_url'],on_success=success,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+        req = UrlRequest(self.config_['config_url'],on_success=success,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='GET')
 
     def on_start(self):
-        self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
         Window.bind(on_keyboard=self.key_handler)
 
         self.update_config()
@@ -92,6 +83,7 @@ class MathCamera(MDApp):
     #Обновление
     def download_content(self,download_url):
         filename = download_url.replace("?","/").split("/")[4]
+        self.root.ids.update_version.text = "Версия {}".format(filename.split("-")[1])
 
         def update_progress(request, current_size, total_size):
             update_progress = round((current_size / total_size)*100)
@@ -108,9 +100,9 @@ class MathCamera(MDApp):
         req = UrlRequest(download_url, on_progress=update_progress,chunk_size=1024, on_success=unzip_content,file_path=filename)
 
     def chooser_callback(self, shared_file_list):
-        ss = SharedStorage()
+        self.ss = SharedStorage()
         for shared_file in shared_file_list:
-            path = ss.copy_from_shared(shared_file)
+            path = self.ss.copy_from_shared(shared_file)
             if path:
                 self.handle_choose(path)
 
@@ -126,9 +118,13 @@ class MathCamera(MDApp):
             err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
             popup.open()  
-
+        
+        self.ss.delete_shared(image_path)
+        
     def choose(self):
-        self.chooser.choose_content('image/*', multiple = False)
+        if platform == "android":
+            self.chooser.choose_content('image/*', multiple = False)
+        else:pass
 
     def set_kb(self,kb_name):
         kb_manager = self.root.ids.kb_manager
@@ -295,7 +291,10 @@ class MathCamera(MDApp):
             self.last_screen = self.root.ids['sm'].current
             
             self.root.ids['sm'].current = screen_name
-            self.root.ids['tb'].title = self.screen_names[screen_name] if not screen_title else screen_title[0]
+
+            if screen_title:
+                self.root.ids['tb'].title = screen_title[0]
+
             self.root.ids['nav_drawer'].set_state("closed")
 
             self.root.ids.textarea.ids.text_field.focus = False
@@ -328,6 +327,7 @@ class MathCamera(MDApp):
         self.root.ids.textarea.ids.text_field.cursor = (cursor_pos,0)
 
     def on_text_screen(self):
+        self.root.ids.textarea.ids.text_field._hide_cut_copy_paste()
         menu_items = [
             {
                 "text": i,
@@ -373,17 +373,21 @@ class MathCamera(MDApp):
                         if plot_filename != None:
                             self.root.ids["plot_img"].source = plot_filename
                             self.root.ids['plot_card'].visible = True
+                            self.root.ids.gl_sw.do_scroll_y = True
 
                         else:
                             self.root.ids['plot_card'].visible = False
+                            self.root.ids.gl_sw.do_scroll_y = False
                     else:
                         self.root.ids['plot_card'].visible = False
+                        self.root.ids.gl_sw.do_scroll_y = False
 
                     self.root.ids["equation_label"].text = equation
                     self.root.ids["solution_label"].text = result["message"]
 
                     self.set_screen("sc_solve")
-
+                    self.root.ids.gl_sw.scroll_y=1
+                    
                     self.root.ids["equ_type_label"].text = self.menu_items[solver_type]
 
                     with open("data/history.json","r+") as file:
@@ -441,7 +445,8 @@ class MathCamera(MDApp):
                         self.set_screen("sc_text")
 
                         if len(result) > 50: result = result[-50:]
-                        self.root.ids['textarea'].text = result
+                        self.root.ids.textarea.ids.text_field.text = result
+                        self.root.ids.textarea.ids.text_field.focus=True
                 
                 else:
                     popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])

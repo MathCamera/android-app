@@ -2,7 +2,6 @@
 #:import is_android modules.xcamera.xcamera.is_android
 #:import Clipboard kivy.core.clipboard.Clipboard
 #:import ClickableTextFieldRound modules.custom.textfield.ClickableTextFieldRound
-#:import LeftLabel modules.custom.leftlabel.LeftLabel
 #:import CustomFlatIconButton modules.custom.button.CustomFlatIconButton
 #:import MultiModeFlatButton modules.custom.button.MultiModeFlatButton
 
@@ -42,7 +41,7 @@
 <DrawerClickableItem@MDNavigationDrawerItem>
     _no_ripple_effect: True
     focus_behavior: False
-    selected_color:app.theme_cls.text_color
+    selected_color:app.theme_cls.text_color #"#DCDCDC" if app.theme_cls.theme_style == "Dark" else "#101010"
     icon_color:app.theme_cls.text_color
     text_color:app.theme_cls.text_color
 
@@ -59,6 +58,8 @@
         pos_hint:{"top":1}
         keyboard_mode:"managed"
         max_height: "140dp"
+        color:app.theme_cls.error_color
+        use_bubble: False
 
     MDIconButton:
         icon: "close-circle-outline"
@@ -190,7 +191,9 @@ ScreenManager:
                 Screen:
                     name:"sc_text"
                     on_enter:
+                        tb.title="Калькулятор"
                         textarea.ids.text_field.focus=True
+                        textarea.ids.text_field.error=False
                         app.on_text_screen()
 
                     MDBoxLayout:
@@ -208,6 +211,7 @@ ScreenManager:
                                 pos_hint: {'center_x': .5, 'center_y': .5}
                                 text: 'Выберите действие'
                                 on_release: app.menu.open()
+                            
                             
                             ClickableTextFieldRound:
                                 id:textarea
@@ -244,97 +248,135 @@ ScreenManager:
                                     FUNCTIONS_KB:
 
                 Screen:
+                    on_enter:
+                        tb.title="Решение"
                     name:"sc_solve"
-
-                    GridLayout:
+                    BoxLayout:
                         id:gl
-                        cols:1
+                        orientation:"vertical"
                         padding:[20,tb.height + dp(5),20,20]
-                        spacing:10
-                        
                         MDIconButton:
                             id:mcd_btn
                             icon: "arrow-left"
                             on_release:app.set_screen(app.last_screen)
+
+                        ScrollView:
+                            id:gl_sw
+                            do_scroll_x: False
+                            do_scroll_y: False
                             
-                        MDCard:
-                            id:mdc
-                            orientation:"vertical"
-                            size_hint_x: 1
-                            pos_hint: {"top":1}
-                            md_bg_color:app.main_colors[1]
-                            padding:[30,15,30,15]
-                            size_hint_y: None
-                            height:(gl.height-mcd_btn.height)/2.5
-                            spacing:10
-
-                            LeftLabel:
-                                id:equ_type_label
-                                adaptive_size: True
-                                bold:True
-                                text:"Задача:"
-                                        
-                            LeftLabel:
-                                adaptive_size: True
-                                id:equation_label
-
-                            LeftLabel:
-                                adaptive_size: True
-                                bold:True
-                                text:"Ответ:"
-                            
-                            ScrollView:
-                                do_scroll_x: False
-                                do_scroll_y: True
-                                size_hint_y:None
-                                height:mdc.height/4
-
-                                Label:
-                                    id:solution_label
+                            GridLayout:
+                                cols:1
+                                spacing:10
+                                size_hint_y: None
+                                height: self.minimum_height
+                                    
+                                MDCard:
+                                    id:mdc
+                                    orientation:"vertical"
+                                    size_hint_x: 1
+                                    pos_hint: {"top":1}
+                                    md_bg_color:app.main_colors[1]
+                                    padding:[30,15,30,15]
                                     size_hint_y: None
-                                    height: self.texture_size[1]
-                                    text_size: self.width, None
+                                    height:(gl.height-mcd_btn.height)/2.5
+                                    spacing:10
 
-                            MDRectangleFlatIconButton:
-                                icon: "content-copy"
-                                text: "Скопировать ответ"
-                                pos_hint:{"center_x":.5}
-                                theme_text_color: "Custom"
-                                text_color: "white"
-                                md_bg_color:app.main_colors[0]
-                                theme_icon_color: "Custom"
-                                icon_color: "white"
-                                on_release:Clipboard.copy(solution_label.text)
+                                    MDLabel:
+                                        id:equ_type_label
+                                        bold:True
+                                        text:"Задача:"
+                                        adaptive_size:True
+                                        theme_text_color: "Custom"
+                                        text_color: "white"
+                                                
+                                    MDLabel:
+                                        adaptive_size: True
+                                        id:equation_label
+                                        theme_text_color: "Custom"
+                                        text_color: "white"
 
-                        MDCard:
-                            id:plot_card
-                            orientation:"vertical"
-                            pos_hint: {"top":1}
-                            md_bg_color:app.main_colors[1]
-                            padding:[30,15,30,15]
-                            size_hint_y: None
-                            height:(gl.height-mcd_btn.height)/2.5
-                            spacing:10
-                            visible:False
-                            
-                            size_hint_x: 1 if self.visible else 0
-                            opacity: 1 if self.visible else 0
-                            disabled: not self.visible
+                                    MDLabel:
+                                        adaptive_size: True
+                                        bold:True
+                                        text:"Ответ:"
+                                        theme_text_color: "Custom"
+                                        text_color: "white"
+                                    
+                                    ScrollView:
+                                        do_scroll_x: False
+                                        do_scroll_y: True
+                                        size_hint_y:None
+                                        height:mdc.height/4
 
-                            FitImage:
-                                id:plot_img
-                                #source: "sympy_tmp/image.png"
-                                size_hint_y: .35
-                                pos_hint: {"top": 1}
-                                radius: 10, 10, 10, 10
-                                visible: plot_card.visible
-                                size_hint_x: 1 if plot_card.visible else 0
-                                opacity: 1 if plot_card.visible else 0
-                                disabled: not plot_card.visible
+                                        Label:
+                                            id:solution_label
+                                            size_hint_y: None
+                                            height: self.texture_size[1]
+                                            text_size: self.width, None
+
+                                    MDRectangleFlatIconButton:
+                                        icon: "content-copy"
+                                        text: "Скопировать ответ"
+                                        pos_hint:{"center_x":.5}
+                                        theme_text_color: "Custom"
+                                        text_color: "white"
+                                        md_bg_color:app.main_colors[0]
+                                        theme_icon_color: "Custom"
+                                        icon_color: "white"
+                                        on_release:Clipboard.copy(solution_label.text)
+
+                                MDCard:
+                                    id:plot_card
+                                    orientation:"vertical"
+                                    pos_hint: {"top":1}
+                                    md_bg_color:app.main_colors[1]
+                                    padding:[30,15,30,15] #25
+                                    size_hint_y: None
+                                    height:(gl.height-mcd_btn.height)/1.5
+                                    spacing:15
+                                    visible:False
+                                    
+                                    size_hint_x: 1 if self.visible else 0
+                                    opacity: 1 if self.visible else 0
+                                    disabled: not self.visible
+
+                                    MDLabel:
+                                        text:"График"
+                                        adaptive_size:True
+                                        theme_text_color: "Custom"
+                                        text_color: "white"
+                                        font_style:"H6"
+
+                                    FitImage:
+                                        id:plot_img
+                                        #source: "sympy_tmp/image.png"
+                                        size_hint: .35,.35
+                                        pos_hint: {"top": 1}
+                                        #radius: 10, 10, 10, 10
+                                        visible: plot_card.visible
+                                        size_hint_x: 1 if plot_card.visible else 0
+                                        opacity: 1 if plot_card.visible else 0
+                                        disabled: not plot_card.visible
+
+                                    MDRectangleFlatIconButton:
+                                        icon: "arrow-right"
+                                        text: "Просмотр графика"
+                                        pos_hint:{"center_x":.5}
+                                        theme_text_color: "Custom"
+                                        text_color: "white"
+                                        md_bg_color:app.main_colors[0]
+                                        theme_icon_color: "Custom"
+                                        icon_color: "white"
+                                        on_release:
+                                            if sc_imgview_img.source == None:sc_imgview_img.size=[sc_imgview_img.size[0]*6,sc_imgview_img.size[1]*6]
+                                            sc_imgview_img.source = plot_img.source
+                                            app.set_screen("sc_imgview")
 
                 Screen:
                     name:"sc_history"
                     on_enter:
+                        tb.title='История'
                         app.load_history()
 
                     BoxLayout:
@@ -357,8 +399,34 @@ ScreenManager:
                             on_release:app.clear_history()
 
                 Screen:
+                    name:"sc_imgview"
+                    on_enter:
+                        tb.title='Просмотр графика'
+
+                    BoxLayout:
+                        orientation:"vertical"
+                        padding:[15,tb.height + dp(15),15,30]
+                        MDIconButton:
+                            id:mcd_btn
+                            icon: "arrow-left"
+                            on_release:app.set_screen(app.last_screen)
+
+                        ScrollView:
+                            do_scroll_x:True
+                            do_scroll_y:True
+                            FitImage:
+                                id:sc_imgview_img
+                                #size:[self.size[0]*2,self.size[1]*2]
+                                #size:[sc_imgview_img.size[0]*2,sc_imgview_img.size[1]*2]
+                                size_hint:None,None
+                                keep_ratio:True
+
+                Screen:
                     name:"sc_settings"
-                    on_enter:app.setup()
+                    on_enter:
+                        tb.title="Насторйки"
+                        app.setup()
+
                     BoxLayout:
                         orientation:"vertical"
                         padding:[50,tb.height + dp(30),50,30]
@@ -406,7 +474,6 @@ ScreenManager:
                         MDRectangleFlatIconButton:
                             icon: "broom"
                             text: "Очистить кеш"
-                            #pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
                             md_bg_color:app.main_colors[0]
@@ -415,9 +482,8 @@ ScreenManager:
                             on_release:app.clear_cache()
 
                         MDRectangleFlatIconButton:
-                            icon: "code-tags"
-                            text: "Просмотр логов"
-                            #pos_hint:{"center_x":.5}
+                            icon: "content-copy"
+                            text: "Скопировать логи"
                             theme_text_color: "Custom"
                             text_color: "white"
                             md_bg_color:app.main_colors[0]
@@ -494,6 +560,12 @@ ScreenManager:
                 halign:"center"
                 text:"Загрузка"
                 font_style:"H4"
+
+            MDLabel:
+                id:update_version
+                halign:"center"
+                #text:"Обновление до версии "
+                font_style:"H5"
 
             MDLabel:
                 id:update_percent
