@@ -212,7 +212,7 @@ ScreenManager:
                                 text: 'Выберите действие'
                                 on_release: app.menu.open()
                             
-                            
+
                             ClickableTextFieldRound:
                                 id:textarea
 
@@ -277,7 +277,7 @@ ScreenManager:
                                     size_hint_x: 1
                                     pos_hint: {"top":1}
                                     md_bg_color:app.main_colors[1]
-                                    padding:[30,15,30,15]
+                                    padding:[30,5,30,15]
                                     size_hint_y: None
                                     height:(gl.height-mcd_btn.height)/2.5
                                     spacing:10
@@ -369,7 +369,7 @@ ScreenManager:
                                         theme_icon_color: "Custom"
                                         icon_color: "white"
                                         on_release:
-                                            if sc_imgview_img.source == None:sc_imgview_img.size=[sc_imgview_img.size[0]*6,sc_imgview_img.size[1]*6]
+                                            if sc_imgview_img.source == None:sc_imgview_img.size=[sc_imgview_img.size[0]*9,sc_imgview_img.size[1]*9]
                                             sc_imgview_img.source = plot_img.source
                                             app.set_screen("sc_imgview")
 
@@ -416,6 +416,7 @@ ScreenManager:
                             do_scroll_y:True
                             FitImage:
                                 id:sc_imgview_img
+                                center_y: root.center_y
                                 #size:[self.size[0]*2,self.size[1]*2]
                                 #size:[sc_imgview_img.size[0]*2,sc_imgview_img.size[1]*2]
                                 size_hint:None,None

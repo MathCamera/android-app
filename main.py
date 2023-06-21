@@ -1,4 +1,4 @@
-__version__ = "6.5.0"
+__version__ = "0.6.5"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -24,7 +24,7 @@ from io import BytesIO
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
-    from modules.android_api import send_to_downloads
+    from modules.android_api import update
 else:
     Window.size = (360,600)
 
@@ -67,7 +67,7 @@ class MathCamera(MDApp):
                 def launch_update():
                     self.root.current = "update_sc"
                     popup.dismiss()
-                    self.download_content(download_url)
+                    self.download_content(download_url,result['latest_version'])
             
             with open("data/config.json","w") as file:
                 file.write(json.dumps(self.config_))           
@@ -76,14 +76,13 @@ class MathCamera(MDApp):
 
     def on_start(self):
         Window.bind(on_keyboard=self.key_handler)
-
         self.update_config()
         self.root.ids.version_label.text = f"Math Camera v {__version__}"
 
     #Обновление
-    def download_content(self,download_url):
-        filename = download_url.replace("?","/").split("/")[4]
-        self.root.ids.update_version.text = "Версия {}".format(filename.split("-")[1])
+    def download_content(self,download_url,version_):
+        filename = "update.apk"#download_url.replace("?","/").split("/")[4]
+        self.root.ids.update_version.text = "Версия {}".format(version_)
 
         def update_progress(request, current_size, total_size):
             update_progress = round((current_size / total_size)*100)
@@ -92,17 +91,19 @@ class MathCamera(MDApp):
 
         def unzip_content(req, result): 
             if platform == 'android':
-                send_to_downloads(filename)
-
-            popup = MDDialog(title='Загрузка завершена',text=f'Для обновления приложения следуйте инструкциям',buttons=[MDFlatButton(text="Открыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:webbrowser.open(self.config_["help_url"]+"update"))],auto_dismiss=False)
+                pass
+            popup = MDDialog(title='Загрузка завершена',text=f'{os.listdir(".")}',buttons=[MDFlatButton(text="Открыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:update_())],auto_dismiss=False)
             popup.open()
+
+        def update_():
+            update.install_intent(filename)
 
         req = UrlRequest(download_url, on_progress=update_progress,chunk_size=1024, on_success=unzip_content,file_path=filename)
 
     def chooser_callback(self, shared_file_list):
-        self.ss = SharedStorage()
+        ss = SharedStorage()
         for shared_file in shared_file_list:
-            path = self.ss.copy_from_shared(shared_file)
+            path = ss.copy_from_shared(shared_file)
             if path:
                 self.handle_choose(path)
 
@@ -118,8 +119,6 @@ class MathCamera(MDApp):
             err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
             popup.open()  
-        
-        self.ss.delete_shared(image_path)
         
     def choose(self):
         if platform == "android":
