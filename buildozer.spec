@@ -1,7 +1,7 @@
 [app]
 
 # (str) Title of your application
-title = Mathсamera
+title = MathCamera
 
 # (str) Package name
 package.name = mathcamera

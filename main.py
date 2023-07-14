@@ -74,7 +74,7 @@ class MathCamera(MDApp):
         req = UrlRequest(self.config_['config_url'],on_success=success,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='GET')
 
     def on_start(self):
-        check_camera_permission()
+        check_request_camera_permission()
         set_orientation()
         Window.bind(on_keyboard=self.key_handler)
         self.update_config()
@@ -85,7 +85,7 @@ class MathCamera(MDApp):
         self.root.ids.preview.disconnect_camera()
 
     def connect_camera(self,dt):
-        self.root.ids.preview.connect_camera(enable_video = False)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_choose)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -150,7 +150,7 @@ class MathCamera(MDApp):
         self.load_history()
 
     def clear_cache(self):
-        paths = ['mpl_tmp','xcamera_tmp']
+        paths = ['mpl_tmp','camera_tmp']
         for path_name in paths:
             if os.path.exists(path_name):
                 shutil.rmtree(path_name, ignore_errors=True)
@@ -161,15 +161,19 @@ class MathCamera(MDApp):
         ids = self.root.ids
         settings = self.settings
         for elem_id in settings.keys():
-            ids[elem_id].active = settings[elem_id]
+            if elem_id != "flashlight":
+                ids[elem_id].active = settings[elem_id]
 
-        ids["auto_flashlight"].disabled = not(ids["enable_flashlight"].active)
+        ids["enable_flashlight"].active = True if settings['flashlight'] == "on" or settings['flashlight'] == "auto" else False
+        ids["auto_flashlight"].disabled = True if settings["flashlight"] == "off" else False
 
     def handle_switch(self,type,state):
-        if type == "enable_flashlight":
-            if state == False:
+        if type == "flashlight":
+            if state == "off":
                 self.root.ids["auto_flashlight"].active = False
-            self.root.ids["auto_flashlight"].disabled = not(state)
+                self.root.ids["auto_flashlight"].disabled = True
+            elif state == "on":
+                self.root.ids["auto_flashlight"].disabled = False
 
         if type == "dark_theme":
             self.theme_cls.theme_style = "Dark" if state == True else "Light"
@@ -186,70 +190,35 @@ class MathCamera(MDApp):
                 self.set_screen(self.last_screen)
             return True
         return False
-
-    def handle_camera(self):
-        xcamera = self.root.ids['xcamera']
-        enable_flashlight = self.settings["enable_flashlight"]
-        auto_flashlight = self.settings["auto_flashlight"]
-
-        state = "on" if enable_flashlight == True else "off"
-        if auto_flashlight == True:state = "auto"
-
-        xcamera.set_flashlight(state)
-        self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
-
-    def switch_flashlight_mode(self):
-        max_len = len(self.flashlight_modes.keys())-1
-
-        if list(self.flashlight_modes.keys()).index(self.root.ids.xcamera.flashlight_mode)+1 <= max_len:
-            val = list(self.flashlight_modes.keys()).index(self.root.ids.xcamera.flashlight_mode)+1
-        else:
-            val = 0
-            
-        res = list(self.flashlight_modes.keys())[val]
-        self.root.ids['xcamera'].set_flashlight(res)
-
-        self.root.ids.flashlight_btn.icon = self.flashlight_modes[res]
-        
-        if res == "auto":
-            self.settings["auto_flashlight"] = True
-            self.settings["enable_flashlight"] = True
-
-        elif res== "on":
-            self.settings["enable_flashlight"] = True
-            self.settings["auto_flashlight"] = False
-
-        elif res == "off":
-            self.settings["enable_flashlight"] = False
-            self.settings["auto_flashlight"] = False
-
-        with open("data/settings.json","w") as file:
-            file.write(json.dumps(self.settings))
-
-    def make_photo(self):
+    
+    def photo(self):
         try:
-            self.root.ids['xcamera'].shoot()
-        except:
-            self.restart_camera()
-
-    def restart_camera(self):
-        if self.check_camera_perm() == True:
-            try:
-                xcamera = self.root.ids['xcamera']
-                xcamera.play = False
-                xcamera._camera._release_camera()
-                xcamera._camera.init_camera()
-                xcamera.play = True
-            except Exception as e:
+            self.root.ids.preview.capture_photo(location="private",subdir="camera_tmp")
+        except Exception as e:
+            if check_camera_permission() == True:
                 err = e
                 err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
                 popup = MDDialog(title='Ошибка',text=f'Не удалось подключиться к камере. Перезагрузите приложение {err}',buttons=[MDFlatButton(text="Перезагрузить",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:self.stop())])
                 popup.open()
-        else:
-            self.show_cam_alert_dialog()
-            
-    def check_camera_perm(self):
-        return check_camera_permission()
+            else:
+                self.perm_dialog = MDDialog(
+                    text="Не удалось подключиться к камере, поскольку приложению не разрешён доступ к ней. Разрешить доступ к камере?",
+                    buttons=[
+                        MDFlatButton(
+                            text="Отмена",
+                            theme_text_color="Custom",
+                            text_color=self.main_colors[0],
+                            on_release=lambda *args:self.perm_dialog.dismiss(),
+                        ),
+                        MDFlatButton(
+                            text="Разрешить",
+                            theme_text_color="Custom",
+                            text_color=self.main_colors[0],
+                            on_release=lambda *args:self.request_camera_perm,
+                        ),
+                    ],
+                )
+                self.perm_dialog.open()
 
     def request_camera_perm(self,*args):
         try:
@@ -257,28 +226,18 @@ class MathCamera(MDApp):
             self.perm_dialog.dismiss()
         except:pass
 
+    def handle_camera(self):
+        flashlight = self.settings["flashlight"]
+        state = self.root.ids.preview.flash(flashlight)
+        self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
+        print(state)
+
+    def switch_flashlight_mode(self):
+        icon = self.root.ids.preview.flash()
+        self.root.ids.flashlight_btn.icon = self.flashlight_modes[icon]
+
     def open_browser(self,url):
         webbrowser.open(url)
-
-    def show_cam_alert_dialog(self):
-        self.perm_dialog = MDDialog(
-            text="Не удалось подключиться к камере, поскольку приложению не разрешён доступ к ней. Разрешить доступ к камере?",
-            buttons=[
-                MDFlatButton(
-                    text="Отмена",
-                    theme_text_color="Custom",
-                    text_color=self.main_colors[0],
-                    on_release=lambda *args:self.perm_dialog.dismiss(),
-                ),
-                MDFlatButton(
-                    text="Разрешить",
-                    theme_text_color="Custom",
-                    text_color=self.main_colors[0],
-                    on_release=self.request_camera_perm,
-                ),
-            ],
-        )
-        self.perm_dialog.open()
 
     def set_screen(self,screen_name,*screen_title):
         if self.root.current == "main_sc":
@@ -459,18 +418,6 @@ class MathCamera(MDApp):
             popup.open()
         
         req = UrlRequest(self.config_["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-
-    @mainthread
-    def picture_taken(self,obj,filename):
-        image_data = obj.texture.pixels
-        size = obj.texture.size
-        pil_image = Image.frombytes(mode='RGBA', size=size,data=image_data)
-        pil_image = pil_image.rotate(180)
-        pil_image = pil_image.transpose(method=Image.FLIP_TOP_BOTTOM)
-        buffered = BytesIO()
-        pil_image.save(buffered,format='png')
-        img = base64.b64encode(buffered.getvalue())
-        self.send_b64(img)
 
 if __name__ == "__main__":
     MathCamera().run()
