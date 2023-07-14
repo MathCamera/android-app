@@ -1,7 +1,7 @@
-__version__ = "0.6.5"
+__version__ = "0.7.0"
 
 from kivy.lang import Builder
-from kivy.clock import mainthread
+from kivy.clock import Clock,mainthread
 from kivy.utils import platform
 from kivy.metrics import dp
 from kivy.network.urlrequest import UrlRequest
@@ -12,10 +12,12 @@ from kivymd.toast import toast
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.menu import MDDropdownMenu
-from kivymd.uix.list import TwoLineListItem
+from kivymd.uix.list import TwoLineListItem,MDList
+from kivymd.uix.label import MDLabel
 
-from modules.xcamera.xcamera import check_camera_permission,check_request_camera_permission
+from modules.android_api import check_camera_permission,check_request_camera_permission,set_orientation
 from modules.plotting import render_plot
+from camera4kivy import Preview
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from packaging import version
@@ -24,7 +26,6 @@ from io import BytesIO
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
-    from modules.android_api import update
 else:
     Window.size = (360,600)
 
@@ -65,9 +66,7 @@ class MathCamera(MDApp):
                 popup.open()  
 
                 def launch_update():
-                    self.root.current = "update_sc"
-                    popup.dismiss()
-                    self.download_content(download_url,result['latest_version'])
+                    webbrowser.open(download_url)
             
             with open("data/config.json","w") as file:
                 file.write(json.dumps(self.config_))           
@@ -75,30 +74,18 @@ class MathCamera(MDApp):
         req = UrlRequest(self.config_['config_url'],on_success=success,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='GET')
 
     def on_start(self):
+        check_camera_permission()
+        set_orientation()
         Window.bind(on_keyboard=self.key_handler)
         self.update_config()
         self.root.ids.version_label.text = f"Math Camera v {__version__}"
+        Clock.schedule_once(self.connect_camera)
 
-    #Обновление
-    def download_content(self,download_url,version_):
-        filename = "update.apk"#download_url.replace("?","/").split("/")[4]
-        self.root.ids.update_version.text = "Версия {}".format(version_)
+    def on_stop(self):
+        self.root.ids.preview.disconnect_camera()
 
-        def update_progress(request, current_size, total_size):
-            update_progress = round((current_size / total_size)*100)
-            self.root.ids.update_progress.value = update_progress
-            self.root.ids.update_percent.text='{}%'.format(update_progress)
-
-        def unzip_content(req, result): 
-            if platform == 'android':
-                pass
-            popup = MDDialog(title='Загрузка завершена',text=f'{os.listdir(".")}',buttons=[MDFlatButton(text="Открыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:update_())],auto_dismiss=False)
-            popup.open()
-
-        def update_():
-            update.install_intent(filename)
-
-        req = UrlRequest(download_url, on_progress=update_progress,chunk_size=1024, on_success=unzip_content,file_path=filename)
+    def connect_camera(self,dt):
+        self.root.ids.preview.connect_camera(enable_video = False)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -142,12 +129,20 @@ class MathCamera(MDApp):
 
     def load_history(self):
         history = json.load(open('data/history.json'))[::-1]
-        history_sw = self.root.ids.history_sw
-        history_sw.clear_widgets()
 
-        for elem in history:
-            for equ_type,equ_text in elem.items():
-                history_sw.add_widget(TwoLineListItem(text=self.menu_items[equ_type],secondary_text=equ_text,on_release=lambda s:self.send_equation(equ_text,equ_type)))
+        history_layout = self.root.ids.history_layout
+        history_layout.clear_widgets()
+        if len(history) != 0:
+            self.root.ids.history_clear_btn.disabled = False
+            history_sw = MDList()
+            self.root.ids.history_layout.add_widget(history_sw)
+            for elem in history:
+                for equ_type,equ_text in elem.items():
+                    f = lambda s:self.send_equation(s.secondary_text,list(self.menu_items.keys())[list(self.menu_items.values()).index(s.text)],from_history=True)
+                    history_sw.add_widget(TwoLineListItem(text=self.menu_items[equ_type],secondary_text=equ_text,on_release=f))
+        else:
+            self.root.ids.history_clear_btn.disabled = True
+            history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
 
     def clear_history(self):
         with open("data/history.json","w") as file:
@@ -346,7 +341,7 @@ class MathCamera(MDApp):
             self.menu.dismiss()
             self.solver_type = list(self.menu_items.keys())[list(self.menu_items.values()).index(text_item)]
 
-    def send_equation(self,*args):
+    def send_equation(self,*args,from_history=False):
         if args:
             equation = args[0]
             solver_type = args[1]
@@ -389,11 +384,12 @@ class MathCamera(MDApp):
                     
                     self.root.ids["equ_type_label"].text = self.menu_items[solver_type]
 
-                    with open("data/history.json","r+") as file:
-                        json_data = json.load(file)
-                        json_data.append({solver_type:equation})
-                        file.seek(0)
-                        json.dump(json_data,file)
+                    if from_history == False:
+                        with open("data/history.json","r+") as file:
+                            json_data = json.load(file)
+                            json_data.append({solver_type:equation})
+                            file.seek(0)
+                            json.dump(json_data,file)
         
                 else:
                     err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""

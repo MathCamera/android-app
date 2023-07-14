@@ -137,29 +137,14 @@ ScreenManager:
                 MDScreen:
                     name:"sc_photo"
                     on_enter:
-                        app.handle_camera()
+                        #app.handle_camera()
                         tb.title="Сканировать"
 
-                    MDBoxLayout:
-                        id:proxy
-                        padding: [0,tb.height+dp(10),0,250]
+                    BoxLayout:
+                        padding:[0,tb.height,0,0]
                         orientation:"vertical"
-                        XCamera:
-                            id: xcamera
-                            play: True
-                            keep_ratio: True
-                            on_picture_taken: app.picture_taken(*args)
-                            center: self.size and proxy.center
-                            size:
-                                (proxy.height, proxy.width) if is_android() \
-                                else (proxy.width, proxy.height)
-                            canvas.before:
-                                PushMatrix
-                                Rotate:
-                                    angle: -90 if is_android() else 0
-                                    origin: self.center
-                            canvas.after:
-                                PopMatrix
+                        Preview:
+                            id:preview
 
                     MDIconButton:
                         pos_hint: {"center_x":.2,"center_y":.1}
@@ -384,10 +369,12 @@ ScreenManager:
                         padding:[15,tb.height + dp(5),15,30]
 
                         MDScrollView:
-                            MDList:
-                                id:history_sw
+                            id:history_layout
 
                         MDRectangleFlatIconButton:
+                            id:history_clear_btn
+                            #size_hint_x: 1 if self.visible else 0
+                            disabled:True
                             icon: "broom"
                             text: "Очистить историю"
                             pos_hint:{"center_x":.5}
@@ -411,16 +398,22 @@ ScreenManager:
                             icon: "arrow-left"
                             on_release:app.set_screen(app.last_screen)
 
-                        ScrollView:
-                            do_scroll_x:True
-                            do_scroll_y:True
-                            FitImage:
+                        Scatter:
+                            do_rotation:False
+                            do_scale:False
+                            Image:
                                 id:sc_imgview_img
-                                center_y: root.center_y
-                                #size:[self.size[0]*2,self.size[1]*2]
-                                #size:[sc_imgview_img.size[0]*2,sc_imgview_img.size[1]*2]
-                                size_hint:None,None
-                                keep_ratio:True
+
+                        #ScrollView:
+                        #    do_scroll_x:True
+                        #    do_scroll_y:True
+                        #    FitImage:
+                        #        id:sc_imgview_img
+                        #        center_y: root.center_y
+                        #        #size:[self.size[0]*2,self.size[1]*2]
+                        #        #size:[sc_imgview_img.size[0]*2,sc_imgview_img.size[1]*2]
+                        #        size_hint:None,None
+                        #        keep_ratio:True
 
                 Screen:
                     name:"sc_settings"
@@ -462,6 +455,15 @@ ScreenManager:
                                 adaptive_width:True
                                 id:auto_flashlight
                                 on_active: app.handle_switch("auto_flashlight",self.active)
+
+                            MDLabel:
+                                text:"MathCamera OCR v2\n"
+                                adaptive_height:True
+
+                            MDSwitch:
+                                adaptive_width:True
+                                id:ocr_v2
+                                on_active: app.handle_switch("ocr_v2",self.active)
 
                             MDLabel:
                                 text:"Режим отладки\n"

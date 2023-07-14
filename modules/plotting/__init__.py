@@ -3,7 +3,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 import numpy as np
 
-def render_plot(equation,dir_name="mpl_tmp",theme="ligth"):
+def render_plot(equation,dir_name="mpl_tmp",theme="light"):
     try:
         x = np.array(range(-8, 9))  
         y = eval(str(equation))
@@ -29,4 +29,4 @@ def render_plot(equation,dir_name="mpl_tmp",theme="ligth"):
     
     except:
         return None
-    
+        
