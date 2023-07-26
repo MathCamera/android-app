@@ -160,12 +160,14 @@ class MathCamera(MDApp):
     def setup(self):
         ids = self.root.ids
         settings = self.settings
+
         for elem_id in settings.keys():
             if elem_id != "flashlight":
                 ids[elem_id].active = settings[elem_id]
 
         ids["enable_flashlight"].active = True if settings['flashlight'] == "on" or settings['flashlight'] == "auto" else False
         ids["auto_flashlight"].disabled = True if settings["flashlight"] == "off" else False
+        ids["auto_flashlight"].active = True if settings["flashlight"] == "auto" else False
 
     def handle_switch(self,type,state):
         if type == "flashlight":
@@ -230,11 +232,14 @@ class MathCamera(MDApp):
         flashlight = self.settings["flashlight"]
         state = self.root.ids.preview.flash(flashlight)
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
-        print(state)
 
     def switch_flashlight_mode(self):
         icon = self.root.ids.preview.flash()
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[icon]
+        self.settings['flashlight'] = icon
+
+        with open("data/settings.json","w") as file:
+            file.write(json.dumps(self.settings))
 
     def open_browser(self,url):
         webbrowser.open(url)

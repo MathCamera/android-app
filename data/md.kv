@@ -263,18 +263,17 @@ ScreenManager:
                                     size_hint_x: 1
                                     pos_hint: {"top":1}
                                     md_bg_color:app.main_colors[1]
-                                    padding:[30,5,30,15]
+                                    padding:[30,15,30,15]
                                     size_hint_y: None
                                     height:(gl.height-mcd_btn.height)/2.5
                                     spacing:10
 
                                     MDLabel:
                                         id:equ_type_label
-                                        bold:True
-                                        text:"Задача:"
                                         adaptive_size:True
                                         theme_text_color: "Custom"
                                         text_color: "white"
+                                        font_style:"H6"
                                                 
                                     MDLabel:
                                         adaptive_size: True
@@ -345,20 +344,6 @@ ScreenManager:
                                         opacity: 1 if plot_card.visible else 0
                                         disabled: not plot_card.visible
 
-                                    MDRectangleFlatIconButton:
-                                        icon: "arrow-right"
-                                        text: "Просмотр графика"
-                                        pos_hint:{"center_x":.5}
-                                        theme_text_color: "Custom"
-                                        text_color: "white"
-                                        md_bg_color:app.main_colors[0]
-                                        theme_icon_color: "Custom"
-                                        icon_color: "white"
-                                        on_release:
-                                            if sc_imgview_img.source == None:sc_imgview_img.size=[sc_imgview_img.size[0]*9,sc_imgview_img.size[1]*9]
-                                            sc_imgview_img.source = plot_img.source
-                                            app.set_screen("sc_imgview")
-
                 Screen:
                     name:"sc_history"
                     on_enter:
@@ -385,37 +370,7 @@ ScreenManager:
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:app.clear_history()
-
-                Screen:
-                    name:"sc_imgview"
-                    on_enter:
-                        tb.title='Просмотр графика'
-
-                    BoxLayout:
-                        orientation:"vertical"
-                        padding:[15,tb.height + dp(15),15,30]
-                        MDIconButton:
-                            id:mcd_btn
-                            icon: "arrow-left"
-                            on_release:app.set_screen(app.last_screen)
-
-                        Scatter:
-                            do_rotation:False
-                            do_scale:False
-                            Image:
-                                id:sc_imgview_img
-
-                        #ScrollView:
-                        #    do_scroll_x:True
-                        #    do_scroll_y:True
-                        #    FitImage:
-                        #        id:sc_imgview_img
-                        #        center_y: root.center_y
-                        #        #size:[self.size[0]*2,self.size[1]*2]
-                        #        #size:[sc_imgview_img.size[0]*2,sc_imgview_img.size[1]*2]
-                        #        size_hint:None,None
-                        #        keep_ratio:True
-
+                            
                 Screen:
                     name:"sc_settings"
                     on_enter:
@@ -456,15 +411,6 @@ ScreenManager:
                                 adaptive_width:True
                                 id:auto_flashlight
                                 on_active: app.handle_switch("flashlight","auto")
-
-                            MDLabel:
-                                text:"MathCamera OCR v2\n"
-                                adaptive_height:True
-
-                            MDSwitch:
-                                adaptive_width:True
-                                id:ocr_v2
-                                on_active: app.handle_switch("ocr_v2",self.active)
 
                             MDLabel:
                                 text:"Режим отладки\n"
