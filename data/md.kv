@@ -318,8 +318,8 @@ ScreenManager:
                                     md_bg_color:app.main_colors[1]
                                     padding:[30,15,30,15] #25
                                     size_hint_y: None
-                                    height:(gl.height-mcd_btn.height)/1.5
-                                    spacing:15
+                                    height:plot_img.size[0]+plot_text.size[0]#(gl.height-mcd_btn.height)/1.5
+                                    spacing:5
                                     visible:False
                                     
                                     size_hint_x: 1 if self.visible else 0
@@ -327,6 +327,7 @@ ScreenManager:
                                     disabled: not self.visible
 
                                     MDLabel:
+                                        id:plot_text
                                         text:"График"
                                         adaptive_size:True
                                         theme_text_color: "Custom"

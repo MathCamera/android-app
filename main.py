@@ -95,17 +95,17 @@ class MathCamera(MDApp):
         self.root.ids.preview.disconnect_camera()
 
     def connect_camera(self,dt):
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_choose)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
         for shared_file in shared_file_list:
             path = ss.copy_from_shared(shared_file)
             if path:
-                self.handle_choose(path)
+                self.handle_image(path)
 
     @mainthread
-    def handle_choose(self,image_path):
+    def handle_image(self,image_path):
         try:
             img = Image.open(image_path)
             output_buffer = BytesIO()

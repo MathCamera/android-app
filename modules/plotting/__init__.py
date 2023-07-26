@@ -21,7 +21,7 @@ def render_plot(equation,dir_name="mpl_tmp",theme="light"):
         plot_filename = f"{dir_name}/{datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S.png')}"#"sympy_tmp/{}".format()
         ax.plot(x, y,color="#9F4576") 
 
-        plt.savefig(plot_filename,bbox_inches='tight', transparent=True, pad_inches=0.1)
+        plt.savefig(plot_filename, transparent=True, pad_inches=0.1)
         plt.clf()
 
         return plot_filename
