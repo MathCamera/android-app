@@ -265,8 +265,8 @@ ScreenManager:
                                     md_bg_color:app.main_colors[1]
                                     padding:[30,15,30,15]
                                     size_hint_y: None
-                                    height:(gl.height-mcd_btn.height)/2.5
-                                    spacing:10
+                                    height:(gl.height-mcd_btn.height)/3
+                                    spacing:15
 
                                     MDLabel:
                                         id:equ_type_label
@@ -353,6 +353,7 @@ ScreenManager:
                     BoxLayout:
                         orientation:"vertical"
                         padding:[15,tb.height + dp(5),15,30]
+                        spacing:10
 
                         MDScrollView:
                             id:history_layout
@@ -369,8 +370,10 @@ ScreenManager:
                             md_bg_color:app.main_colors[0]
                             theme_icon_color: "Custom"
                             icon_color: "white"
-                            on_release:app.clear_history()
-                            
+                            on_release:
+                                app.clear_history()
+                                app.load_history()
+
                 Screen:
                     name:"sc_settings"
                     on_enter:
@@ -448,7 +451,7 @@ ScreenManager:
 
                 MDNavigationDrawerMenu:
                     MDNavigationDrawerHeader:
-                        title: "Math Camera"
+                        title: "MathCamera"
                         source: "media/transparent-icon.png"
                         spacing:"4dp"
                         padding: "12dp", 0, 0, "28dp"
@@ -472,12 +475,12 @@ ScreenManager:
                         text: "Выбрать из галереи"
                         on_release:app.choose()
 
+                    MDNavigationDrawerDivider:
+
                     DrawerClickableItem:
                         icon: "history"
                         text: "История"
                         on_release:app.set_screen('sc_history')
-
-                    MDNavigationDrawerDivider:
 
                     DrawerClickableItem:
                         icon: "cog"
@@ -496,7 +499,7 @@ ScreenManager:
                     DrawerClickableItem:
                         id:version_label
                         icon: "information-outline"
-                        #text: "Math Camera v"+app.config_["current_version"]
+                        text: "MathCamera v"+app.version_
     
     MDScreen:
         name:"update_sc"

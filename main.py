@@ -1,4 +1,4 @@
-__version__ = "0.7.0"
+__version__ = "0.7.5"
 
 from kivy.lang import Builder
 from kivy.clock import Clock,mainthread
@@ -6,6 +6,7 @@ from kivy.utils import platform
 from kivy.metrics import dp
 from kivy.network.urlrequest import UrlRequest
 from kivy.core.window import Window
+from kivy.storage.jsonstore import JsonStore
 
 from kivymd.app import MDApp
 from kivymd.toast import toast
@@ -32,8 +33,18 @@ else:
 class MathCamera(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.version_ = __version__
+
+        self.data_dir = os.path.join("..","user_data")
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+            os.replace("data/settings.json",os.path.join(self.data_dir,"settings.json"))
+            #Действия при первом запуске после первой установки
+
+        self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
+        self.settings = json.load(open(os.path.join(self.data_dir,'settings.json')))
+            
         self.config_ = json.load(open('data/config.json'))
-        self.settings = json.load(open('data/settings.json'))
         self.theme_cls.colors = json.load(open('data/themes.json'))
 
         self.theme_cls.material_style = "M2"
@@ -78,7 +89,6 @@ class MathCamera(MDApp):
         set_orientation()
         Window.bind(on_keyboard=self.key_handler)
         self.update_config()
-        self.root.ids.version_label.text = f"Math Camera v {__version__}"
         Clock.schedule_once(self.connect_camera)
 
     def on_stop(self):
@@ -128,26 +138,25 @@ class MathCamera(MDApp):
             kb_manager.current = kb_name
 
     def load_history(self):
-        history = json.load(open('data/history.json'))[::-1]
-
         history_layout = self.root.ids.history_layout
         history_layout.clear_widgets()
-        if len(history) != 0:
+
+        if len(self.history) != 0:
             self.root.ids.history_clear_btn.disabled = False
             history_sw = MDList()
             self.root.ids.history_layout.add_widget(history_sw)
-            for elem in history:
-                for equ_type,equ_text in elem.items():
-                    f = lambda s:self.send_equation(s.secondary_text,list(self.menu_items.keys())[list(self.menu_items.values()).index(s.text)],from_history=True)
-                    history_sw.add_widget(TwoLineListItem(text=self.menu_items[equ_type],secondary_text=equ_text,on_release=f))
+            for elem in self.history:
+                equ_type = self.history[elem]['equ_type']
+                equ_text = elem
+                f = lambda s:self.send_equation(s.secondary_text,list(self.menu_items.keys())[list(self.menu_items.values()).index(s.text)],from_history=True)
+                history_sw.add_widget(TwoLineListItem(text=self.menu_items[equ_type],secondary_text=equ_text,on_release=f))
         else:
             self.root.ids.history_clear_btn.disabled = True
             history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
 
     def clear_history(self):
-        with open("data/history.json","w") as file:
-            json.dump([],file)
-        self.load_history()
+        for elem in self.history:
+            self.history.delete(elem)
 
     def clear_cache(self):
         paths = ['mpl_tmp','camera_tmp']
@@ -182,7 +191,7 @@ class MathCamera(MDApp):
 
         self.settings[type] = state
 
-        with open("data/settings.json","w") as file:
+        with open(os.path.join(self.data_dir,'settings.json'),"w") as file:
             file.write(json.dumps(self.settings))
 
     def key_handler(self, window, keycode,*args):
@@ -238,7 +247,7 @@ class MathCamera(MDApp):
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[icon]
         self.settings['flashlight'] = icon
 
-        with open("data/settings.json","w") as file:
+        with open(os.path.join(self.data_dir,'settings.json'),"w") as file:
             file.write(json.dumps(self.settings))
 
     def open_browser(self,url):
@@ -349,12 +358,8 @@ class MathCamera(MDApp):
                     self.root.ids["equ_type_label"].text = self.menu_items[solver_type]
 
                     if from_history == False:
-                        with open("data/history.json","r+") as file:
-                            json_data = json.load(file)
-                            json_data.append({solver_type:equation})
-                            file.seek(0)
-                            json.dump(json_data,file)
-        
+                        self.history[equation] = {"equ_type":solver_type}
+    
                 else:
                     err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
                     popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Помощь",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:webbrowser.open(self.config_["help_url"]+solver_type)),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
