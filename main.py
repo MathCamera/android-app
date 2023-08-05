@@ -1,4 +1,4 @@
-__version__ = "0.7.5"
+__version__ = "0.7.8"
 
 from kivy.lang import Builder
 from kivy.clock import Clock,mainthread
@@ -16,12 +16,11 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 
-from modules.android_api import check_camera_permission,check_request_camera_permission,set_orientation
+from modules.android_api import request_camera_permission,set_orientation
 from modules.plotting import render_plot
 from camera4kivy import Preview
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
-from packaging import version
 from PIL import Image
 from io import BytesIO
 
@@ -38,12 +37,14 @@ class MathCamera(MDApp):
         self.data_dir = os.path.join("..","user_data")
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
-            os.replace("data/settings.json",os.path.join(self.data_dir,"settings.json"))
-            #Действия при первом запуске после первой установки
+            shutil.copyfile("data/settings.json",os.path.join(self.data_dir,"settings.json"))
+
+        self.settings = json.load(open(os.path.join(self.data_dir,'settings.json')))
+
+        if json.load(open('data/settings.json')).keys() != self.settings.keys():
+            self.set_settings(reset=True)
 
         self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
-        self.settings = json.load(open(os.path.join(self.data_dir,'settings.json')))
-            
         self.config_ = json.load(open('data/config.json'))
         self.theme_cls.colors = json.load(open('data/themes.json'))
 
@@ -52,11 +53,7 @@ class MathCamera(MDApp):
 
         self.last_screen,self.solver_type = None,None
         self.flashlight_modes = {"on":"flash","auto":"flash-auto","off":"flash-off"}
-        self.menu_items = {"digital":"Решить пример",
-                           "equation":"Решить уравнение",
-                           "system":"Решить систему уравнений",
-                           "simplify":"Упростить выражение",
-                           "inequality":"Решить неравенство"}
+        self.menu_items = {"digital":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение","inequality":"Решить неравенство"}
 
     def build(self):
         self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
@@ -65,13 +62,20 @@ class MathCamera(MDApp):
         
         return Builder.load_file('data/md.kv')
     
+    def set_settings(self,reset=False):
+        if reset == True:
+            self.settings = json.load(open('data/settings.json'))
+
+        with open(os.path.join(self.data_dir,'settings.json'),"w") as file:
+            file.write(json.dumps(self.settings))
+    
     def update_config(self):
         def success(req,result):
             result = json.loads(result)
             self.config_["math_solve_url"] = result["math_solve_url"]
             self.config_["ocr_url"] = result["ocr_url"]
         
-            if version.parse(__version__) < version.parse(result["latest_version"]):
+            if __version__ != result["latest_version"]:
                 download_url = result["download_url"]
                 popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:launch_update()),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
                 popup.open()  
@@ -85,7 +89,7 @@ class MathCamera(MDApp):
         req = UrlRequest(self.config_['config_url'],on_success=success,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='GET')
 
     def on_start(self):
-        check_request_camera_permission()
+        request_camera_permission()
         set_orientation()
         Window.bind(on_keyboard=self.key_handler)
         self.update_config()
@@ -95,7 +99,7 @@ class MathCamera(MDApp):
         self.root.ids.preview.disconnect_camera()
 
     def connect_camera(self,dt):
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels = True)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -112,10 +116,19 @@ class MathCamera(MDApp):
             img.save(output_buffer, format='PNG' if image_path.split(".")[-1] == "png" else "JPEG")
             base64_str = base64.b64encode(output_buffer.getvalue())
             self.send_b64(base64_str)
+
         except Exception as e:
             err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
             popup.open()  
+
+    def analyze_pixels_callback(self, pixels, image_size, image_pos, scale, mirror):
+        if self.settings['enable_analuze_pixels'] == True:
+            img = Image.frombytes(mode='RGBA', size=image_size, data= pixels)
+            output_buffer = BytesIO()
+            img.save(output_buffer, format='PNG')
+            base64_str = base64.b64encode(output_buffer.getvalue())
+            self.send_b64(base64_str)
         
     def choose(self):
         if platform == "android":
@@ -134,8 +147,7 @@ class MathCamera(MDApp):
 
             kb_manager.current = next_screen
 
-        else:
-            kb_manager.current = kb_name
+        else:kb_manager.current = kb_name
 
     def load_history(self):
         history_layout = self.root.ids.history_layout
@@ -171,28 +183,14 @@ class MathCamera(MDApp):
         settings = self.settings
 
         for elem_id in settings.keys():
-            if elem_id != "flashlight":
-                ids[elem_id].active = settings[elem_id]
-
-        ids["enable_flashlight"].active = True if settings['flashlight'] == "on" or settings['flashlight'] == "auto" else False
-        ids["auto_flashlight"].disabled = True if settings["flashlight"] == "off" else False
-        ids["auto_flashlight"].active = True if settings["flashlight"] == "auto" else False
+            ids[elem_id].active = settings[elem_id]
 
     def handle_switch(self,type,state):
-        if type == "flashlight":
-            if state == "off":
-                self.root.ids["auto_flashlight"].active = False
-                self.root.ids["auto_flashlight"].disabled = True
-            elif state == "on":
-                self.root.ids["auto_flashlight"].disabled = False
-
         if type == "dark_theme":
             self.theme_cls.theme_style = "Dark" if state == True else "Light"
 
         self.settings[type] = state
-
-        with open(os.path.join(self.data_dir,'settings.json'),"w") as file:
-            file.write(json.dumps(self.settings))
+        self.set_settings()
 
     def key_handler(self, window, keycode,*args):
         manager = self.root.ids["sm"]
@@ -203,52 +201,18 @@ class MathCamera(MDApp):
         return False
     
     def photo(self):
-        try:
-            self.root.ids.preview.capture_photo(location="private",subdir="camera_tmp")
-        except Exception as e:
-            if check_camera_permission() == True:
-                err = e
-                err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
-                popup = MDDialog(title='Ошибка',text=f'Не удалось подключиться к камере. Перезагрузите приложение {err}',buttons=[MDFlatButton(text="Перезагрузить",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:self.stop())])
-                popup.open()
-            else:
-                self.perm_dialog = MDDialog(
-                    text="Не удалось подключиться к камере, поскольку приложению не разрешён доступ к ней. Разрешить доступ к камере?",
-                    buttons=[
-                        MDFlatButton(
-                            text="Отмена",
-                            theme_text_color="Custom",
-                            text_color=self.main_colors[0],
-                            on_release=lambda *args:self.perm_dialog.dismiss(),
-                        ),
-                        MDFlatButton(
-                            text="Разрешить",
-                            theme_text_color="Custom",
-                            text_color=self.main_colors[0],
-                            on_release=lambda *args:self.request_camera_perm,
-                        ),
-                    ],
-                )
-                self.perm_dialog.open()
-
-    def request_camera_perm(self,*args):
-        try:
-            check_request_camera_permission()
-            self.perm_dialog.dismiss()
-        except:pass
+        self.root.ids.preview.capture_photo(location="private",subdir="camera_tmp")
 
     def handle_camera(self):
-        flashlight = self.settings["flashlight"]
+        flashlight = self.settings["enable_flashlight"]
         state = self.root.ids.preview.flash(flashlight)
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
 
     def switch_flashlight_mode(self):
-        icon = self.root.ids.preview.flash()
+        icon = self.root.ids.preview.flash("on" if self.settings['enable_flashlight'] == True else "off")
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[icon]
-        self.settings['flashlight'] = icon
-
-        with open(os.path.join(self.data_dir,'settings.json'),"w") as file:
-            file.write(json.dumps(self.settings))
+        self.settings['enable_flashlight'] = not self.settings['enable_flashlight']
+        self.set_settings()
 
     def open_browser(self,url):
         webbrowser.open(url)
@@ -256,17 +220,10 @@ class MathCamera(MDApp):
     def set_screen(self,screen_name,*screen_title):
         if self.root.current == "main_sc":
             self.last_screen = self.root.ids['sm'].current
-            
             self.root.ids['sm'].current = screen_name
-
-            if screen_title:
-                self.root.ids['tb'].title = screen_title[0]
-
+            if screen_title:self.root.ids['tb'].title = screen_title[0]
             self.root.ids['nav_drawer'].set_state("closed")
-
             self.root.ids.textarea.ids.text_field.focus = False
-
-        #Window.clearcolor = (0,0,0,0) if screen_name == "sc_photo" else (1,1,1,1)
     
     def edit_textfield(self,text,move_cursor=0):
         textfield = self.root.ids.textarea.ids.text_field

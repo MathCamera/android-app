@@ -405,16 +405,16 @@ ScreenManager:
                             MDSwitch:
                                 adaptive_width:True
                                 id:enable_flashlight
-                                on_active: app.handle_switch("flashlight","on" if self.active == True else "off")
+                                on_active: app.handle_switch("enable_flashlight",self.active)
 
                             MDLabel:
-                                text:"Авто вспышка\n"
+                                text:"Автосканирование\n"
                                 adaptive_height:True
 
                             MDSwitch:
                                 adaptive_width:True
-                                id:auto_flashlight
-                                on_active: app.handle_switch("flashlight","auto")
+                                id:enable_analyze_pixels
+                                on_active: app.handle_switch("enable_analyze_pixels",self.active)
 
                             MDLabel:
                                 text:"Режим отладки\n"
@@ -434,6 +434,18 @@ ScreenManager:
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:app.clear_cache()
+
+                        MDRectangleFlatIconButton:
+                            icon: "autorenew"
+                            text: "Сбросить настройки"
+                            theme_text_color: "Custom"
+                            text_color: "white"
+                            md_bg_color:app.main_colors[0]
+                            theme_icon_color: "Custom"
+                            icon_color: "white"
+                            on_release:
+                                app.set_settings(reset=True)
+                                app.setup()
 
                         MDRectangleFlatIconButton:
                             icon: "content-copy"

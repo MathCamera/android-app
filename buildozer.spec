@@ -37,7 +37,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3, certifi, pillow, numpy, matplotlib, packaging, kivy, https://github.com/kivymd/KivyMD/archive/master.zip, androidstorage4kivy,camera4kivy,gestures4kivy
+requirements = python3, certifi, pillow, numpy, matplotlib, kivy, https://github.com/kivymd/KivyMD/archive/master.zip, androidstorage4kivy,camera4kivy,gestures4kivy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -95,7 +95,7 @@ android.presplash_color = #044A33
 
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the supported syntaxes and properties)
-android.permissions = INTERNET,CAMERA, READ_EXTERNAL_STORAGE
+android.permissions = INTERNET,CAMERA
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host

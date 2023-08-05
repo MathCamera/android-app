@@ -10,16 +10,6 @@ def before_apk_build(toolchain):
     if '--enable-androidx' not in unprocessed_args:
         unprocessed_args.append('--enable-androidx')
         info('Camerax Provider: Add android.enable_androidx = True')
-
-    if 'CAMERA' not in unprocessed_args:
-        unprocessed_args.append('--permission')
-        unprocessed_args.append('CAMERA')
-        info('Camerax Provider: Add android.permissions = CAMERA')
-
-    if 'RECORD_AUDIO' not in unprocessed_args:
-        unprocessed_args.append('--permission')
-        unprocessed_args.append('RECORD_AUDIO')
-        info('Camerax Provider: Add android.permissions = RECORD_AUDIO')
         
     # Check the current versions of these camera Gradle dependencies here:
     #https://developer.android.com/jetpack/androidx/releases/camera#dependencies

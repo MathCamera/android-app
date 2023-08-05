@@ -21,7 +21,7 @@ def check_camera_permission():
         permission = Permission.CAMERA
         return check_permission(permission)
 
-def check_request_camera_permission(callback=None):
+def request_camera_permission(callback=None):
     if platform == "android":
         had_permission = check_camera_permission()
         if not had_permission:
