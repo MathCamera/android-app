@@ -84,6 +84,55 @@ ScreenManager:
                 id:sm
 
                 MDScreen:
+                    name:"sc_home"
+                    BoxLayout:
+                        orientation:"vertical"
+                        padding:[50,tb.height + dp(30),50,30]
+                        spacing:30
+                        center_y: root.center_y
+
+                        MDLabel:
+                            text: "Что вы хотите сделать?"
+                            halign:"center"
+                            font_style:"H6"
+                            adaptive_height:True
+
+                        MDRectangleFlatIconButton:
+                            icon: "text-recognition"
+                            pos_hint:{"center_x":.5}
+                            text: "Сканировать"
+                            theme_text_color: "Custom"
+                            text_color: "white"
+                            md_bg_color: app.main_colors[0]
+                            theme_icon_color: "Custom"
+                            icon_color: "white"
+                            on_release:
+                                app.set_screen("sc_photo")
+
+                        MDRectangleFlatIconButton:
+                            icon: "calculator"
+                            pos_hint:{"center_x":.5}
+                            text: "Калькулятор"
+                            theme_text_color: "Custom"
+                            text_color: "white"
+                            md_bg_color: app.main_colors[0]
+                            theme_icon_color: "Custom"
+                            icon_color: "white"
+                            on_release:
+                                app.set_screen("sc_text")
+
+                        MDRectangleFlatIconButton:
+                            icon: "file-image"
+                            pos_hint:{"center_x":.5}
+                            text: "Выбрать из галереи"
+                            theme_text_color: "Custom"
+                            text_color: "white"
+                            md_bg_color: app.main_colors[0]
+                            theme_icon_color: "Custom"
+                            icon_color: "white"
+                            on_release:app.choose()
+
+                MDScreen:
                     name:"sc_photo"
                     on_enter:
                         app.handle_camera()
@@ -94,7 +143,7 @@ ScreenManager:
                         orientation:"vertical"
                         XCamera:
                             id:preview
-                            aspect_ratio:"16:9" if app.settings['high_resolution'] == True else "4:3"
+                            aspect_ratio:"16:9"
 
                     MDIconButton:
                         pos_hint: {"center_x":.2,"center_y":.1}
@@ -339,33 +388,6 @@ ScreenManager:
                         GridLayout:
                             cols:2
                             id:settings_grid
-
-                            MDLabel:
-                                text:"Тёмная тема\n"
-                                adaptive_height:True
-
-                            MDSwitch:
-                                adaptive_width:True
-                                id:dark_theme
-                                on_active: app.handle_switch("dark_theme",self.active)
-
-                            MDLabel:
-                                text:"Вспышка\n"
-                                adaptive_height:True
-
-                            MDSwitch:
-                                adaptive_width:True
-                                id:enable_flashlight
-                                on_active: app.handle_switch("enable_flashlight",self.active)
-
-                            MDLabel:
-                                text:"Высокое разрешение\n(потребуется перезагрузка)"
-                                adaptive_height:True
-
-                            MDSwitch:
-                                adaptive_width:True
-                                id:high_resolution
-                                on_active: app.handle_switch("high_resolution",self.active)
 
                             MDLabel:
                                 text:"Режим отладки\n"

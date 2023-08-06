@@ -25,11 +25,9 @@ from io import BytesIO
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
-    from kvdroid.tools import change_statusbar_color
-    from kvdroid.tools import navbar_color
-    from kvdroid.tools import toast
+    from kvdroid.tools import change_statusbar_color,navbar_color,toast
+    from kvdroid.tools.darkmode import dark_mode
     change_statusbar_color("#02714C", "white")
-    navbar_color("#FFFFFF")
 else:
     Window.size = (360,600)
 
@@ -55,13 +53,13 @@ class MathCamera(MDApp):
         self.theme_cls.material_style = "M2"
         self.main_colors = ["#02714C","#039866"]
 
-        self.last_screen,self.solver_type = None,None
-        self.flashlight_modes = {"on":"flash","auto":"flash-auto","off":"flash-off"}
+        self.last_screen,self.solver_type,self.flashlight_mode = None,None,"off"
+        self.flashlight_modes = {"on":"flash","off":"flash-off"}
         self.menu_items = {"digital":"Решить пример","equation":"Решить уравнение","system":"Решить систему уравнений","simplify":"Упростить выражение","inequality":"Решить неравенство"}
 
     def build(self):
-        self.theme_cls.theme_style = "Dark" if self.settings["dark_theme"] == True else "Light"
         if platform == "android":
+            self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
             self.chooser = Chooser(self.chooser_callback)
         
         return Builder.load_file('data/md.kv')
@@ -181,13 +179,6 @@ class MathCamera(MDApp):
         for elem_id in settings.keys():
             ids[elem_id].active = settings[elem_id]
 
-    def handle_switch(self,type,state):
-        if type == "dark_theme":
-            self.theme_cls.theme_style = "Dark" if state == True else "Light"
-
-        self.settings[type] = state
-        self.set_settings()
-
     def key_handler(self, window, keycode,*args):
         manager = self.root.ids["sm"]
         if keycode in [27, 1001]:
@@ -200,15 +191,13 @@ class MathCamera(MDApp):
         self.root.ids.preview.capture_photo(location="private",subdir="camera_tmp")
 
     def handle_camera(self):
-        flashlight = self.settings["enable_flashlight"]
-        state = self.root.ids.preview.flash(flashlight)
+        state = self.root.ids.preview.flash(self.flashlight_mode)
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[state]
 
     def switch_flashlight_mode(self):
-        icon = self.root.ids.preview.flash("on" if self.settings['enable_flashlight'] == True else "off")
+        self.flashlight_mode = "on" if self.flashlight_mode == "off" else "off"
+        icon = self.root.ids.preview.flash(self.flashlight_mode)
         self.root.ids.flashlight_btn.icon = self.flashlight_modes[icon]
-        self.settings['enable_flashlight'] = not self.settings['enable_flashlight']
-        self.set_settings()
 
     def open_browser(self,url):
         webbrowser.open(url)
