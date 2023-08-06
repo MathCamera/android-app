@@ -37,7 +37,17 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3, certifi, pillow, numpy, matplotlib, kivy, https://github.com/kivymd/KivyMD/archive/master.zip, androidstorage4kivy,camera4kivy,gestures4kivy
+requirements = python3,
+               certifi,
+               pillow,
+               numpy,
+               matplotlib,
+               kivy,
+               https://github.com/kivymd/KivyMD/archive/master.zip,
+               androidstorage4kivy,
+               camera4kivy,
+               gestures4kivy,
+               kvdroid
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -333,7 +343,7 @@ android.release_artifact = apk
 #p4a.local_recipes =
 
 # (str) Filename to the hook for p4a
-p4a.hook = camerax_provider/gradle_options.py
+p4a.hook = modules/camerax_provider/gradle_options.py
 
 # (str) Bootstrap to use for android builds
 # p4a.bootstrap = sdl2

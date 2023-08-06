@@ -9,7 +9,6 @@ from kivy.core.window import Window
 from kivy.storage.jsonstore import JsonStore
 
 from kivymd.app import MDApp
-from kivymd.toast import toast
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.menu import MDDropdownMenu
@@ -18,7 +17,7 @@ from kivymd.uix.label import MDLabel
 
 from modules.android_api import request_camera_permission,set_orientation
 from modules.plotting import render_plot
-from camera4kivy import Preview
+from modules.xcamera import *
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from PIL import Image
@@ -26,6 +25,11 @@ from io import BytesIO
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
+    from kvdroid.tools import change_statusbar_color
+    from kvdroid.tools import navbar_color
+    from kvdroid.tools import toast
+    change_statusbar_color("#02714C", "white")
+    navbar_color("#FFFFFF")
 else:
     Window.size = (360,600)
 
@@ -99,7 +103,7 @@ class MathCamera(MDApp):
         self.root.ids.preview.disconnect_camera()
 
     def connect_camera(self,dt):
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels = True)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -121,14 +125,6 @@ class MathCamera(MDApp):
             err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
             popup.open()  
-
-    def analyze_pixels_callback(self, pixels, image_size, image_pos, scale, mirror):
-        if self.settings['enable_analuze_pixels'] == True:
-            img = Image.frombytes(mode='RGBA', size=image_size, data= pixels)
-            output_buffer = BytesIO()
-            img.save(output_buffer, format='PNG')
-            base64_str = base64.b64encode(output_buffer.getvalue())
-            self.send_b64(base64_str)
         
     def choose(self):
         if platform == "android":
