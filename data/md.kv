@@ -7,6 +7,7 @@
 #:include modules/keyboard/letters_kb.kv
 #:include modules/keyboard/functions_kb.kv
 #:include modules/keyboard/top_kb.kv
+#:include modules/keyboard/trigonometry_kb.kv
 
 <KeyboardFlatButton@MDFlatButton>:
     size_hint: 1, 1
@@ -137,6 +138,9 @@ ScreenManager:
                     on_enter:
                         app.handle_camera()
                         tb.title="Сканировать"
+                        
+                    on_pre_leave:
+                        preview.disconnect_camera()
 
                     BoxLayout:
                         padding:[0,tb.height,0,0]
@@ -180,7 +184,6 @@ ScreenManager:
                         tb.title="Калькулятор"
                         textarea.ids.text_field.focus=True
                         textarea.ids.text_field.error=False
-                        app.on_text_screen()
 
                     MDBoxLayout:
                         padding:[0,tb.height + dp(15),0,0]
@@ -191,13 +194,6 @@ ScreenManager:
                             padding:[20,0,20,30]
                             orientation:"vertical"
                             #spacing:10
-
-                            MDDropDownItem:
-                                id: drop_item
-                                pos_hint: {'center_x': .5, 'center_y': .5}
-                                text: 'Выберите действие'
-                                on_release: app.menu.open()
-                            
 
                             ClickableTextFieldRound:
                                 id:textarea
@@ -213,7 +209,7 @@ ScreenManager:
                                 theme_icon_color: "Custom"
                                 icon_color: "white"
                                 on_release:
-                                    app.send_equation(textarea.ids.text_field.text,app.solver_type)
+                                    app.send_equation(textarea.ids.text_field.text)
 
                         TOP_KB:
 
@@ -224,6 +220,10 @@ ScreenManager:
                                 MDScreen:
                                     name:"main_kb"
                                     MAIN_KB:
+
+                                MDScreen:
+                                    name:"trigonometry_kb"
+                                    TRIGONOMETRY_KB:
 
                                 MDScreen:
                                     name:"letters_kb"
@@ -237,113 +237,35 @@ ScreenManager:
                     on_enter:
                         tb.title="Решение"
                     name:"sc_solve"
+
                     BoxLayout:
-                        id:gl
                         orientation:"vertical"
                         padding:[20,tb.height + dp(5),20,20]
-                        MDIconButton:
-                            id:mcd_btn
-                            icon: "arrow-left"
-                            on_release:app.set_screen(app.last_screen)
+                        MDGridLayout:
+                            cols:2
+                            adaptive_height:True
+  
+                            MDIconButton:
+                                icon: "arrow-left"
+                                on_release:app.set_screen(app.last_screen)
+
+                            MDRelativeLayout:
+                                MDIconButton:
+                                    pos_hint:{"center_x":.9}
+                                    icon: "alert-circle-outline"
+                                    #on_release:app.set_screen(app.last_screen)
 
                         ScrollView:
                             id:gl_sw
                             do_scroll_x: False
-                            do_scroll_y: False
+                            do_scroll_y: True
                             
                             GridLayout:
+                                id:gl
                                 cols:1
                                 spacing:10
                                 size_hint_y: None
                                 height: self.minimum_height
-                                    
-                                MDCard:
-                                    id:mdc
-                                    orientation:"vertical"
-                                    size_hint_x: 1
-                                    pos_hint: {"top":1}
-                                    md_bg_color:app.main_colors[1]
-                                    padding:[30,15,30,15]
-                                    size_hint_y: None
-                                    height:(gl.height-mcd_btn.height)/3
-                                    spacing:15
-
-                                    MDLabel:
-                                        id:equ_type_label
-                                        adaptive_size:True
-                                        theme_text_color: "Custom"
-                                        text_color: "white"
-                                        font_style:"H6"
-                                                
-                                    MDLabel:
-                                        adaptive_size: True
-                                        id:equation_label
-                                        theme_text_color: "Custom"
-                                        text_color: "white"
-
-                                    MDLabel:
-                                        adaptive_size: True
-                                        bold:True
-                                        text:"Ответ:"
-                                        theme_text_color: "Custom"
-                                        text_color: "white"
-                                    
-                                    ScrollView:
-                                        do_scroll_x: False
-                                        do_scroll_y: True
-                                        size_hint_y:None
-                                        height:mdc.height/4
-
-                                        Label:
-                                            id:solution_label
-                                            size_hint_y: None
-                                            height: self.texture_size[1]
-                                            text_size: self.width, None
-
-                                    MDRectangleFlatIconButton:
-                                        icon: "content-copy"
-                                        text: "Скопировать ответ"
-                                        pos_hint:{"center_x":.5}
-                                        theme_text_color: "Custom"
-                                        text_color: "white"
-                                        md_bg_color:app.main_colors[0]
-                                        theme_icon_color: "Custom"
-                                        icon_color: "white"
-                                        on_release:Clipboard.copy(solution_label.text)
-
-                                MDCard:
-                                    id:plot_card
-                                    orientation:"vertical"
-                                    pos_hint: {"top":1}
-                                    md_bg_color:app.main_colors[1]
-                                    padding:[30,15,30,15] #25
-                                    size_hint_y: None
-                                    height:plot_img.size[0]+plot_text.size[0]#(gl.height-mcd_btn.height)/1.5
-                                    spacing:5
-                                    visible:False
-                                    
-                                    size_hint_x: 1 if self.visible else 0
-                                    opacity: 1 if self.visible else 0
-                                    disabled: not self.visible
-
-                                    MDLabel:
-                                        id:plot_text
-                                        text:"График"
-                                        adaptive_size:True
-                                        theme_text_color: "Custom"
-                                        text_color: "white"
-                                        font_style:"H6"
-
-                                    FitImage:
-                                        id:plot_img
-                                        #source: "sympy_tmp/image.png"
-                                        size_hint: .35,.35
-                                        pos_hint: {"top": 1}
-                                        #radius: 10, 10, 10, 10
-                                        visible: plot_card.visible
-                                        size_hint_x: 1 if plot_card.visible else 0
-                                        opacity: 1 if plot_card.visible else 0
-                                        disabled: not plot_card.visible
 
                 Screen:
                     name:"sc_history"

@@ -23,9 +23,10 @@
         values: ['G','E']
         on_short_press: app.edit_textfield(self.value)
 
-    CustomFlatIconButton:
-        icon: 'pi'
-        on_press: app.edit_textfield("π")
+    MultiModeFlatButton:
+        modes: ['π','τ']
+        values: ['π','τ']
+        on_short_press: app.edit_textfield(self.value)
 
     CustomFlatIconButton:
         icon: 'square-root'
