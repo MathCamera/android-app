@@ -1,4 +1,3 @@
-#:import Clipboard kivy.core.clipboard.Clipboard
 #:import ClickableTextFieldRound modules.custom.textfield.ClickableTextFieldRound
 #:import CustomFlatIconButton modules.custom.button.CustomFlatIconButton
 #:import MultiModeFlatButton modules.custom.button.MultiModeFlatButton
@@ -138,9 +137,6 @@ ScreenManager:
                     on_enter:
                         app.handle_camera()
                         tb.title="Сканировать"
-                        
-                    on_pre_leave:
-                        preview.disconnect_camera()
 
                     BoxLayout:
                         padding:[0,tb.height,0,0]
@@ -249,11 +245,11 @@ ScreenManager:
                                 icon: "arrow-left"
                                 on_release:app.set_screen(app.last_screen)
 
-                            MDRelativeLayout:
-                                MDIconButton:
-                                    pos_hint:{"center_x":.9}
-                                    icon: "alert-circle-outline"
-                                    #on_release:app.set_screen(app.last_screen)
+                            #MDRelativeLayout:
+                            #    MDIconButton:
+                            #        pos_hint:{"center_x":.9}
+                            #        icon: "alert-circle-outline"
+                            #        #on_release:app.set_screen(app.last_screen)
 
                         ScrollView:
                             id:gl_sw
@@ -321,16 +317,6 @@ ScreenManager:
                                 on_active: app.handle_switch("debug_mode",self.active)
 
                         MDRectangleFlatIconButton:
-                            icon: "broom"
-                            text: "Очистить кеш"
-                            theme_text_color: "Custom"
-                            text_color: "white"
-                            md_bg_color:app.main_colors[0]
-                            theme_icon_color: "Custom"
-                            icon_color: "white"
-                            on_release:app.clear_cache()
-
-                        MDRectangleFlatIconButton:
                             icon: "autorenew"
                             text: "Сбросить настройки"
                             theme_text_color: "Custom"
@@ -351,7 +337,7 @@ ScreenManager:
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             #on_release:app.set_screen('sc_logs')
-                            on_release:Clipboard.copy(app.get_logs())
+                            on_release:app.copy_content(app.get_logs())
 
             MDNavigationDrawer:
                 id: nav_drawer

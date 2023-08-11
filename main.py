@@ -1,4 +1,4 @@
-__version__ = "0.9.0"
+__version__ = "0.8.0"
 
 from kivy.lang import Builder
 from kivy.clock import Clock,mainthread
@@ -13,7 +13,7 @@ Loader.loading_image = "media/loader.png"
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton,MDRectangleFlatIconButton
+from kivymd.uix.button import MDFlatButton,MDRectangleFlatButton
 from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
@@ -101,6 +101,7 @@ class MathCamera(MDApp):
         set_orientation()
         self.update_config()
         Window.bind(on_keyboard=self.key_handler)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image)
         
         if platform == "android":
             self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
@@ -174,14 +175,6 @@ class MathCamera(MDApp):
         for elem in self.history:
             self.history.delete(elem)
 
-    def clear_cache(self):
-        paths = ['mpl_tmp','camera_tmp']
-        for path_name in paths:
-            if os.path.exists(path_name):
-                shutil.rmtree(path_name, ignore_errors=True)
-        
-        toast("Кеш очищен")
-
     def setup(self):
         ids = self.root.ids
         settings = self.settings
@@ -202,7 +195,6 @@ class MathCamera(MDApp):
 
     def handle_camera(self):
         flashlight_modes = {"on":"flash","off":"flash-off"}
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image)
         state = self.root.ids.preview.flash(self.flashlight_mode)
         self.root.ids.flashlight_btn.icon = flashlight_modes[state]
 
@@ -267,13 +259,12 @@ class MathCamera(MDApp):
                 status_code = result['status_code']
 
                 if status_code == 0:
-
                     gamma_result = result['message']
                     self.root.ids.gl.clear_widgets()
 
                     for card in gamma_result:
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
-                        contains_latex = 'pre_output' in list(card.keys()) and card['pre_output'] != card['var'] and card['pre_output'] != "\\mathtt{\\text{}}"
+                        #contains_latex = 'pre_output' in list(card.keys()) and card['pre_output'] != card['var'] and card['pre_output'] != "\\mathtt{\\text{}}"
                         
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color=self.main_colors[1],padding=[30,15,30,15],size_hint_y=None,spacing=10)
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6")
@@ -285,20 +276,24 @@ class MathCamera(MDApp):
                             kv_card.height = dp(kv_card.height*1.4)+dp(image_widget.height*1.4)
                             kv_card.add_widget(image_widget)
 
-                        elif contains_latex == True:
-                            plot_url = self.config_["latex_url"].format(str(card['pre_output']).replace(" ",""))
-                            image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5})
-                            kv_card.height = dp(image_widget.height*1.2)
-                            kv_card.add_widget(image_widget)
+                        #elif contains_latex == True:
+                        #    plot_url = self.config_["latex_url"].format(f"{card['pre_output']} = {card['output']}".replace(" ",""))
+                        #    image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5})
+                        #    kv_card.height = image_widget.height
+                        #    kv_card.add_widget(image_widget)
 
                         else:
                             kv_card.adaptive_height = True
-                            result_text = card['output'] if 'var' not in list(card.keys()) or card['var']=='None' else f"{card['var']} = {card['output']}"
+                            result_text = card['output']
                             output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white")
                             kv_card.add_widget(output_label)
 
                         self.root.ids.gl.add_widget(kv_card)
-
+                    
+                    if self.settings['debug_mode'] == True:
+                        self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Скопировать json",on_release=lambda f:self.copy_content(str(gamma_result))))
+                        self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Открыть в Sympy Gamma",on_release=lambda f:self.open_browser(f"https://sympygamma.com/input/?i={gamma_result[0]['output']}")))
+                    
                     self.set_screen("sc_solve")
                     
                     if from_history == False:

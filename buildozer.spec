@@ -40,8 +40,6 @@ version.filename = %(source.dir)s/main.py
 requirements = python3,
                certifi,
                pillow,
-               numpy,
-               matplotlib,
                kivy,
                https://github.com/kivymd/KivyMD/archive/master.zip,
                androidstorage4kivy,
