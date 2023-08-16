@@ -42,9 +42,7 @@ requirements = python3,
                pillow,
                kivy,
                https://github.com/kivymd/KivyMD/archive/master.zip,
-               androidstorage4kivy,
-               camera4kivy,
-               gestures4kivy,
+               androidstorage4kivy,camera4kivy,gestures4kivy,
                kvdroid
 
 # (str) Custom source folders for requirements

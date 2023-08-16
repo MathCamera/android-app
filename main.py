@@ -1,7 +1,7 @@
 __version__ = "0.8.0"
 
 from kivy.lang import Builder
-from kivy.clock import Clock,mainthread
+from kivy.clock import mainthread
 from kivy.utils import platform
 from kivy.metrics import dp
 from kivy.network.urlrequest import UrlRequest
@@ -38,28 +38,38 @@ class MathCamera(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.version_ = __version__
-
         self.data_dir = os.path.join("..","user_data")
+        self.theme_cls.colors = json.load(open('data/themes.json'))
+        self.theme_cls.material_style = "M2"
+        self.main_colors = ["#02714C","#039866"]
+        self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
+
+    def build(self):        
+        return Builder.load_file('data/md.kv')  
+    
+    def on_start(self):
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
             shutil.copyfile("data/settings.json",os.path.join(self.data_dir,"settings.json"))
 
         self.settings = json.load(open(os.path.join(self.data_dir,'settings.json')))
+        self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
 
         if json.load(open('data/settings.json')).keys() != self.settings.keys():
             self.set_settings(reset=True)
 
-        self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
-        #self.config_ = json.load(open('data/config.json'))
-        self.theme_cls.colors = json.load(open('data/themes.json'))
+        request_camera_permission()
+        set_orientation()
+        self.update_config()
+        Window.bind(on_keyboard=self.key_handler)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True)
+        
+        if platform == "android":
+            self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
+            self.chooser = Chooser(self.chooser_callback)
 
-        self.theme_cls.material_style = "M2"
-        self.main_colors = ["#02714C","#039866"]
-
-        self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
-
-    def build(self):        
-        return Builder.load_file('data/md.kv')
+    def on_stop(self):
+        self.root.ids.preview.disconnect_camera()
     
     def set_settings(self,reset=False):
         if reset == True:
@@ -78,7 +88,7 @@ class MathCamera(MDApp):
                 self.config_[elem] = result[elem]
         
             if __version__ != result["latest_version"]:
-                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:launch_update()),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:launch_update()),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()  
 
                 def launch_update():
@@ -87,7 +97,7 @@ class MathCamera(MDApp):
         def error(req, result):
             result = str(result).replace("\n","")
             err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету и повторите попытку{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss()),MDFlatButton(text="Повторить",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:retry())])
+            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету и повторите попытку{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss()),MDFlatButton(text="Повторить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:retry())])
             popup.open()  
             
             def retry():
@@ -95,20 +105,6 @@ class MathCamera(MDApp):
                 self.update_config()
 
         req = UrlRequest(self.config_['config_url'],on_success=success,on_failure=error,on_error=error,req_body=urllib.parse.urlencode({'version':self.version_}),req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-
-    def on_start(self):
-        request_camera_permission()
-        set_orientation()
-        self.update_config()
-        Window.bind(on_keyboard=self.key_handler)
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image)
-        
-        if platform == "android":
-            self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
-            self.chooser = Chooser(self.chooser_callback)
-
-    def on_stop(self):
-        self.root.ids.preview.disconnect_camera()
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -122,13 +118,13 @@ class MathCamera(MDApp):
         try:
             img = Image.open(image_path)
             output_buffer = BytesIO()
-            img.save(output_buffer, format='PNG' if image_path.split(".")[-1] == "png" else "JPEG")
+            img.save(output_buffer, format='PNG' if image_path.split(".")[-1] == "png" else "JPEG",quality=20,optimize=True)
             base64_str = base64.b64encode(output_buffer.getvalue())
             self.send_b64(base64_str)
 
         except Exception as e:
             err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+            popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()  
         
     def choose(self):
@@ -266,7 +262,7 @@ class MathCamera(MDApp):
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
                         #contains_latex = 'pre_output' in list(card.keys()) and card['pre_output'] != card['var'] and card['pre_output'] != "\\mathtt{\\text{}}"
                         
-                        kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color=self.main_colors[1],padding=[30,15,30,15],size_hint_y=None,spacing=10)
+                        kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6")
                         kv_card.add_widget(title_label)
 
@@ -301,14 +297,14 @@ class MathCamera(MDApp):
 
                 else:
                     err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-                    popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+                    popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()   
 
             def error(req, result):
                 loading_popup.dismiss()
                 result = str(result).replace("\n","")
                 err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-                popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+                popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
                 
             req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
@@ -341,29 +337,28 @@ class MathCamera(MDApp):
                     result = " ".join(str(result).split())
 
                     if result == "":
-                        popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+                        popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                         popup.open()
                     
                     else:
                         self.set_screen("sc_text")
-
                         if len(result) > 50: result = result[-50:]
                         self.root.ids.textarea.ids.text_field.text = result
                         self.root.ids.textarea.ids.text_field.focus=True
                 
                 else:
-                    popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+                    popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()
                     
             except:
-                popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+                popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()   
 
         def error(req, result):
             loading_popup.dismiss()
             result = str(result).replace("\n","")
             err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color=self.main_colors[0],on_release=lambda *args:popup.dismiss())])
+            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()
         
         req = UrlRequest(self.config_["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')

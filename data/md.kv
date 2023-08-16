@@ -76,7 +76,7 @@ ScreenManager:
                 id:tb
                 title:"Главная"
                 pos_hint: {"top": 1}
-                md_bg_color: app.main_colors[0]
+                md_bg_color: "#02714C"
                 left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
                 right_action_items:[["history", lambda x: app.set_screen("sc_history"), "", "История"],["cog", lambda x: app.set_screen("sc_settings"), "", "Настройки"]]
 
@@ -103,7 +103,7 @@ ScreenManager:
                             text: "Сканировать"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color: app.main_colors[0]
+                            md_bg_color: "#02714C"
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
@@ -115,7 +115,7 @@ ScreenManager:
                             text: "Калькулятор"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color: app.main_colors[0]
+                            md_bg_color: "#02714C"
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
@@ -127,7 +127,7 @@ ScreenManager:
                             text: "Выбрать из галереи"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color: app.main_colors[0]
+                            md_bg_color: "#02714C"
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:app.choose()
@@ -201,7 +201,7 @@ ScreenManager:
                                 pos_hint:{"center_x":.5}
                                 theme_text_color: "Custom"
                                 text_color: "white"
-                                md_bg_color:app.main_colors[0]
+                                md_bg_color:"#02714C"
                                 theme_icon_color: "Custom"
                                 icon_color: "white"
                                 on_release:
@@ -286,7 +286,7 @@ ScreenManager:
                             pos_hint:{"center_x":.5}
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.main_colors[0]
+                            md_bg_color:"#02714C"
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
@@ -321,7 +321,7 @@ ScreenManager:
                             text: "Сбросить настройки"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.main_colors[0]
+                            md_bg_color:"#02714C"
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             on_release:
@@ -333,7 +333,7 @@ ScreenManager:
                             text: "Скопировать логи"
                             theme_text_color: "Custom"
                             text_color: "white"
-                            md_bg_color:app.main_colors[0]
+                            md_bg_color:"#02714C"
                             theme_icon_color: "Custom"
                             icon_color: "white"
                             #on_release:app.set_screen('sc_logs')
@@ -426,4 +426,4 @@ ScreenManager:
                 size_hint_y:None
                 height:10
                 #type: "indeterminate"
-                color:app.main_colors[1]
+                color:"#039866"
