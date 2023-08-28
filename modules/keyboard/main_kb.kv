@@ -23,10 +23,9 @@
         values: ['G','E']
         on_short_press: app.edit_textfield(self.value)
 
-    MultiModeFlatButton:
-        modes: ['π','τ']
-        values: ['π','τ']
-        on_short_press: app.edit_textfield(self.value)
+    KeyboardFlatButton:
+        text: 'π'
+        on_press: app.edit_textfield(self.text)
 
     CustomFlatIconButton:
         icon: 'square-root'
@@ -112,10 +111,9 @@
         values: ['sin()','cos()','tan()','cot()']
         on_short_press: app.edit_textfield(self.value,1)
 
-    MultiModeFlatButton:
-        modes: ['.',',']
-        values: ['.',',']
-        on_short_press: app.edit_textfield(self.value)
+    KeyboardFlatButton:
+        text: '.'
+        on_press: app.edit_textfield(self.text)
 
     KeyboardFlatButton:
         text: '0'

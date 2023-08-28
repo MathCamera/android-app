@@ -1,4 +1,4 @@
-__version__ = "0.8.0"
+__version__ = "0.8.5"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -9,6 +9,7 @@ from kivy.core.window import Window
 from kivy.core.clipboard import Clipboard
 from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
+from kivy.logger import Logger
 Loader.loading_image = "media/loader.png"
 
 from kivymd.app import MDApp
@@ -62,7 +63,7 @@ class MathCamera(MDApp):
         set_orientation()
         self.update_config()
         Window.bind(on_keyboard=self.key_handler)
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True)
+        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
         
         if platform == "android":
             self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
@@ -105,7 +106,7 @@ class MathCamera(MDApp):
                 self.update_config()
 
         req = UrlRequest(self.config_['config_url'],on_success=success,on_failure=error,on_error=error,req_body=urllib.parse.urlencode({'version':self.version_}),req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-
+        
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
         for shared_file in shared_file_list:
@@ -118,6 +119,22 @@ class MathCamera(MDApp):
         try:
             img = Image.open(image_path)
             output_buffer = BytesIO()
+
+            if "camera_tmp" in image_path:
+                if img.width > img.height:
+                    img = img.rotate(270,expand=True)
+
+                frame_height = img.height/8
+                frame_width = img.width/6*4
+
+                start_x = (img.width/2) - (frame_width/2)
+                start_y = img.height/3
+
+                end_x = start_x + frame_width
+                end_y = start_y + frame_height
+
+                img = img.crop((start_x,start_y,end_x,end_y))
+
             img.save(output_buffer, format='PNG' if image_path.split(".")[-1] == "png" else "JPEG",quality=20,optimize=True)
             base64_str = base64.b64encode(output_buffer.getvalue())
             self.send_b64(base64_str)
@@ -134,7 +151,7 @@ class MathCamera(MDApp):
 
     def set_kb(self,kb_name):
         kb_manager = self.root.ids.kb_manager
-        screens_list = ["main_kb","trigonometry_kb","letters_kb","functions_kb"]
+        screens_list = ["main_kb","trigonometry_kb","letters_kb"]
         if kb_name == "next":
             if screens_list.index(kb_manager.current)+1 < len(screens_list):
                 next_screen = screens_list[screens_list.index(kb_manager.current)+1]
@@ -205,6 +222,14 @@ class MathCamera(MDApp):
 
     def copy_content(self,text):
         Clipboard.copy(text)
+
+    def clear_cache(self):
+        paths = ['camera_tmp']
+        for path_name in paths:
+            if os.path.exists(path_name):
+                shutil.rmtree(path_name, ignore_errors=True)
+        
+        toast("Кеш очищен")
 
     def set_screen(self,screen_name,*screen_title):
         if self.root.current == "main_sc":
@@ -307,8 +332,8 @@ class MathCamera(MDApp):
                 popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
                 
-            req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-            
+            if "math_solve_url" in self.config_.keys():
+                req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
         else:
             self.root.ids.textarea.ids.text_field.error = True
 
@@ -344,7 +369,6 @@ class MathCamera(MDApp):
                         self.set_screen("sc_text")
                         if len(result) > 50: result = result[-50:]
                         self.root.ids.textarea.ids.text_field.text = result
-                        self.root.ids.textarea.ids.text_field.focus=True
                 
                 else:
                     popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
@@ -360,8 +384,9 @@ class MathCamera(MDApp):
             err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()
-        
-        req = UrlRequest(self.config_["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
+        if "ocr_url" in self.config_.keys():
+            req = UrlRequest(self.config_["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+            
 if __name__ == "__main__":
     MathCamera().run()

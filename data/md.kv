@@ -4,7 +4,7 @@
 
 #:include modules/keyboard/main_kb.kv
 #:include modules/keyboard/letters_kb.kv
-#:include modules/keyboard/functions_kb.kv
+##:include modules/keyboard/functions_kb.kv
 #:include modules/keyboard/top_kb.kv
 #:include modules/keyboard/trigonometry_kb.kv
 
@@ -197,7 +197,7 @@ ScreenManager:
                             MDRectangleFlatIconButton:
                                 id:send_btn
                                 icon: "arrow-right"
-                                text: "Показать решение"
+                                text: "Отправить"
                                 pos_hint:{"center_x":.5}
                                 theme_text_color: "Custom"
                                 text_color: "white"
@@ -225,9 +225,9 @@ ScreenManager:
                                     name:"letters_kb"
                                     LETTERS_KB:
 
-                                MDScreen:
-                                    name:"functions_kb"
-                                    FUNCTIONS_KB:
+                                #MDScreen:
+                                #    name:"functions_kb"
+                                #    FUNCTIONS_KB:
 
                 Screen:
                     on_enter:
@@ -329,6 +329,17 @@ ScreenManager:
                                 app.setup()
 
                         MDRectangleFlatIconButton:
+                            icon: "broom"
+                            text: "Очистить кеш камеры"
+                            theme_text_color: "Custom"
+                            text_color: "white"
+                            md_bg_color:"#02714C"
+                            theme_icon_color: "Custom"
+                            icon_color: "white"
+                            on_release:
+                                app.clear_cache()
+
+                        MDRectangleFlatIconButton:
                             icon: "content-copy"
                             text: "Скопировать логи"
                             theme_text_color: "Custom"
@@ -391,9 +402,8 @@ ScreenManager:
                     MDNavigationDrawerDivider:
 
                     DrawerClickableItem:
-                        id:version_label
                         icon: "information-outline"
-                        text: "MathCamera v"+app.version_
+                        text: "v"+app.version_
     
     MDScreen:
         name:"update_sc"

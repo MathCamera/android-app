@@ -33,7 +33,7 @@ class CustomFlatIconButton(MDFlatButton):
 
 class LongPressButton(ButtonBehavior):
     __events__ = ('on_long_press', 'on_short_press')
-    long_press_time = .3
+    long_press_time = .2
     is_long_pressed = False
 
     def on_state(self, instance, value):
