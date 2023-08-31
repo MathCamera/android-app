@@ -74,7 +74,7 @@ ScreenManager:
         MDNavigationLayout:
             MDTopAppBar:
                 id:tb
-                title:"Главная"
+                title:"Сканировать"
                 pos_hint: {"top": 1}
                 md_bg_color: "#02714C"
                 left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
@@ -82,55 +82,6 @@ ScreenManager:
 
             ScreenManager:
                 id:sm
-
-                MDScreen:
-                    name:"sc_home"
-                    BoxLayout:
-                        orientation:"vertical"
-                        padding:[50,tb.height + dp(30),50,30]
-                        spacing:30
-                        center_y: root.center_y
-
-                        MDLabel:
-                            text: "Что вы хотите сделать?"
-                            halign:"center"
-                            font_style:"H6"
-                            adaptive_height:True
-
-                        MDRectangleFlatIconButton:
-                            icon: "text-recognition"
-                            pos_hint:{"center_x":.5}
-                            text: "Сканировать"
-                            theme_text_color: "Custom"
-                            text_color: "white"
-                            md_bg_color: "#02714C"
-                            theme_icon_color: "Custom"
-                            icon_color: "white"
-                            on_release:
-                                app.set_screen("sc_photo")
-
-                        MDRectangleFlatIconButton:
-                            icon: "calculator"
-                            pos_hint:{"center_x":.5}
-                            text: "Калькулятор"
-                            theme_text_color: "Custom"
-                            text_color: "white"
-                            md_bg_color: "#02714C"
-                            theme_icon_color: "Custom"
-                            icon_color: "white"
-                            on_release:
-                                app.set_screen("sc_text")
-
-                        MDRectangleFlatIconButton:
-                            icon: "file-image"
-                            pos_hint:{"center_x":.5}
-                            text: "Выбрать из галереи"
-                            theme_text_color: "Custom"
-                            text_color: "white"
-                            md_bg_color: "#02714C"
-                            theme_icon_color: "Custom"
-                            icon_color: "white"
-                            on_release:app.choose()
 
                 MDScreen:
                     name:"sc_photo"
@@ -238,18 +189,24 @@ ScreenManager:
                         orientation:"vertical"
                         padding:[20,tb.height + dp(5),20,20]
                         MDGridLayout:
-                            cols:2
+                            cols:3
                             adaptive_height:True
   
                             MDIconButton:
                                 icon: "arrow-left"
                                 on_release:app.set_screen(app.last_screen)
 
-                            #MDRelativeLayout:
-                            #    MDIconButton:
-                            #        pos_hint:{"center_x":.9}
-                            #        icon: "alert-circle-outline"
-                            #        #on_release:app.set_screen(app.last_screen)
+                            MDIconButton:
+                                icon: "pencil"
+                                on_release:
+                                    app.set_screen("sc_text")
+                                    textarea.ids.text_field.text = gl.problem_main
+
+                            MDRelativeLayout:
+                                MDIconButton:
+                                    pos_hint:{"center_x":.9}
+                                    icon: "alert-circle-outline"
+                                    on_release:app.send_report("Неверное решение задачи: "+gl.problem_input+"\nhttps://sympygamma.com/input/?i="+gl.problem_main)
 
                         ScrollView:
                             id:gl_sw
@@ -406,34 +363,34 @@ ScreenManager:
                         text: "v"+app.version_
     
     MDScreen:
-        name:"update_sc"
-        #on_enter:
-        #    app.download_content()
+        name:"onboarding_sc"
+        md_bg_color:"#02714C"
+        Carousel: 
+            id:onboarding_carousel
+            MDFloatLayout:
+                orientation:"vertical"
+                FitImage:
+                    source:"media/onboarding-1.png"
 
-        MDBoxLayout:
-            padding:[30,100,30,200]
-            orientation:"vertical"
-            MDLabel:
-                halign:"center"
-                text:"Загрузка"
-                font_style:"H4"
+                MDRaisedButton:
+                    text:"Дальше"
+                    theme_text_color: "Custom"
+                    text_color: "#02714C"
+                    md_bg_color:"white"
+                    theme_icon_color: "Custom"
+                    pos_hint:{"center_x":.5,"center_y":.08}
+                    on_release:onboarding_carousel.load_next(mode='next')
 
-            MDLabel:
-                id:update_version
-                halign:"center"
-                #text:"Обновление до версии "
-                font_style:"H5"
+            MDFloatLayout:
+                orientation:"vertical"
+                FitImage:
+                    source:"media/onboarding-2.png"
 
-            MDLabel:
-                id:update_percent
-                halign:"center"
-                text:"0%"
-                font_style:"H3"
-                pos_hint_y:None
-
-            MDProgressBar:
-                id:update_progress
-                size_hint_y:None
-                height:10
-                #type: "indeterminate"
-                color:"#039866"
+                MDRaisedButton:
+                    text:"Закрыть"
+                    theme_text_color: "Custom"
+                    text_color: "#02714C"
+                    md_bg_color:"white"
+                    theme_icon_color: "Custom"
+                    pos_hint:{"center_x":.5,"center_y":.08}
+                    on_release:root.current="main_sc"

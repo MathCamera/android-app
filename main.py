@@ -1,4 +1,4 @@
-__version__ = "0.8.5"
+__version__ = "0.9.0"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -52,6 +52,7 @@ class MathCamera(MDApp):
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
             shutil.copyfile("data/settings.json",os.path.join(self.data_dir,"settings.json"))
+            self.root.current = "onboarding_sc"
 
         self.settings = json.load(open(os.path.join(self.data_dir,'settings.json')))
         self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
@@ -198,7 +199,7 @@ class MathCamera(MDApp):
     def key_handler(self, window, keycode,*args):
         manager = self.root.ids["sm"]
         if keycode in [27, 1001]:
-            if manager.current != 'sc_home':
+            if manager.current != 'sc_photo':
                 self.set_screen(self.last_screen)
             return True
         return False
@@ -264,6 +265,15 @@ class MathCamera(MDApp):
 
         self.root.ids.textarea.ids.text_field.cursor = (cursor_pos,0)
 
+    def send_report(self,message):
+        params = urllib.parse.urlencode({'message':message,"user":"mobile app","platform":"android-app"})
+        def error(req,message):
+            toast("Не удалось отправить отчёт.")
+        def success(req,message):
+            toast('Отчёт получен, спасибо')
+
+        req = UrlRequest(self.config_["report_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+
     def send_equation(self,*args,from_history=False):
         equation = args[0] if args else self.root.ids.textarea.ids.text_field.text
 
@@ -310,6 +320,8 @@ class MathCamera(MDApp):
                             kv_card.add_widget(output_label)
 
                         self.root.ids.gl.add_widget(kv_card)
+                        self.root.ids.gl.problem_main = ''.join(str(gamma_result[0]['output']).split(" "))
+                        self.root.ids.gl.problem_input = equation
                     
                     if self.settings['debug_mode'] == True:
                         self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Скопировать json",on_release=lambda f:self.copy_content(str(gamma_result))))
