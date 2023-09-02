@@ -200,7 +200,7 @@ ScreenManager:
                                 icon: "pencil"
                                 on_release:
                                     app.set_screen("sc_text")
-                                    textarea.ids.text_field.text = gl.problem_main
+                                    textarea.ids.text_field.text = gl.problem_input
 
                             MDRelativeLayout:
                                 MDIconButton:
@@ -360,7 +360,7 @@ ScreenManager:
 
                     DrawerClickableItem:
                         icon: "information-outline"
-                        text: "v"+app.version_
+                        text: "Версия "+app.version_
     
     MDScreen:
         name:"onboarding_sc"
@@ -387,7 +387,35 @@ ScreenManager:
                     source:"media/onboarding-2.png"
 
                 MDRaisedButton:
-                    text:"Закрыть"
+                    text:"Дальше"
+                    theme_text_color: "Custom"
+                    text_color: "#02714C"
+                    md_bg_color:"white"
+                    theme_icon_color: "Custom"
+                    pos_hint:{"center_x":.5,"center_y":.08}
+                    on_release:onboarding_carousel.load_next(mode='next')
+
+            MDFloatLayout:
+                orientation:"vertical"
+                FitImage:
+                    source:"media/onboarding-3.png"
+
+                MDRaisedButton:
+                    text:"Дальше"
+                    theme_text_color: "Custom"
+                    text_color: "#02714C"
+                    md_bg_color:"white"
+                    theme_icon_color: "Custom"
+                    pos_hint:{"center_x":.5,"center_y":.08}
+                    on_release:onboarding_carousel.load_next(mode='next')
+
+            MDFloatLayout:
+                orientation:"vertical"
+                FitImage:
+                    source:"media/onboarding-4.png"
+
+                MDRaisedButton:
+                    text:"Готово"
                     theme_text_color: "Custom"
                     text_color: "#02714C"
                     md_bg_color:"white"

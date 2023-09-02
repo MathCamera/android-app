@@ -10,7 +10,6 @@ from kivy.core.clipboard import Clipboard
 from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
 from kivy.logger import Logger
-Loader.loading_image = "media/loader.png"
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
@@ -33,7 +32,10 @@ if platform == "android":
     from kvdroid.tools.darkmode import dark_mode
     change_statusbar_color("#02714C", "white")
 else:
-    Window.size = (360,600)
+    def toast(text):
+        print(text)
+
+    Window.size = (400,700)
 
 class MathCamera(MDApp):
     def __init__(self, **kwargs):
@@ -69,6 +71,10 @@ class MathCamera(MDApp):
         if platform == "android":
             self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
             self.chooser = Chooser(self.chooser_callback)
+        else:
+            self.theme_cls.theme_style = "Dark" 
+
+        Loader.loading_image = f"media/loader-{self.theme_cls.theme_style.lower()}.png"
 
     def on_stop(self):
         self.root.ids.preview.disconnect_camera()
@@ -269,6 +275,7 @@ class MathCamera(MDApp):
         params = urllib.parse.urlencode({'message':message,"user":"mobile app","platform":"android-app"})
         def error(req,message):
             toast("Не удалось отправить отчёт.")
+
         def success(req,message):
             toast('Отчёт получен, спасибо')
 
@@ -292,6 +299,7 @@ class MathCamera(MDApp):
                 if status_code == 0:
                     gamma_result = result['message']
                     self.root.ids.gl.clear_widgets()
+                    problem_main = ''.join(str(gamma_result[0]['output']).split(" "))
 
                     for card in gamma_result:
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
@@ -302,7 +310,7 @@ class MathCamera(MDApp):
                         kv_card.add_widget(title_label)
 
                         if contains_plot == True:
-                            plot_url = self.config_["plotting_url"].format(str(card['input']).replace(" ",""))
+                            plot_url = self.config_["plotting_url"]+"?src="+problem_main
                             image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5},size_hint=(1.3,3.5))
                             kv_card.height = dp(kv_card.height*1.4)+dp(image_widget.height*1.4)
                             kv_card.add_widget(image_widget)
@@ -320,7 +328,7 @@ class MathCamera(MDApp):
                             kv_card.add_widget(output_label)
 
                         self.root.ids.gl.add_widget(kv_card)
-                        self.root.ids.gl.problem_main = ''.join(str(gamma_result[0]['output']).split(" "))
+                        self.root.ids.gl.problem_main = problem_main
                         self.root.ids.gl.problem_input = equation
                     
                     if self.settings['debug_mode'] == True:
@@ -371,15 +379,12 @@ class MathCamera(MDApp):
 
             try:
                 if status_code == 0:
-                    result = " ".join(str(result).split())
-
                     if result == "":
                         popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                         popup.open()
                     
                     else:
                         self.set_screen("sc_text")
-                        if len(result) > 50: result = result[-50:]
                         self.root.ids.textarea.ids.text_field.text = result
                 
                 else:
