@@ -96,7 +96,9 @@ class MathCamera(MDApp):
                 self.config_[elem] = result[elem]
         
             if __version__ != result["latest_version"]:
-                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',buttons=[MDFlatButton(text="Обновить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:launch_update()),MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+                buttons = [MDFlatButton(text="Обновить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:launch_update())]
+                if result['old'] != True:buttons.append(MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss()))
+                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',auto_dismiss=not result['old'],buttons=buttons)
                 popup.open()  
 
                 def launch_update():
@@ -174,21 +176,23 @@ class MathCamera(MDApp):
         history_layout = self.root.ids.history_layout
         history_layout.clear_widgets()
         try:
-            if len(self.history) != 0:
+            history = dict(self.history)
+            if len(history.keys()) != 0:
                 self.root.ids.history_clear_btn.disabled = False
                 history_sw = MDList()
                 self.root.ids.history_layout.add_widget(history_sw)
 
-                for elem in self.history:
-                    equ_type = self.history[elem]['equ_type']
+                for elem in reversed(history):
+                    equ_type = history[elem]['equ_type']
                     equ_text = elem
                     f = lambda s:self.send_equation(s.secondary_text,from_history=True)
                     history_sw.add_widget(TwoLineListItem(text=equ_type,secondary_text=equ_text,on_release=f))
             else:
                 self.root.ids.history_clear_btn.disabled = True
                 history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
-        except:
-            self.clear_history()
+        except Exception as e:
+            print(e)
+            #self.clear_history()
             self.set_screen("sc_history")
 
     def clear_history(self):
@@ -330,10 +334,11 @@ class MathCamera(MDApp):
                         self.root.ids.gl.add_widget(kv_card)
                         self.root.ids.gl.problem_main = problem_main
                         self.root.ids.gl.problem_input = equation
+                        self.root.ids.gl.gamma_url = f"https://sympygamma.com/input/?i={gamma_result[0]['output'].replace(' ','')}"
                     
                     if self.settings['debug_mode'] == True:
                         self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Скопировать json",on_release=lambda f:self.copy_content(str(gamma_result))))
-                        self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Открыть в Sympy Gamma",on_release=lambda f:self.open_browser(f"https://sympygamma.com/input/?i={gamma_result[0]['output']}")))
+                        self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Открыть в Sympy Gamma",on_release=lambda f:self.open_browser(self.root.ids.gl.gamma_url)))
                     
                     self.set_screen("sc_solve")
                     

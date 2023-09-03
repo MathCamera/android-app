@@ -206,7 +206,7 @@ ScreenManager:
                                 MDIconButton:
                                     pos_hint:{"center_x":.9}
                                     icon: "alert-circle-outline"
-                                    on_release:app.send_report("Неверное решение задачи: "+gl.problem_input+"\nhttps://sympygamma.com/input/?i="+gl.problem_main)
+                                    on_release:app.send_report("Неверное решение задачи: "+gl.problem_input+"\n"+gl.gamma_url)
 
                         ScrollView:
                             id:gl_sw
@@ -354,12 +354,12 @@ ScreenManager:
                         icon: "information-outline"
                         text: "О нас"
                         on_release:
-                            app.open_browser("https://mathcamera.page.link/website")
+                            app.open_browser(app.config_['information_url'])
 
                     MDNavigationDrawerDivider:
 
                     DrawerClickableItem:
-                        icon: "information-outline"
+                        icon: "information"
                         text: "Версия "+app.version_
     
     MDScreen:
