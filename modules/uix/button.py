@@ -6,7 +6,6 @@ from kivy.properties import StringProperty, ListProperty,DictProperty
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.button import MDFlatButton
 
-
 Builder.load_string('''
 #:import MDIcon kivymd.uix.label.MDIcon
 <CustomFlatIconButton>:

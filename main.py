@@ -1,4 +1,4 @@
-__version__ = "0.9.0"
+__version__ = "0.9.5"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -20,6 +20,8 @@ from kivymd.uix.card import MDCard
 from kivymd.uix.fitimage import FitImage
 
 from modules.android_api import request_camera_permission,set_orientation
+from modules.core.update import check_update
+from modules.uix.reportdialog import ReportDialog
 from modules.xcamera import *
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
@@ -51,15 +53,14 @@ class MathCamera(MDApp):
         return Builder.load_file('data/md.kv')  
     
     def on_start(self):
-        if not os.path.exists(self.data_dir):
-            os.makedirs(self.data_dir)
-            shutil.copyfile("data/settings.json",os.path.join(self.data_dir,"settings.json"))
-            self.root.current = "onboarding_sc"
-
-        self.settings = json.load(open(os.path.join(self.data_dir,'settings.json')))
+        self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
         self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
 
-        if json.load(open('data/settings.json')).keys() != self.settings.keys():
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+            self.root.current = "onboarding_sc"
+
+        if list(json.load(open('data/settings.json')).keys()) != self.settings.keys():
             self.set_settings(reset=True)
 
         request_camera_permission()
@@ -81,32 +82,20 @@ class MathCamera(MDApp):
     
     def set_settings(self,reset=False):
         if reset == True:
-            self.settings = json.load(open('data/settings.json'))
-
-        with open(os.path.join(self.data_dir,'settings.json'),"w") as file:
-            file.write(json.dumps(self.settings))
-
-    def handle_switch(self,type,state):
-        self.settings[type] = state
-        self.set_settings()
+            default_history = json.load(open('data/settings.json'))
+            for elem in default_history:
+                self.settings[elem] = default_history[elem]
     
     def update_config(self):
         def success(req,result):
             for elem in result.keys():
                 self.config_[elem] = result[elem]
+
+            check_update(__version__,result)
         
-            if __version__ != result["latest_version"]:
-                buttons = [MDFlatButton(text="Обновить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:launch_update())]
-                if result['old'] != True:buttons.append(MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss()))
-                popup = MDDialog(title='Доступно новое обновление',text=f'Вы хотите обновить приложение?',auto_dismiss=not result['old'],buttons=buttons)
-                popup.open()  
-
-                def launch_update():
-                    webbrowser.open(result["download_url"])  
-
         def error(req, result):
             result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+            err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету и повторите попытку{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss()),MDFlatButton(text="Повторить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:retry())])
             popup.open()  
             
@@ -149,7 +138,7 @@ class MathCamera(MDApp):
             self.send_b64(base64_str)
 
         except Exception as e:
-            err = f"\n\n{e}" if self.settings["debug_mode"] == True else ""
+            err = f"\n\n{e}" if self.settings["debug_mode"]['mode'] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()  
         
@@ -157,20 +146,6 @@ class MathCamera(MDApp):
         if platform == "android":
             self.chooser.choose_content('image/*', multiple = False)
         else:pass
-
-    def set_kb(self,kb_name):
-        kb_manager = self.root.ids.kb_manager
-        screens_list = ["main_kb","trigonometry_kb","letters_kb"]
-        if kb_name == "next":
-            if screens_list.index(kb_manager.current)+1 < len(screens_list):
-                next_screen = screens_list[screens_list.index(kb_manager.current)+1]
-
-            elif screens_list.index(kb_manager.current)+1 == len(screens_list):
-                next_screen = screens_list[0]
-
-            kb_manager.current = next_screen
-
-        else:kb_manager.current = kb_name
 
     def load_history(self):
         history_layout = self.root.ids.history_layout
@@ -184,15 +159,15 @@ class MathCamera(MDApp):
 
                 for elem in reversed(history):
                     equ_type = history[elem]['equ_type']
-                    equ_text = elem
+                    equ_text = history[elem]['equation']
                     f = lambda s:self.send_equation(s.secondary_text,from_history=True)
                     history_sw.add_widget(TwoLineListItem(text=equ_type,secondary_text=equ_text,on_release=f))
             else:
                 self.root.ids.history_clear_btn.disabled = True
                 history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
         except Exception as e:
-            print(e)
-            #self.clear_history()
+            Logger.error(f"History exception: {e}")
+            self.clear_history()
             self.set_screen("sc_history")
 
     def clear_history(self):
@@ -200,11 +175,8 @@ class MathCamera(MDApp):
             self.history.delete(elem)
 
     def setup(self):
-        ids = self.root.ids
-        settings = self.settings
-
-        for elem_id in settings.keys():
-            ids[elem_id].active = settings[elem_id]
+        for elem_id in self.settings.keys():
+            self.root.ids[elem_id].active = self.settings[elem_id]['mode']
 
     def key_handler(self, window, keycode,*args):
         manager = self.root.ids["sm"]
@@ -252,11 +224,16 @@ class MathCamera(MDApp):
     
     def edit_textfield(self,text,move_cursor=0):
         textfield = self.root.ids.textarea.ids.text_field
+        self.root.ids.textarea.ids.text_field.last_edit = self.root.ids.textarea.ids.text_field.text
         cursor_index = int(textfield.cursor[0])
         textfield.text = textfield.text[:textfield.cursor[0]] + text + textfield.text[textfield.cursor[0]:]
         textfield.cursor = (cursor_index+len(text)-move_cursor,0)
+    
+    def undo_textfield(self):
+        self.root.ids.textarea.ids.text_field.text = self.root.ids.textarea.ids.text_field.last_edit
 
     def delete_textfield(self):
+        self.root.ids.textarea.ids.text_field.last_edit = self.root.ids.textarea.ids.text_field.text
         textfield = self.root.ids.textarea.ids.text_field
         cursor_index = int(textfield.cursor[0])
         if cursor_index > 0:
@@ -275,15 +252,39 @@ class MathCamera(MDApp):
 
         self.root.ids.textarea.ids.text_field.cursor = (cursor_pos,0)
 
+    def set_kb(self,kb_name):
+        kb_manager = self.root.ids.kb_manager
+        screens_list = ["main_kb","trigonometry_kb","letters_kb"]
+        if kb_name == "next":
+            if screens_list.index(kb_manager.current)+1 < len(screens_list):
+                next_screen = screens_list[screens_list.index(kb_manager.current)+1]
+
+            elif screens_list.index(kb_manager.current)+1 == len(screens_list):
+                next_screen = screens_list[0]
+
+            kb_manager.current = next_screen
+
+        else:kb_manager.current = kb_name
+
     def send_report(self,message):
-        params = urllib.parse.urlencode({'message':message,"user":"mobile app","platform":"android-app"})
-        def error(req,message):
-            toast("Не удалось отправить отчёт.")
+        reportdialog = ReportDialog()
+        reportdialog.set_message(message)
 
-        def success(req,message):
-            toast('Отчёт получен, спасибо')
+        report_message = MDDialog(title="Отчёт об ошибке",type="custom",content_cls=reportdialog,buttons=[MDFlatButton(text="Отправить",on_release=lambda x:send()),MDFlatButton(text="Закрыть",on_release=lambda x:report_message.dismiss())])
+        report_message.open()
+        
+        def send():
+            report_contact,report_text = reportdialog.get_data()
+            if report_contact!="" and report_text != "":
+                params = urllib.parse.urlencode({'message':report_text,"user":report_contact,"platform":"android","app_info":{"version":__version__,"screen":self.root.ids.sm.current}})
+                def error(req,message):
+                    toast("Не удалось отправить отчёт")
 
-        req = UrlRequest(self.config_["report_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+                def success(req,message):
+                    report_message.dismiss()
+                    toast('Отчёт получен, спасибо')
+
+                req = UrlRequest(self.config_["report_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     def send_equation(self,*args,from_history=False):
         equation = args[0] if args else self.root.ids.textarea.ids.text_field.text
@@ -303,9 +304,11 @@ class MathCamera(MDApp):
                 if status_code == 0:
                     gamma_result = result['message']
                     self.root.ids.gl.clear_widgets()
-                    problem_main = ''.join(str(gamma_result[0]['output']).split(" "))
+                    gamma_output = str(gamma_result[0]['output']) if 'output' in gamma_result[0].keys() else ""
+                    problem_main = ''.join(gamma_output.split(" "))
 
                     for card in gamma_result:
+                        valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
                         #contains_latex = 'pre_output' in list(card.keys()) and card['pre_output'] != card['var'] and card['pre_output'] != "\\mathtt{\\text{}}"
                         
@@ -327,33 +330,35 @@ class MathCamera(MDApp):
 
                         else:
                             kv_card.adaptive_height = True
-                            result_text = card['output']
+                            result_text = card['output'] if 'output' in card.keys() else ""
                             output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white")
                             kv_card.add_widget(output_label)
 
-                        self.root.ids.gl.add_widget(kv_card)
-                        self.root.ids.gl.problem_main = problem_main
-                        self.root.ids.gl.problem_input = equation
-                        self.root.ids.gl.gamma_url = f"https://sympygamma.com/input/?i={gamma_result[0]['output'].replace(' ','')}"
+                        if valid_card or contains_plot:
+                            self.root.ids.gl.add_widget(kv_card)
+
+                    self.root.ids.gl.problem_main = problem_main
+                    self.root.ids.gl.problem_input = equation
+                    self.root.ids.gl.gamma_url = f"https://sympygamma.com/input/?i={gamma_output.replace(' ','')}"
                     
-                    if self.settings['debug_mode'] == True:
+                    if self.settings['debug_mode']['mode'] == True:
                         self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Скопировать json",on_release=lambda f:self.copy_content(str(gamma_result))))
                         self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Открыть в Sympy Gamma",on_release=lambda f:self.open_browser(self.root.ids.gl.gamma_url)))
                     
                     self.set_screen("sc_solve")
                     
                     if from_history == False:
-                        self.history[equation] = {"equ_type":gamma_result[0]['title']}
+                        self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation}
 
                 else:
-                    err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+                    err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
                     popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()   
 
             def error(req, result):
                 loading_popup.dismiss()
                 result = str(result).replace("\n","")
-                err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+                err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
                 popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
                 
@@ -403,7 +408,7 @@ class MathCamera(MDApp):
         def error(req, result):
             loading_popup.dismiss()
             result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["debug_mode"] == True else ""
+            err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()
 

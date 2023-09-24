@@ -1,12 +1,14 @@
-#:import ClickableTextFieldRound modules.custom.textfield.ClickableTextFieldRound
-#:import CustomFlatIconButton modules.custom.button.CustomFlatIconButton
-#:import MultiModeFlatButton modules.custom.button.MultiModeFlatButton
+#:import ClickableTextFieldRound modules.uix.textfield.ClickableTextFieldRound
+#:import CustomFlatIconButton modules.uix.button.CustomFlatIconButton
+#:import MultiModeFlatButton modules.uix.button.MultiModeFlatButton
+#:import ReportDialog modules.uix.reportdialog.ReportDialog
 
-#:include modules/keyboard/main_kb.kv
-#:include modules/keyboard/letters_kb.kv
-##:include modules/keyboard/functions_kb.kv
-#:include modules/keyboard/top_kb.kv
-#:include modules/keyboard/trigonometry_kb.kv
+#:include modules/uix/keyboard/main_kb.kv
+#:include modules/uix/keyboard/letters_kb.kv
+##:include modules/uix/keyboard/functions_kb.kv
+##:include modules/uix/keyboard/grades_kb.kv
+#:include modules/uix/keyboard/top_kb.kv
+#:include modules/uix/keyboard/trigonometry_kb.kv
 
 <KeyboardFlatButton@MDFlatButton>:
     size_hint: 1, 1
@@ -177,6 +179,10 @@ ScreenManager:
                                     LETTERS_KB:
 
                                 #MDScreen:
+                                #    name:"grades_kb"
+                                #    GRADES_KB:
+
+                                #MDScreen:
                                 #    name:"functions_kb"
                                 #    FUNCTIONS_KB:
 
@@ -206,7 +212,7 @@ ScreenManager:
                                 MDIconButton:
                                     pos_hint:{"center_x":.9}
                                     icon: "alert-circle-outline"
-                                    on_release:app.send_report("Неверное решение задачи: "+gl.problem_input+"\n"+gl.gamma_url)
+                                    on_release:app.send_report("Неверное решение задачи: "+gl.problem_input)
 
                         ScrollView:
                             id:gl_sw
@@ -271,7 +277,7 @@ ScreenManager:
                             MDSwitch:
                                 adaptive_width:True
                                 id:debug_mode
-                                on_active: app.handle_switch("debug_mode",self.active)
+                                on_active: app.settings.put("debug_mode",mode=self.active)#app.handle_switch("debug_mode",self.active)
 
                         MDRectangleFlatIconButton:
                             icon: "autorenew"
