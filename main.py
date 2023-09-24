@@ -152,7 +152,7 @@ class MathCamera(MDApp):
         history_layout.clear_widgets()
         try:
             history = dict(self.history)
-            if len(history.keys()) != 0:
+            if self.history.count() != 0:
                 self.root.ids.history_clear_btn.disabled = False
                 history_sw = MDList()
                 self.root.ids.history_layout.add_widget(history_sw)
@@ -175,8 +175,11 @@ class MathCamera(MDApp):
             self.history.delete(elem)
 
     def setup(self):
-        for elem_id in self.settings.keys():
-            self.root.ids[elem_id].active = self.settings[elem_id]['mode']
+        try:
+            for elem_id in self.settings.keys():
+                self.root.ids[elem_id].active = self.settings[elem_id]['mode']
+        except:
+            self.set_settings(reset=True)
 
     def key_handler(self, window, keycode,*args):
         manager = self.root.ids["sm"]
