@@ -53,12 +53,12 @@ class MathCamera(MDApp):
         return Builder.load_file('data/md.kv')  
     
     def on_start(self):
-        self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
-        self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
-
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
             self.root.current = "onboarding_sc"
+    
+        self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
+        self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
 
         if list(json.load(open('data/settings.json')).keys()) != self.settings.keys():
             self.set_settings(reset=True)
