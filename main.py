@@ -1,4 +1,4 @@
-__version__ = "0.9.5"
+__version__ = "1.0.0"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -21,7 +21,6 @@ from kivymd.uix.fitimage import FitImage
 
 from modules.android_api import request_camera_permission,set_orientation
 from modules.core.update import check_update
-from modules.uix.reportdialog import ReportDialog
 from modules.xcamera import *
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
@@ -30,12 +29,18 @@ from io import BytesIO
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
-    from kvdroid.tools import change_statusbar_color,toast
+    from kvdroid.tools import change_statusbar_color,toast,navbar_color
     from kvdroid.tools.darkmode import dark_mode
     change_statusbar_color("#02714C", "white")
 else:
     def toast(text):
         print(text)
+
+    def navbar_color(color):
+        pass
+
+    def dark_mode():
+        return True
 
     Window.size = (400,700)
 
@@ -45,17 +50,20 @@ class MathCamera(MDApp):
         self.version_ = __version__
         self.data_dir = os.path.join("..","user_data")
         self.theme_cls.colors = json.load(open('data/themes.json'))
-        self.theme_cls.material_style = "M2"
+        self.theme_cls.material_style = "M3"
         self.main_colors = ["#02714C","#039866"]
         self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
 
     def build(self):        
         return Builder.load_file('data/md.kv')  
     
+    def test():
+        print("ok")
+    
     def on_start(self):
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
-            self.root.current = "onboarding_sc"
+            self.set_screen("onboarding_sc",root_=True)
     
         self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
         self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
@@ -69,22 +77,16 @@ class MathCamera(MDApp):
         Window.bind(on_keyboard=self.key_handler)
         self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
         
-        if platform == "android":
-            self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
-            self.chooser = Chooser(self.chooser_callback)
-        else:
-            self.theme_cls.theme_style = "Dark" 
+        self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
 
-        Loader.loading_image = f"media/loader-{self.theme_cls.theme_style.lower()}.png"
+        if platform == "android":
+            self.chooser = Chooser(self.chooser_callback)
+
+        Loader.loading_image = "media/loader-dark.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
+        Logger.info(f"App version:{__version__}")
 
     def on_stop(self):
         self.root.ids.preview.disconnect_camera()
-    
-    def set_settings(self,reset=False):
-        if reset == True:
-            default_history = json.load(open('data/settings.json'))
-            for elem in default_history:
-                self.settings[elem] = default_history[elem]
     
     def update_config(self):
         def success(req,result):
@@ -92,10 +94,11 @@ class MathCamera(MDApp):
                 self.config_[elem] = result[elem]
 
             check_update(__version__,result)
+            Logger.info(f"Api server response:{result}")
         
         def error(req, result):
             result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
+            err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету и повторите попытку{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss()),MDFlatButton(text="Повторить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:retry())])
             popup.open()  
             
@@ -104,7 +107,7 @@ class MathCamera(MDApp):
                 self.update_config()
 
         req = UrlRequest(self.config_['config_url'],on_success=success,on_failure=error,on_error=error,req_body=urllib.parse.urlencode({'version':self.version_}),req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-        
+
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
         for shared_file in shared_file_list:
@@ -138,7 +141,7 @@ class MathCamera(MDApp):
             self.send_b64(base64_str)
 
         except Exception as e:
-            err = f"\n\n{e}" if self.settings["debug_mode"]['mode'] == True else ""
+            err = f"\n\n{e}" if self.settings["enable_debug_mode"]['mode'] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удалось открыть изображение{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()  
         
@@ -167,22 +170,27 @@ class MathCamera(MDApp):
                 history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
         except Exception as e:
             Logger.error(f"History exception: {e}")
-            self.clear_history()
+            self.history.clear()
             self.set_screen("sc_history")
-
-    def clear_history(self):
-        for elem in self.history:
-            self.history.delete(elem)
 
     def setup(self):
         try:
             for elem_id in self.settings.keys():
                 self.root.ids[elem_id].active = self.settings[elem_id]['mode']
-        except:
+        except Exception as e:
+            Logger.error(f"Setup error: {e}")
             self.set_settings(reset=True)
 
+    def set_settings(self,reset=False):
+        if reset == True:
+            default_history = json.load(open('data/settings.json'))
+            self.settings.clear()
+            Logger.info("Settings: Clear settings")
+            for elem in default_history:
+                self.settings[elem] = default_history[elem]
+
     def key_handler(self, window, keycode,*args):
-        manager = self.root.ids["sm"]
+        manager = self.root.ids.sm
         if keycode in [27, 1001]:
             if manager.current != 'sc_photo':
                 self.set_screen(self.last_screen)
@@ -193,9 +201,10 @@ class MathCamera(MDApp):
         self.root.ids.preview.capture_photo(location="private",subdir="camera_tmp")
 
     def handle_camera(self):
-        flashlight_modes = {"on":"flash","off":"flash-off"}
-        state = self.root.ids.preview.flash(self.flashlight_mode)
-        self.root.ids.flashlight_btn.icon = flashlight_modes[state]
+        if self.root.ids.preview.camera_connected == True:
+            flashlight_modes = {"on":"flash","off":"flash-off"}
+            state = self.root.ids.preview.flash(self.flashlight_mode)
+            self.root.ids.flashlight_btn.icon = flashlight_modes[state]
 
     def switch_flashlight_mode(self):
         flashlight_modes = {"on":"flash","off":"flash-off"}
@@ -209,21 +218,28 @@ class MathCamera(MDApp):
     def copy_content(self,text):
         Clipboard.copy(text)
 
-    def clear_cache(self):
-        paths = ['camera_tmp']
+    def clear_cache(self,paths):
         for path_name in paths:
             if os.path.exists(path_name):
                 shutil.rmtree(path_name, ignore_errors=True)
         
         toast("Кеш очищен")
 
-    def set_screen(self,screen_name,*screen_title):
-        if self.root.current == "main_sc":
-            self.last_screen = self.root.ids['sm'].current
-            self.root.ids['sm'].current = screen_name
-            if screen_title:self.root.ids['tb'].title = screen_title[0]
-            self.root.ids['nav_drawer'].set_state("closed")
-            self.root.ids.textarea.ids.text_field.focus = False
+    def set_screen(self,screen_name,*screen_title,root_=False):
+        if root_ == False:
+            if self.root.current == "main_sc":
+                self.last_screen = self.root.ids['sm'].current
+                self.root.ids['sm'].current = screen_name
+                if screen_title:self.root.ids['tb'].title = screen_title[0]
+                self.root.ids['nav_drawer'].set_state("closed")
+                self.root.ids.textarea.ids.text_field.focus = False
+                if screen_name in ["sc_photo"]:
+                    navbar_color("#000000")
+                else:
+                    color = "#121212" if dark_mode() == True else "#FFFFFF"
+                    navbar_color(color)
+        else:
+            self.root.current = screen_name
     
     def edit_textfield(self,text,move_cursor=0):
         textfield = self.root.ids.textarea.ids.text_field
@@ -268,26 +284,6 @@ class MathCamera(MDApp):
             kb_manager.current = next_screen
 
         else:kb_manager.current = kb_name
-
-    def send_report(self,message):
-        reportdialog = ReportDialog()
-        reportdialog.set_message(message)
-
-        report_message = MDDialog(title="Отчёт об ошибке",type="custom",content_cls=reportdialog,buttons=[MDFlatButton(text="Отправить",on_release=lambda x:send()),MDFlatButton(text="Закрыть",on_release=lambda x:report_message.dismiss())])
-        report_message.open()
-        
-        def send():
-            report_contact,report_text = reportdialog.get_data()
-            if report_contact!="" and report_text != "":
-                params = urllib.parse.urlencode({'message':report_text,"user":report_contact,"platform":"android","app_info":{"version":__version__,"screen":self.root.ids.sm.current}})
-                def error(req,message):
-                    toast("Не удалось отправить отчёт")
-
-                def success(req,message):
-                    report_message.dismiss()
-                    toast('Отчёт получен, спасибо')
-
-                req = UrlRequest(self.config_["report_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     def send_equation(self,*args,from_history=False):
         equation = args[0] if args else self.root.ids.textarea.ids.text_field.text
@@ -344,7 +340,7 @@ class MathCamera(MDApp):
                     self.root.ids.gl.problem_input = equation
                     self.root.ids.gl.gamma_url = f"https://sympygamma.com/input/?i={gamma_output.replace(' ','')}"
                     
-                    if self.settings['debug_mode']['mode'] == True:
+                    if self.settings['enable_debug_mode']['mode'] == True:
                         self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Скопировать json",on_release=lambda f:self.copy_content(str(gamma_result))))
                         self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Открыть в Sympy Gamma",on_release=lambda f:self.open_browser(self.root.ids.gl.gamma_url)))
                     
@@ -354,14 +350,14 @@ class MathCamera(MDApp):
                         self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation}
 
                 else:
-                    err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
+                    err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                     popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()   
 
             def error(req, result):
                 loading_popup.dismiss()
                 result = str(result).replace("\n","")
-                err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
+                err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                 popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
                 
@@ -371,14 +367,10 @@ class MathCamera(MDApp):
             self.root.ids.textarea.ids.text_field.error = True
 
     def get_logs(self):
-        logs_path = '.kivy/logs'
-        r = os.listdir(logs_path)
-        last_log = len(r)-2
-
-        f = open(f"{logs_path}/{r[last_log]}", 'r')
-        file_contents = f.read()
-        f.close()
-        return file_contents
+        logs_path = shutil.make_archive('logs', 'zip', root_dir='.kivy/logs')
+        ss = SharedStorage()
+        ss.copy_to_shared(logs_path,filepath='/logs')
+        toast(f"Логи выгружены: Documents/MathCamera/logs")
 
     def send_b64(self,b64):
         loading_popup = MDDialog(title='Загрузка',text='Ожидаем ответ от сервера...',auto_dismiss=False)
@@ -411,12 +403,13 @@ class MathCamera(MDApp):
         def error(req, result):
             loading_popup.dismiss()
             result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["debug_mode"]['mode'] == True else ""
+            err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
             popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()
 
         if "ocr_url" in self.config_.keys():
-            req = UrlRequest(self.config_["ocr_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+            ocr_url = self.config_["debug_server_url"] if self.settings["enable_test_server"]['mode'] == True else self.config_["ocr_url"]
+            req = UrlRequest(ocr_url,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
             
 if __name__ == "__main__":
     MathCamera().run()
