@@ -78,6 +78,7 @@ class MathCamera(MDApp):
         self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
         
         self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
+        navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
 
         if platform == "android":
             self.chooser = Chooser(self.chooser_callback)
@@ -233,11 +234,6 @@ class MathCamera(MDApp):
                 if screen_title:self.root.ids['tb'].title = screen_title[0]
                 self.root.ids['nav_drawer'].set_state("closed")
                 self.root.ids.textarea.ids.text_field.focus = False
-                if screen_name in ["sc_photo"]:
-                    navbar_color("#000000")
-                else:
-                    color = "#121212" if dark_mode() == True else "#FFFFFF"
-                    navbar_color(color)
         else:
             self.root.current = screen_name
     
