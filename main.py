@@ -1,4 +1,4 @@
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -18,6 +18,7 @@ from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
 from kivymd.uix.fitimage import FitImage
+from kivymd.uix.boxlayout import MDBoxLayout
 
 from modules.android_api import request_camera_permission,set_orientation
 from modules.core.update import check_update
@@ -26,6 +27,7 @@ from modules.xcamera import *
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from PIL import Image
 from io import BytesIO
+from random import randint
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
@@ -55,10 +57,7 @@ class MathCamera(MDApp):
         self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
 
     def build(self):        
-        return Builder.load_file('data/md.kv')  
-    
-    def test():
-        print("ok")
+        return Builder.load_file('data/md.kv')
     
     def on_start(self):
         if not os.path.exists(self.data_dir):
@@ -233,31 +232,34 @@ class MathCamera(MDApp):
                 self.root.ids['sm'].current = screen_name
                 if screen_title:self.root.ids['tb'].title = screen_title[0]
                 self.root.ids['nav_drawer'].set_state("closed")
-                self.root.ids.textarea.ids.text_field.focus = False
+                self.root.ids.textarea.focus = False
         else:
             self.root.current = screen_name
     
     def edit_textfield(self,text,move_cursor=0):
-        textfield = self.root.ids.textarea.ids.text_field
-        self.root.ids.textarea.ids.text_field.last_edit = self.root.ids.textarea.ids.text_field.text
+        textfield = self.root.ids.textarea
+        self.root.ids.textarea.last_edit = self.root.ids.textarea.text
         cursor_index = int(textfield.cursor[0])
         textfield.text = textfield.text[:textfield.cursor[0]] + text + textfield.text[textfield.cursor[0]:]
         textfield.cursor = (cursor_index+len(text)-move_cursor,0)
     
     def undo_textfield(self):
-        self.root.ids.textarea.ids.text_field.text = self.root.ids.textarea.ids.text_field.last_edit
+        self.root.ids.textarea.text = self.root.ids.textarea.last_edit
 
     def delete_textfield(self):
-        self.root.ids.textarea.ids.text_field.last_edit = self.root.ids.textarea.ids.text_field.text
-        textfield = self.root.ids.textarea.ids.text_field
+        self.root.ids.textarea.last_edit = self.root.ids.textarea.text
+        textfield = self.root.ids.textarea
         cursor_index = int(textfield.cursor[0])
         if cursor_index > 0:
             textfield.text = textfield.text[:(cursor_index-1)] + textfield.text[cursor_index:]
         textfield.cursor = (cursor_index-1,0)
 
+    def clear_textfield(self):
+        self.root.ids.textarea.text = ""
+
     def move_cursor(self,direction):
-        cursor = self.root.ids.textarea.ids.text_field.cursor
-        max_index = len(self.root.ids.textarea.ids.text_field.text)+1
+        cursor = self.root.ids.textarea.cursor
+        max_index = len(self.root.ids.textarea.text)+1
 
         if direction == "right":
             cursor_pos = cursor[0]+1 if cursor[0]+1 < max_index else 0
@@ -265,7 +267,7 @@ class MathCamera(MDApp):
         if direction == "left":
             cursor_pos = cursor[0]-1 if cursor[0]-1 >= 0 else max_index
 
-        self.root.ids.textarea.ids.text_field.cursor = (cursor_pos,0)
+        self.root.ids.textarea.cursor = (cursor_pos,0)
 
     def set_kb(self,kb_name):
         kb_manager = self.root.ids.kb_manager
@@ -282,12 +284,12 @@ class MathCamera(MDApp):
         else:kb_manager.current = kb_name
 
     def send_equation(self,*args,from_history=False):
-        equation = args[0] if args else self.root.ids.textarea.ids.text_field.text
+        equation = args[0] if args else self.root.ids.textarea.text
 
         if equation != "":
-            self.root.ids.textarea.ids.text_field.focus = False
+            self.root.ids.textarea.focus = False
 
-            loading_popup = MDDialog(title='Загрузка',text='Ожидаем ответ от сервера...',auto_dismiss=False)
+            loading_popup = MDDialog(title='Загрузка',auto_dismiss=False)
             loading_popup.open()
 
             params = urllib.parse.urlencode({'src':equation})
@@ -301,6 +303,13 @@ class MathCamera(MDApp):
                     self.root.ids.gl.clear_widgets()
                     gamma_output = str(gamma_result[0]['output']) if 'output' in gamma_result[0].keys() else ""
                     problem_main = ''.join(gamma_output.split(" "))
+                    
+                    adv_index = randint(1,len(self.config_['adv_urls']))
+                    adv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",size_hint_y=None,on_release=lambda f:self.open_browser(self.config_["adv_urls"][adv_index-1]))
+                    image_widget = FitImage(source=self.config_['adv_url'].format(adv_index),radius=(20,20,20,20))
+                    adv_card.add_widget(image_widget)
+
+                    self.root.ids.gl.add_widget(adv_card)
 
                     for card in gamma_result:
                         valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
@@ -347,20 +356,20 @@ class MathCamera(MDApp):
 
                 else:
                     err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-                    popup = MDDialog(title='Ошибка',text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+                    popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()   
 
             def error(req, result):
                 loading_popup.dismiss()
                 result = str(result).replace("\n","")
                 err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-                popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+                popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
                 
             if "math_solve_url" in self.config_.keys():
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
         else:
-            self.root.ids.textarea.ids.text_field.error = True
+            self.root.ids.textarea.error = True
 
     def get_logs(self):
         logs_path = shutil.make_archive('logs', 'zip', root_dir='.kivy/logs')
@@ -369,38 +378,30 @@ class MathCamera(MDApp):
         toast(f"Логи выгружены: Documents/MathCamera/logs")
 
     def send_b64(self,b64):
-        loading_popup = MDDialog(title='Загрузка',text='Ожидаем ответ от сервера...',auto_dismiss=False)
+        loading_popup = MDDialog(title='Загрузка',auto_dismiss=False)
         loading_popup.open()
 
         params = urllib.parse.urlencode({'src':b64})
+
         def success(req, result):
             loading_popup.dismiss()
-            status_code = result['status_code']
-            result = result["message"]
 
-            try:
-                if status_code == 0:
-                    if result == "":
-                        popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-                        popup.open()
-                    
-                    else:
-                        self.set_screen("sc_text")
-                        self.root.ids.textarea.ids.text_field.text = result
-                
-                else:
-                    popup = MDDialog(title="Ошибка",text='{result}\nStatus code: {st_code}'.format(result=result,st_code=status_code),buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+            if result['status_code'] == 0:
+                if result['message'] == "":
+                    popup = MDDialog(text="Не удалось распознать задачу",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()
                     
-            except:
-                popup = MDDialog(title="Ошибка",text="Не удалось распознать текст на фото",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-                popup.open()   
+                else:
+                    self.set_screen("sc_text")
+                    self.root.ids.textarea.text = result["message"]
+                
+            else:error()
 
         def error(req, result):
             loading_popup.dismiss()
             result = str(result).replace("\n","")
             err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+            popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
             popup.open()
 
         if "ocr_url" in self.config_.keys():

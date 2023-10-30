@@ -45,30 +45,6 @@
     icon_color:app.theme_cls.text_color
     text_color:app.theme_cls.text_color
 
-<ClickableTextFieldRound>:
-    #size_hint_y: None
-    height: text_field.height
-
-    MDTextField:
-        id: text_field
-        hint_text:"Введите математическую задачу"
-        text: root.text
-        helper_text: 'Это поле не должно быть пустым'
-        helper_text_mode: "on_error"
-        pos_hint:{"top":1}
-        keyboard_mode:"managed"
-        max_height: "140dp"
-        color:app.theme_cls.error_color
-        use_bubble: False
-
-    MDIconButton:
-        icon: "close-circle-outline"
-        pos_hint: {"center_y": .5}
-        pos: text_field.width - self.width + dp(8), 0
-        theme_text_color: "Hint"
-        on_release: text_field.text = ""
-        pos_hint:{"top":1}
-
 ScreenManager:
     id:root_sm
     MDScreen:
@@ -146,34 +122,36 @@ ScreenManager:
                     name:"sc_text"
                     on_enter:
                         tb.title="Калькулятор"
-                        textarea.ids.text_field.focus=True
-                        textarea.ids.text_field.error=False
+                        textarea.focus=True
+                        textarea.error=False
 
                     MDBoxLayout:
                         padding:[0,tb.height + dp(15),0,0]
                         orientation:"vertical"
 
                         MDBoxLayout:
-                            id:text_inp_bl
-                            size_hint_y: 0.8
-                            padding:[20,0,20,30]
-                            orientation:"vertical"
+                            padding:[10,0,10,20]
+                            RelativeLayout:
+                                TextInput:
+                                    id:textarea
+                                    size_hint: 1, 1
+                                    background_color: app.theme_cls.bg_normal
+                                    hint_text:"Введите математическую задачу"
+                                    keyboard_mode:"managed"
+                                    use_bubble: False
+                                    background_color: 0,0,0,0  
+                                    foreground_color:app.theme_cls.text_color
+                                    font_size:"24sp"
+                                    cursor_color:app.theme_cls.secondary_text_color
 
-                            ClickableTextFieldRound:
-                                id:textarea
-
-                            MDRectangleFlatIconButton:
-                                id:send_btn
-                                icon: "arrow-right"
-                                text: "Отправить"
-                                pos_hint:{"center_x":.5}
-                                theme_text_color: "Custom"
-                                text_color: "white"
-                                md_bg_color:"#02714C"
-                                theme_icon_color: "Custom"
-                                icon_color: "white"
-                                on_release:
-                                    app.send_equation(textarea.ids.text_field.text)
+                                MDFloatingActionButton:
+                                    pos_hint:{"center_x":.9,"center_y":.1}
+                                    theme_icon_color: "Custom"
+                                    icon_color: "white"
+                                    md_bg_color:"#02714C"
+                                    icon: "send"
+                                    on_release:
+                                        app.send_equation(textarea.text)
 
                         TOP_KB:
 
@@ -221,7 +199,7 @@ ScreenManager:
                                 icon: "pencil"
                                 on_release:
                                     app.set_screen("sc_text")
-                                    textarea.ids.text_field.text = gl.problem_input
+                                    textarea.text = gl.problem_input
 
                         ScrollView:
                             id:gl_sw

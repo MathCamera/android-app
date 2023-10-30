@@ -3,7 +3,6 @@ from kivy.lang import Builder
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.properties import StringProperty, ListProperty,DictProperty
 
-from kivymd.uix.button import MDIconButton
 from kivymd.uix.button import MDFlatButton
 
 Builder.load_string('''
@@ -23,12 +22,8 @@ Builder.load_string('''
         size_hint: 1, 1
         halign: 'center'
         theme_text_color: 'Primary'
+                    
 ''')
-
-class CustomFlatIconButton(MDFlatButton):
-    icon = StringProperty('android')
-    bg_color = ListProperty((1, 1, 1, 0))
-
 
 class LongPressButton(ButtonBehavior):
     __events__ = ('on_long_press', 'on_short_press')
@@ -60,9 +55,9 @@ class LongPressButton(ButtonBehavior):
         else:
             self._do_short_press()
 
-
-class LongPressIconButton(LongPressButton, MDIconButton):
-    pass
+class CustomFlatIconButton(LongPressButton,MDFlatButton):
+    icon = StringProperty('android')
+    bg_color = ListProperty((1, 1, 1, 0))
 
 class MultiModeFlatButton(LongPressButton, MDFlatButton):
     modes = ListProperty(['', ''])

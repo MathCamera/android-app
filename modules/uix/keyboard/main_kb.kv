@@ -19,9 +19,14 @@
         on_short_press: app.edit_textfield(self.value)
 
     MultiModeFlatButton:
-        modes: ['G','E']
-        values: ['G','E']
+        modes: ['(','[','{']
+        values: ['(','[','{']
         on_short_press: app.edit_textfield(self.value)
+
+    MultiModeFlatButton:
+        modes: [')',']','}']
+        values: [')',']','}']
+        on_short_press: app.edit_textfield(self.value,1)
 
     MultiModeFlatButton:
         modes: ['√','³√','⁴√']
@@ -29,18 +34,14 @@
         on_short_press: app.edit_textfield(self.value,1)
 
     KeyboardFlatButton:
-        text: 'π'
-        on_press: app.edit_textfield(self.text)
-
-    KeyboardFlatButton:
         text: '□!'
         font_name:"media/fonts/ArialMT.ttf"
         on_press: app.edit_textfield("!")
 
     MultiModeFlatButton:
-        modes: ['( )','[ ]','{ }']
-        values: ['()','[]','{}']
-        on_short_press: app.edit_textfield(self.value,1)
+        modes: ['π','E']
+        values: ['π','E']
+        on_short_press: app.edit_textfield(self.value)
 
     KeyboardFlatButton:
         text: '7'
