@@ -56,7 +56,7 @@ ScreenManager:
                 title:"Камера"
                 pos_hint: {"top": 1}
                 md_bg_color: "#02714C"
-                left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+                left_action_items: [["menu", lambda x: app.show_menu()]]
                 right_action_items:[["help-circle-outline", lambda x: app.set_screen("onboarding_sc",root_=True), "", "Справка"]]
 
             ScreenManager:
@@ -123,7 +123,6 @@ ScreenManager:
                     on_enter:
                         tb.title="Калькулятор"
                         textarea.focus=True
-                        textarea.error=False
 
                     MDBoxLayout:
                         padding:[0,tb.height + dp(15),0,0]
@@ -182,11 +181,13 @@ ScreenManager:
                 Screen:
                     on_enter:
                         tb.title="Решение"
+                        app.show_adv()
                     name:"sc_solve"
 
                     BoxLayout:
                         orientation:"vertical"
                         padding:[20,tb.height + dp(5),20,20]
+                        id:sc_solve_layout
                         MDGridLayout:
                             cols:3
                             adaptive_height:True
@@ -212,7 +213,19 @@ ScreenManager:
                                 spacing:10
                                 size_hint_y: None
                                 height: self.minimum_height
-
+                    
+                        MDBoxLayout:
+                            orientation:"vertical"
+                            height:sc_solve_layout.height/8
+                            size_hint_y:None
+                            padding:[0,10,0,0]
+                            MDCard:
+                                id:adv_card
+                                size_hint_y:1
+                                height:self.parent.parent.parent.height/5
+                                FitImage:
+                                    id:adv_image
+                            
                 Screen:
                     name:"sc_history"
                     on_enter:

@@ -42,7 +42,7 @@ else:
         pass
 
     def dark_mode():
-        return True
+        return False
 
     Window.size = (400,700)
 
@@ -82,11 +82,15 @@ class MathCamera(MDApp):
         if platform == "android":
             self.chooser = Chooser(self.chooser_callback)
 
-        Loader.loading_image = "media/loader-dark.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
+        Loader.loading_image = "media/loader.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
         Logger.info(f"App version:{__version__}")
 
     def on_stop(self):
         self.root.ids.preview.disconnect_camera()
+
+    def show_menu(self):
+        self.root.ids.nav_drawer.set_state("open")
+        self.root.ids.textarea.focus=False
     
     def update_config(self):
         def success(req,result):
@@ -283,6 +287,11 @@ class MathCamera(MDApp):
 
         else:kb_manager.current = kb_name
 
+    def show_adv(self):
+        adv_index = randint(1,len(self.config_['adv_urls']))
+        self.root.ids.adv_card.on_release = lambda:self.open_browser(self.config_["adv_urls"][adv_index-1])
+        self.root.ids.adv_image.source = self.config_['adv_url'].format(adv_index)
+
     def send_equation(self,*args,from_history=False):
         equation = args[0] if args else self.root.ids.textarea.text
 
@@ -303,25 +312,18 @@ class MathCamera(MDApp):
                     self.root.ids.gl.clear_widgets()
                     gamma_output = str(gamma_result[0]['output']) if 'output' in gamma_result[0].keys() else ""
                     problem_main = ''.join(gamma_output.split(" "))
-                    
-                    adv_index = randint(1,len(self.config_['adv_urls']))
-                    adv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",size_hint_y=None,on_release=lambda f:self.open_browser(self.config_["adv_urls"][adv_index-1]))
-                    image_widget = FitImage(source=self.config_['adv_url'].format(adv_index),radius=(20,20,20,20))
-                    adv_card.add_widget(image_widget)
-
-                    self.root.ids.gl.add_widget(adv_card)
 
                     for card in gamma_result:
                         valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
                         #contains_latex = 'pre_output' in list(card.keys()) and card['pre_output'] != card['var'] and card['pre_output'] != "\\mathtt{\\text{}}"
-                        
+
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6")
                         kv_card.add_widget(title_label)
 
                         if contains_plot == True:
-                            plot_url = self.config_["plotting_url"]+"?src="+problem_main
+                            plot_url = self.config_["plotting_url"]+"?src="+(card['output'].replace(" ",""))
                             image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5},size_hint=(1.3,3.5))
                             kv_card.height = dp(kv_card.height*1.4)+dp(image_widget.height*1.4)
                             kv_card.add_widget(image_widget)
@@ -368,8 +370,6 @@ class MathCamera(MDApp):
                 
             if "math_solve_url" in self.config_.keys():
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-        else:
-            self.root.ids.textarea.error = True
 
     def get_logs(self):
         logs_path = shutil.make_archive('logs', 'zip', root_dir='.kivy/logs')
