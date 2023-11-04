@@ -1,47 +1,11 @@
-#:import ClickableTextFieldRound modules.uix.textfield.ClickableTextFieldRound
-#:import CustomFlatIconButton modules.uix.button.CustomFlatIconButton
-#:import MultiModeFlatButton modules.uix.button.MultiModeFlatButton
-#:import ReportDialog modules.uix.reportdialog.ReportDialog
-
-#:include modules/uix/keyboard/main_kb.kv
-#:include modules/uix/keyboard/letters_kb.kv
-##:include modules/uix/keyboard/functions_kb.kv
-##:include modules/uix/keyboard/grades_kb.kv
-#:include modules/uix/keyboard/top_kb.kv
-#:include modules/uix/keyboard/trigonometry_kb.kv
-
-<KeyboardFlatButton@MDFlatButton>:
-    size_hint: 1, 1
-    md_bg_color:app.theme_cls.bg_light
-    on_parent:
-        self.font_size *= 2
-    ripple_duration_in_fast: .1
-
-<LetterFlatButton@MDFlatButton>:
-    size_hint: 0.5,0.5
-    md_bg_color:app.theme_cls.bg_light
-    on_parent:
-        self.font_size *= 1.5
-    ripple_duration_in_fast: .1
-
-<CustomFlatIconButton>:
-    size_hint: 1, 1
-    md_bg_color:app.theme_cls.bg_light
-    ripple_duration_in_fast: .1
-
-<MultiModeFlatButton>:
-    text: self.modes[0]
-    value: self.values[0]
-    size_hint: 1, 1
-    md_bg_color:app.theme_cls.divider_color
-    on_parent:
-        self.font_size *= 2
-    ripple_duration_in_fast: .1
+##:import ReportDialog modules.uix.reportdialog.ReportDialog
+#:include modules/uix/keyboard/kb.kv
+#:import NoTransition kivy.uix.screenmanager.NoTransition
 
 <DrawerClickableItem@MDNavigationDrawerItem>
     _no_ripple_effect: True
     focus_behavior: False
-    selected_color:app.theme_cls.text_color #"#DCDCDC" if app.theme_cls.theme_style == "Dark" else "#101010"
+    selected_color:app.theme_cls.text_color
     icon_color:app.theme_cls.text_color
     text_color:app.theme_cls.text_color
 
@@ -61,7 +25,7 @@ ScreenManager:
 
             ScreenManager:
                 id:sm
-
+                transition:NoTransition()
                 MDScreen:
                     name:"sc_photo"
                     on_enter:
@@ -154,31 +118,8 @@ ScreenManager:
                                     on_release:
                                         app.send_equation(textarea.text)
 
-                        TOP_KB:
-
-                        MDBoxLayout:
-                            orientation:"vertical"
-                            ScreenManager:
-                                id:kb_manager
-                                MDScreen:
-                                    name:"main_kb"
-                                    MAIN_KB:
-
-                                MDScreen:
-                                    name:"trigonometry_kb"
-                                    TRIGONOMETRY_KB:
-
-                                MDScreen:
-                                    name:"letters_kb"
-                                    LETTERS_KB:
-
-                                #MDScreen:
-                                #    name:"grades_kb"
-                                #    GRADES_KB:
-
-                                #MDScreen:
-                                #    name:"functions_kb"
-                                #    FUNCTIONS_KB:
+                        KB_MAIN:
+                            id:kb
 
                 Screen:
                     on_enter:
@@ -401,9 +342,9 @@ ScreenManager:
                 MDNavigationDrawerMenu:
                     MDNavigationDrawerHeader:
                         title: "MathCamera"
-                        source: "media/transparent-icon.png"
-                        spacing:"4dp"
-                        padding: "12dp", 0, 0, "12dp"
+                        source: "media/app-favicon.png"
+                        spacing:"10dp"
+                        padding: [12,0,0,12]
 
                     MDNavigationDrawerDivider:
 

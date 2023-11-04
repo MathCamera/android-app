@@ -1,4 +1,4 @@
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -19,33 +19,17 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
 from kivymd.uix.fitimage import FitImage
 
-from modules.android_api import request_camera_permission,set_orientation
-from modules.core.update import check_update
+from modules.platform_api import *
 from modules.xcamera import *
+from modules.core.update import check_update
+from modules.uix.loadingdialog import LoadingDialog
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from PIL import Image
 from io import BytesIO
 from random import randint
 
-if platform == "android":
-    from androidstorage4kivy import Chooser,SharedStorage
-    from kvdroid.tools import change_statusbar_color,toast,navbar_color
-    from kvdroid.tools.darkmode import dark_mode
-    change_statusbar_color("#02714C", "white")
-else:
-    def toast(text):
-        print(text)
-
-    def navbar_color(color):
-        pass
-
-    def dark_mode():
-        return False
-
-    Window.size = (400,700)
-
-class MathCamera(MDApp):
+class app_main(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.version_ = __version__
@@ -59,6 +43,17 @@ class MathCamera(MDApp):
         return Builder.load_file('data/md.kv')
     
     def on_start(self):
+        if platform == "android":
+            self.chooser = Chooser(self.chooser_callback)
+
+        else:
+            Window.size = (400,700)
+
+        set_orientation()
+        request_camera_permission()
+        navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
+        change_statusbar_color("#02714C", "white")
+
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
             self.set_screen("onboarding_sc",root_=True)
@@ -69,20 +64,14 @@ class MathCamera(MDApp):
         if list(json.load(open('data/settings.json')).keys()) != self.settings.keys():
             self.set_settings(reset=True)
 
-        request_camera_permission()
-        set_orientation()
         self.update_config()
         Window.bind(on_keyboard=self.key_handler)
         self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
         
         self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
-        navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
-
-        if platform == "android":
-            self.chooser = Chooser(self.chooser_callback)
 
         Loader.loading_image = "media/loader.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
-        Logger.info(f"App version:{__version__}")
+        Logger.info(f"App version: {__version__}")
 
     def on_stop(self):
         self.root.ids.preview.disconnect_camera()
@@ -97,7 +86,7 @@ class MathCamera(MDApp):
                 self.config_[elem] = result[elem]
 
             check_update(__version__,result)
-            Logger.info(f"Api server response:{result}")
+            Logger.info(f"Api server response: {result}")
         
         def error(req, result):
             result = str(result).replace("\n","")
@@ -154,6 +143,8 @@ class MathCamera(MDApp):
         else:pass
 
     def load_history(self):
+        loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
+        loading_popup.open()
         history_layout = self.root.ids.history_layout
         history_layout.clear_widgets()
         try:
@@ -171,7 +162,10 @@ class MathCamera(MDApp):
             else:
                 self.root.ids.history_clear_btn.disabled = True
                 history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
+            loading_popup.dismiss()
+            
         except Exception as e:
+            loading_popup.dismiss()
             Logger.error(f"History exception: {e}")
             self.history.clear()
             self.set_screen("sc_history")
@@ -228,63 +222,22 @@ class MathCamera(MDApp):
         
         toast("Кеш очищен")
 
+    def get_logs(self):
+        logs_path = shutil.make_archive('logs', 'zip', root_dir='.kivy/logs')
+        ss = SharedStorage()
+        ss.copy_to_shared(logs_path,filepath='/logs')
+        toast(f"Логи выгружены: Documents/MathCamera/logs")
+
     def set_screen(self,screen_name,*screen_title,root_=False):
+        self.root.ids['nav_drawer'].set_state("closed")
+        self.root.ids.textarea.focus=False
         if root_ == False:
             if self.root.current == "main_sc":
                 self.last_screen = self.root.ids['sm'].current
                 self.root.ids['sm'].current = screen_name
                 if screen_title:self.root.ids['tb'].title = screen_title[0]
-                self.root.ids['nav_drawer'].set_state("closed")
-                self.root.ids.textarea.focus = False
         else:
             self.root.current = screen_name
-    
-    def edit_textfield(self,text,move_cursor=0):
-        textfield = self.root.ids.textarea
-        self.root.ids.textarea.last_edit = self.root.ids.textarea.text
-        cursor_index = int(textfield.cursor[0])
-        textfield.text = textfield.text[:textfield.cursor[0]] + text + textfield.text[textfield.cursor[0]:]
-        textfield.cursor = (cursor_index+len(text)-move_cursor,0)
-    
-    def undo_textfield(self):
-        self.root.ids.textarea.text = self.root.ids.textarea.last_edit
-
-    def delete_textfield(self):
-        self.root.ids.textarea.last_edit = self.root.ids.textarea.text
-        textfield = self.root.ids.textarea
-        cursor_index = int(textfield.cursor[0])
-        if cursor_index > 0:
-            textfield.text = textfield.text[:(cursor_index-1)] + textfield.text[cursor_index:]
-        textfield.cursor = (cursor_index-1,0)
-
-    def clear_textfield(self):
-        self.root.ids.textarea.text = ""
-
-    def move_cursor(self,direction):
-        cursor = self.root.ids.textarea.cursor
-        max_index = len(self.root.ids.textarea.text)+1
-
-        if direction == "right":
-            cursor_pos = cursor[0]+1 if cursor[0]+1 < max_index else 0
-
-        if direction == "left":
-            cursor_pos = cursor[0]-1 if cursor[0]-1 >= 0 else max_index
-
-        self.root.ids.textarea.cursor = (cursor_pos,0)
-
-    def set_kb(self,kb_name):
-        kb_manager = self.root.ids.kb_manager
-        screens_list = ["main_kb","trigonometry_kb","letters_kb"]
-        if kb_name == "next":
-            if screens_list.index(kb_manager.current)+1 < len(screens_list):
-                next_screen = screens_list[screens_list.index(kb_manager.current)+1]
-
-            elif screens_list.index(kb_manager.current)+1 == len(screens_list):
-                next_screen = screens_list[0]
-
-            kb_manager.current = next_screen
-
-        else:kb_manager.current = kb_name
 
     def show_adv(self):
         adv_index = randint(1,len(self.config_['adv_urls']))
@@ -297,7 +250,7 @@ class MathCamera(MDApp):
         if equation != "":
             self.root.ids.textarea.focus = False
 
-            loading_popup = MDDialog(title='Загрузка',auto_dismiss=False)
+            loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
             loading_popup.open()
 
             params = urllib.parse.urlencode({'src':equation})
@@ -315,28 +268,21 @@ class MathCamera(MDApp):
                     for card in gamma_result:
                         valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
-                        #contains_latex = 'pre_output' in list(card.keys()) and card['pre_output'] != card['var'] and card['pre_output'] != "\\mathtt{\\text{}}"
 
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6")
                         kv_card.add_widget(title_label)
 
                         if contains_plot == True:
-                            plot_url = self.config_["plotting_url"]+"?src="+(card['output'].replace(" ",""))
+                            plot_url = self.config_["plotting_url"].format(str(card['input']).replace(" ",""))
                             image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5},size_hint=(1.3,3.5))
                             kv_card.height = dp(kv_card.height*1.4)+dp(image_widget.height*1.4)
                             kv_card.add_widget(image_widget)
 
-                        #elif contains_latex == True:
-                        #    plot_url = self.config_["latex_url"].format(f"{card['pre_output']} = {card['output']}".replace(" ",""))
-                        #    image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5})
-                        #    kv_card.height = image_widget.height
-                        #    kv_card.add_widget(image_widget)
-
                         else:
                             kv_card.adaptive_height = True
                             result_text = card['output'] if 'output' in card.keys() else ""
-                            output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white")
+                            output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white",font_name="media/fonts/ArialMT.ttf")
                             kv_card.add_widget(output_label)
 
                         if valid_card or contains_plot:
@@ -366,26 +312,19 @@ class MathCamera(MDApp):
                 err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                 popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
-                
+            self.config_["math_solve_url"] = "http://127.0.0.1:5000/api/solve"
             if "math_solve_url" in self.config_.keys():
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
-    def get_logs(self):
-        logs_path = shutil.make_archive('logs', 'zip', root_dir='.kivy/logs')
-        ss = SharedStorage()
-        ss.copy_to_shared(logs_path,filepath='/logs')
-        toast(f"Логи выгружены: Documents/MathCamera/logs")
-
     def send_b64(self,b64):
-        loading_popup = MDDialog(title='Загрузка',auto_dismiss=False)
+        loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
         loading_popup.open()
 
         params = urllib.parse.urlencode({'src':b64})
 
         def success(req, result):
-            loading_popup.dismiss()
-
             if result['status_code'] == 0:
+                loading_popup.dismiss()
                 if result['message'] == "":
                     popup = MDDialog(text="Не удалось распознать задачу",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()
@@ -394,7 +333,7 @@ class MathCamera(MDApp):
                     self.set_screen("sc_text")
                     self.root.ids.textarea.text = result["message"]
                 
-            else:error()
+            else:error(req,result)
 
         def error(req, result):
             loading_popup.dismiss()
@@ -406,6 +345,6 @@ class MathCamera(MDApp):
         if "ocr_url" in self.config_.keys():
             ocr_url = self.config_["debug_server_url"] if self.settings["enable_test_server"]['mode'] == True else self.config_["ocr_url"]
             req = UrlRequest(ocr_url,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
-            
-if __name__ == "__main__":
-    MathCamera().run()
+
+app_ = app_main()
+app_.run()

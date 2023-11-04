@@ -3,7 +3,7 @@ from kivymd.uix.button import MDFlatButton
 from kivymd.uix.dialog import MDDialog
 
 def check_update(current_version,data):
-    if current_version != data["latest_version"]:
+    if int("".join(str(current_version).split("."))) < int("".join(str(data["latest_version"]).split("."))):
         buttons = [MDFlatButton(text="Обновить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:launch_update())]
         old = 'old' in data.keys()
         if old != True:
@@ -13,4 +13,4 @@ def check_update(current_version,data):
         popup.open()  
 
         def launch_update():
-            webbrowser.open(data["download_url"])  
+            webbrowser.open(data["download_url"])

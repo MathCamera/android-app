@@ -12,21 +12,21 @@
 
     CustomFlatIconButton:
         icon: 'keyboard-tab'
-        on_press: app.set_kb("next")
+        on_press: set_kb(app,"next")
 
     CustomFlatIconButton:
         icon: 'arrow-left'
-        on_press: app.move_cursor("left")
+        on_press: move_cursor(app,"left")
 
     CustomFlatIconButton:
         icon: 'arrow-right'
-        on_press: app.move_cursor("right")
+        on_press: move_cursor(app,"right")
 
     CustomFlatIconButton:
         icon: 'backup-restore'
-        on_press: app.undo_textfield()
+        on_press: edit_textfield(app,"undo")
 
     CustomFlatIconButton:
         icon: 'backspace'
-        on_short_press: app.delete_textfield()
-        on_long_press: app.clear_textfield()
+        on_short_press: edit_textfield(app,"delete")
+        on_long_press: edit_textfield(app,"clear")

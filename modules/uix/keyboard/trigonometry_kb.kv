@@ -10,103 +10,106 @@
     size_hint_y: 1
     padding: dp(1.5)
     spacing: dp(1.5)
+    button_size_hint:0.5,0.5
+    button_font_size:1.5
 
-    LetterFlatButton:
-        text: 'rad'
-        on_press: app.edit_textfield(self.text+"()",1)
+    MultiModeFlatButton:
+        modes: ['rad','deg']
+        values: ['rad()','deg()']
+        on_short_press: edit_textfield(app,"edit",self.value,1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'sin'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'cos'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'tan'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'cot'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'sec'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'csc'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'asin'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'acos'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'atan'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'acot'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'asec'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'acsc'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'sinh'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'cosh'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'tanh'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'coth'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'sech'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'csch'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'asinh'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'acosh'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'atanh'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'acoth'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'asech'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)
 
-    LetterFlatButton:
+    KeyboardFlatButton:
         text: 'acsch'
-        on_press: app.edit_textfield(self.text+"()",1)
+        on_press: edit_textfield(app,"edit",self.text+"()",1)

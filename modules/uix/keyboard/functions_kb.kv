@@ -1,5 +1,3 @@
-
-
 <FUNCTIONS_KB@GridLayout>:
     cols:5
     canvas:
@@ -12,31 +10,41 @@
     size_hint_y: 1
     padding: dp(1.5)
     spacing: dp(1.5)
+    button_size_hint:1,1
+    button_font_size:2
 
     KeyboardFlatButton:
         text: 'exp'
-        on_press: app.edit_textfield("exp()",1)
+        on_press: edit_textfield(app,"edit","exp()",1)
 
     KeyboardFlatButton:
         text: 'fct'
-        on_press: app.edit_textfield("fct()",1)
-
-    KeyboardFlatButton:
-        text: 'φ(x)'
-        on_press: app.edit_textfield("tot()",1)
+        on_press: edit_textfield(app,"edit","fct()",1)
 
     KeyboardFlatButton:
         text: 'нод'
-        on_press: app.edit_textfield("gcd()",1)
+        on_press: edit_textfield(app,"edit","gcd()",1)
 
     KeyboardFlatButton:
         text: 'нок'
-        on_press: app.edit_textfield("lcm()",1)
+        on_press: edit_textfield(app,"edit","lcm()",1)
 
     KeyboardFlatButton:
         text: 'огр'
-        on_press: app.edit_textfield("lmt()",1)
+        on_press: edit_textfield(app,"edit","lmt()",1)
 
     KeyboardFlatButton:
         text: 'srs'
-        on_press: app.edit_textfield("srs()",1)
+        on_press: edit_textfield(app,"edit","srs()",1)
+
+    KeyboardFlatButton:
+        text: 'srs'
+        on_press: edit_textfield(app,"edit","srs()",1)
+
+    KeyboardFlatButton:
+        text: 'Der'
+        on_press: edit_textfield(app,"edit","Derivative()",1)
+
+    KeyboardFlatButton:
+        text: 'Int'
+        on_press: edit_textfield(app,"edit","Integral()",1)
