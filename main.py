@@ -18,7 +18,6 @@ from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
 from kivymd.uix.fitimage import FitImage
-from kivymd.uix.boxlayout import MDBoxLayout
 
 from modules.android_api import request_camera_permission,set_orientation
 from modules.core.update import check_update

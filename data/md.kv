@@ -77,12 +77,14 @@ ScreenManager:
 
                     MDIconButton:
                         pos_hint: {"center_x":.2,"center_y":.1}
-                        icon: "file-image"
+                        #icon: "file-image"
+                        icon:"calculator"
                         icon_size: "30sp"
                         icon_color:"white"
                         theme_icon_color: "Custom"
                         _no_ripple_effect: True
-                        on_press:app.choose()
+                        #on_press:app.choose()
+                        on_press:app.set_screen("sc_text")
 
                     MDIconButton:
                         _no_ripple_effect: True
@@ -129,7 +131,7 @@ ScreenManager:
                         orientation:"vertical"
 
                         MDBoxLayout:
-                            padding:[10,0,10,20]
+                            padding:[15,0,15,20]
                             RelativeLayout:
                                 TextInput:
                                     id:textarea
@@ -459,12 +461,14 @@ ScreenManager:
     MDScreen:
         name:"onboarding_sc"
         md_bg_color:"#02714C"
+        FitImage:
+            source:"media/onboarding/onboarding-bg.png"
         Carousel: 
             id:onboarding_carousel
             MDFloatLayout:
                 orientation:"vertical"
                 FitImage:
-                    source:"media/onboarding-1.png"
+                    source:"media/onboarding/onboarding-1.png"
 
                 MDRaisedButton:
                     text:"Дальше"
@@ -478,7 +482,7 @@ ScreenManager:
             MDFloatLayout:
                 orientation:"vertical"
                 FitImage:
-                    source:"media/onboarding-2.png"
+                    source:"media/onboarding/onboarding-2.png"
 
                 MDRaisedButton:
                     text:"Дальше"
@@ -492,7 +496,7 @@ ScreenManager:
             MDFloatLayout:
                 orientation:"vertical"
                 FitImage:
-                    source:"media/onboarding-3.png"
+                    source:"media/onboarding/onboarding-3.png"
 
                 MDRaisedButton:
                     text:"Дальше"
@@ -506,7 +510,7 @@ ScreenManager:
             MDFloatLayout:
                 orientation:"vertical"
                 FitImage:
-                    source:"media/onboarding-4.png"
+                    source:"media/onboarding/onboarding-4.png"
 
                 MDRaisedButton:
                     text:"Дальше"
@@ -520,7 +524,7 @@ ScreenManager:
             MDFloatLayout:
                 orientation:"vertical"
                 FitImage:
-                    source:"media/onboarding-5.png"
+                    source:"media/onboarding/onboarding-5.png"
 
                 MDRaisedButton:
                     text:"Закрыть"
