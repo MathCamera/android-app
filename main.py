@@ -312,7 +312,7 @@ class app_main(MDApp):
                 err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                 popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                 popup.open()
-            self.config_["math_solve_url"] = "http://127.0.0.1:5000/api/solve"
+
             if "math_solve_url" in self.config_.keys():
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
