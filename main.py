@@ -19,15 +19,32 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
 from kivymd.uix.fitimage import FitImage
 
-from modules.platform_api import *
-from modules.xcamera import *
+from modules.platform_api import request_camera_permission,set_orientation
 from modules.core.update import check_update
+from modules.xcamera import *
 from modules.uix.loadingdialog import LoadingDialog
 
 import base64,os,certifi,urllib.parse,json,webbrowser,shutil
 from PIL import Image
 from io import BytesIO
 from random import randint
+
+if platform == "android":
+    from androidstorage4kivy import Chooser,SharedStorage
+    from kvdroid.tools import change_statusbar_color,toast,navbar_color
+    from kvdroid.tools.darkmode import dark_mode
+    change_statusbar_color("#02714C", "white")
+else:
+    def toast(text):
+        print(text)
+
+    def navbar_color(color):
+        pass
+
+    def dark_mode():
+        return False
+
+    Window.size = (400,700)
 
 class app_main(MDApp):
     def __init__(self, **kwargs):
@@ -40,20 +57,9 @@ class app_main(MDApp):
         self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
 
     def build(self):        
-        return Builder.load_file('data/md.kv')
+        return Builder.load_file('style.kv')
     
     def on_start(self):
-        if platform == "android":
-            self.chooser = Chooser(self.chooser_callback)
-
-        else:
-            Window.size = (400,700)
-
-        set_orientation()
-        request_camera_permission()
-        navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
-        change_statusbar_color("#02714C", "white")
-
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
             self.set_screen("onboarding_sc",root_=True)
@@ -64,11 +70,17 @@ class app_main(MDApp):
         if list(json.load(open('data/settings.json')).keys()) != self.settings.keys():
             self.set_settings(reset=True)
 
+        request_camera_permission()
+        set_orientation()
         self.update_config()
         Window.bind(on_keyboard=self.key_handler)
         self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
         
         self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
+        navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
+
+        if platform == "android":
+            self.chooser = Chooser(self.chooser_callback)
 
         Loader.loading_image = "media/loader.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
         Logger.info(f"App version: {__version__}")
