@@ -282,7 +282,7 @@ class app_main(MDApp):
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
 
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
-                        title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6")
+                        title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6",bold=True)
                         kv_card.add_widget(title_label)
 
                         if contains_plot == True:
@@ -294,7 +294,8 @@ class app_main(MDApp):
                         else:
                             kv_card.adaptive_height = True
                             result_text = card['output'] if 'output' in card.keys() else ""
-                            output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white",font_name="media/fonts/ArialMT.ttf")
+                            output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="Subtitle1")
+                            output_label.font_name = "media/fonts/NotoSansMath-Regular.ttf"
                             kv_card.add_widget(output_label)
 
                         if valid_card or contains_plot:
