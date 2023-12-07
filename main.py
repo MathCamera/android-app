@@ -1,4 +1,4 @@
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 from kivy.lang import Builder
 from kivy.clock import mainthread
@@ -10,10 +10,11 @@ from kivy.core.clipboard import Clipboard
 from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
 from kivy.logger import Logger
+from kivy.uix.image import AsyncImage
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton,MDRectangleFlatButton
+from kivymd.uix.button import MDFlatButton
 from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
@@ -33,6 +34,7 @@ if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
     from kvdroid.tools import change_statusbar_color,toast,navbar_color
     from kvdroid.tools.darkmode import dark_mode
+    from kvdroid.tools import share_text
     change_statusbar_color("#02714C", "white")
 else:
     def toast(text):
@@ -91,7 +93,13 @@ class app_main(MDApp):
     def show_menu(self):
         self.root.ids.nav_drawer.set_state("open")
         self.root.ids.textarea.focus=False
-    
+
+    def share_text(self,text):
+        if platform == "android":
+            share_text(text, title="Поделиться", chooser=False, app_package=None,call_playstore=False, error_msg="Не удалось отправить сообщение")
+        else:
+            print(text)
+
     def update_config(self):
         def success(req,result):
             for elem in result.keys():
@@ -268,7 +276,6 @@ class app_main(MDApp):
             params = urllib.parse.urlencode({'src':equation})
 
             def success(req, result):
-                loading_popup.dismiss()
                 status_code = result['status_code']
 
                 if status_code == 0:
@@ -277,7 +284,7 @@ class app_main(MDApp):
                     gamma_output = str(gamma_result[0]['output']) if 'output' in gamma_result[0].keys() else ""
                     problem_main = ''.join(gamma_output.split(" "))
 
-                    for card in gamma_result:
+                    for card_index,card in enumerate(gamma_result):
                         valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
 
@@ -285,10 +292,15 @@ class app_main(MDApp):
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6",bold=True)
                         kv_card.add_widget(title_label)
 
-                        if contains_plot == True:
+                        if contains_plot:
                             plot_url = self.config_["plotting_url"].format(str(card['input']).replace(" ",""))
-                            image_widget = FitImage(source=plot_url,pos_hint={"center_x":.5},size_hint=(1.3,3.5))
-                            kv_card.height = dp(kv_card.height*1.4)+dp(image_widget.height*1.4)
+
+                            def on_load(image_widget):
+                                plot_card = image_widget.parent
+                                self.root.ids.gl.add_widget(plot_card,len(self.root.ids.gl.children)-1)
+
+                            image_widget = AsyncImage(source=plot_url,on_load=on_load,fit_mode="cover")
+                            kv_card.height = dp(kv_card.height*1.5)+dp(image_widget.height*1.5)
                             kv_card.add_widget(image_widget)
 
                         else:
@@ -298,22 +310,18 @@ class app_main(MDApp):
                             output_label.font_name = "media/fonts/NotoSansMath-Regular.ttf"
                             kv_card.add_widget(output_label)
 
-                        if valid_card or contains_plot:
                             self.root.ids.gl.add_widget(kv_card)
 
                     self.root.ids.gl.problem_main = problem_main
                     self.root.ids.gl.problem_input = equation
-                    self.root.ids.gl.gamma_url = f"https://sympygamma.com/input/?i={gamma_output.replace(' ','')}"
-                    
-                    if self.settings['enable_debug_mode']['mode'] == True:
-                        self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Скопировать json",on_release=lambda f:self.copy_content(str(gamma_result))))
-                        self.root.ids.gl.add_widget(MDRectangleFlatButton(text="Открыть в Sympy Gamma",on_release=lambda f:self.open_browser(self.root.ids.gl.gamma_url)))
-                    
-                    self.set_screen("sc_solve")
-                    
+                    self.root.ids.gl.gamma_url = f"https://mathcamera.vercel.app/input/?i={gamma_output.replace(' ','')}"
+
                     if from_history == False:
                         self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation}
-
+        
+                    loading_popup.dismiss()
+                    self.set_screen("sc_solve")
+                
                 else:
                     err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                     popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])

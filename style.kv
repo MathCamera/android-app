@@ -135,7 +135,7 @@ ScreenManager:
                         MDGridLayout:
                             cols:3
                             adaptive_height:True
-  
+                            
                             MDIconButton:
                                 icon: "arrow-left"
                                 on_release:app.set_screen(app.last_screen)
@@ -145,6 +145,17 @@ ScreenManager:
                                 on_release:
                                     app.set_screen("sc_text")
                                     textarea.text = gl.problem_input
+
+                            MDRelativeLayout:
+                                MDIconButton:
+                                    pos_hint:{"center_x":.7}
+                                    icon: "share-variant"
+                                    on_release:app.share_text(gl.gamma_url)
+
+                                MDIconButton:
+                                    pos_hint:{"center_x":.9}
+                                    icon: "open-in-new"
+                                    on_release:app.open_browser(gl.gamma_url)
 
                         ScrollView:
                             id:gl_sw
