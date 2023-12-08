@@ -57,6 +57,7 @@ class app_main(MDApp):
         self.theme_cls.material_style = "M3"
         self.main_colors = ["#02714C","#039866"]
         self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
+        self.deeplink=""
 
     def build(self):        
         return Builder.load_file('style.kv')
@@ -82,6 +83,7 @@ class app_main(MDApp):
         navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
 
         if platform == "android":
+            self.verify_message_at_startup()
             self.chooser = Chooser(self.chooser_callback)
 
         Loader.loading_image = "media/loader.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
@@ -97,8 +99,6 @@ class app_main(MDApp):
     def share_text(self,text):
         if platform == "android":
             share_text(text, title="Поделиться", chooser=False, app_package=None,call_playstore=False, error_msg="Не удалось отправить сообщение")
-        else:
-            print(text)
 
     def update_config(self):
         def success(req,result):
@@ -107,6 +107,8 @@ class app_main(MDApp):
 
             check_update(__version__,result)
             Logger.info(f"Api server response: {result}")
+            if self.deeplink != "":
+                self.process_deep_link(self.deeplink)
         
         def error(req, result):
             result = str(result).replace("\n","")
@@ -119,6 +121,28 @@ class app_main(MDApp):
                 self.update_config()
 
         req = UrlRequest(self.config_['config_url'],on_success=success,on_failure=error,on_error=error,req_body=urllib.parse.urlencode({'version':self.version_}),req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+
+    def verify_message_at_startup(self):
+        from jnius import autoclass
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        activity = PythonActivity.mActivity
+        intent = activity.getIntent()
+        self.android_message(intent)
+
+    @mainthread
+    def android_message(self, intent):
+        intent_data = intent.getData()
+        try:
+            uri = intent_data.toString()
+            self.deeplink = uri
+        except AttributeError:
+            pass
+
+    def process_deep_link(self, uri):
+        uri_data = str(uri).replace("http://","https://").replace("https://mathcamera.vercel.app/s/","").replace("mathcamera://solve/","")
+        Logger.info("Deeplink: "+str(uri_data))
+        if uri_data != "":
+            self.send_equation(uri_data)
 
     def chooser_callback(self, shared_file_list):
         ss = SharedStorage()
@@ -276,16 +300,18 @@ class app_main(MDApp):
             params = urllib.parse.urlencode({'src':equation})
 
             def success(req, result):
+                loading_popup.dismiss()
                 status_code = result['status_code']
 
                 if status_code == 0:
                     gamma_result = result['message']
                     self.root.ids.gl.clear_widgets()
                     gamma_output = str(gamma_result[0]['output']) if 'output' in gamma_result[0].keys() else ""
+                    gamma_input = str(gamma_result[0]['input']) if 'input' in gamma_result[0].keys() else equation
                     problem_main = ''.join(gamma_output.split(" "))
 
-                    for card_index,card in enumerate(gamma_result):
-                        valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
+                    for card in gamma_result:
+                        #valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
 
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
@@ -297,7 +323,7 @@ class app_main(MDApp):
 
                             def on_load(image_widget):
                                 plot_card = image_widget.parent
-                                self.root.ids.gl.add_widget(plot_card,len(self.root.ids.gl.children)-1)
+                                self.root.ids.gl.add_widget(plot_card)
 
                             image_widget = AsyncImage(source=plot_url,on_load=on_load,fit_mode="cover")
                             kv_card.height = dp(kv_card.height*1.5)+dp(image_widget.height*1.5)
@@ -314,14 +340,13 @@ class app_main(MDApp):
 
                     self.root.ids.gl.problem_main = problem_main
                     self.root.ids.gl.problem_input = equation
-                    self.root.ids.gl.gamma_url = f"https://mathcamera.vercel.app/input/?i={gamma_output.replace(' ','')}"
+                    self.root.ids.gl.share_url = self.config_['share_url'].format(gamma_input.replace(' ',''))
 
                     if from_history == False:
                         self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation}
         
-                    loading_popup.dismiss()
+                    
                     self.set_screen("sc_solve")
-                
                 else:
                     err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                     popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
@@ -367,5 +392,9 @@ class app_main(MDApp):
             ocr_url = self.config_["debug_server_url"] if self.settings["enable_test_server"]['mode'] == True else self.config_["ocr_url"]
             req = UrlRequest(ocr_url,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
-app_ = app_main()
-app_.run()
+if __name__ == '__main__':
+    app_ = app_main()
+    if platform == 'android':
+        import android.activity
+        android.activity.bind(on_new_intent=app_.android_message)
+    app_.run()

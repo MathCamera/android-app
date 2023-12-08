@@ -148,14 +148,9 @@ ScreenManager:
 
                             MDRelativeLayout:
                                 MDIconButton:
-                                    pos_hint:{"center_x":.7}
-                                    icon: "share-variant"
-                                    on_release:app.share_text(gl.gamma_url)
-
-                                MDIconButton:
                                     pos_hint:{"center_x":.9}
-                                    icon: "open-in-new"
-                                    on_release:app.open_browser(gl.gamma_url)
+                                    icon: "share-variant"
+                                    on_release:app.share_text(gl.share_url)
 
                         ScrollView:
                             id:gl_sw

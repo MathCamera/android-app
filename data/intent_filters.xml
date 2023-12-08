@@ -1,15 +1,15 @@
-<!-- http url scheme as http://mathcamera-api.vercel.app/app/launch -->
+<!-- http url scheme as https://mathcamera.vercel.app/p/ -->
 <intent-filter>
-    <data android:scheme="https"
-          android:host="mathcamera.vercel.app"
-          android:pathPrefix="input/"/>
+    <data android:scheme="https"/>
+    <data android:scheme="http"/>
+    <data android:host="mathcamera.vercel.app" android:pathPrefix="/s/"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>
 </intent-filter>
 <!-- direct app scheme mathcamera:// -->
 <intent-filter>
-    <data android:scheme="mathcamera" android:host="*"/>
+    <data android:scheme="mathcamera" android:host="solve"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>
