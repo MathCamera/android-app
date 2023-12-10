@@ -13,6 +13,14 @@ ScreenManager:
     id:root_sm
     transition:NoTransition()
     MDScreen:
+        MDLabel:
+            text:"Загрузка..."
+            font_style:"H5"
+            bold:True
+            adaptive_height:True
+            halign:"center"
+            pos_hint:{"center_y":.5}
+    MDScreen:
         name:"main_sc"
         MDNavigationLayout:
 
@@ -189,6 +197,10 @@ ScreenManager:
 
                         MDScrollView:
                             id:history_layout
+                            MDLabel:
+                                text:"Пусто"
+                                halign:"center"
+                                font_style:"H5"
 
                         MDRectangleFlatIconButton:
                             id:history_clear_btn
@@ -405,7 +417,32 @@ ScreenManager:
                     DrawerClickableItem:
                         icon: "information"
                         text: "Версия "+app.version_
-    
+    MDScreen:
+        name:"loading_sc_error"
+        MDBoxLayout:
+            orientation:"vertical"
+            padding:50
+            spacing:25
+            adaptive_height:True
+            pos_hint:{"center_y":.5}
+            MDIcon:
+                icon: "wifi-alert"
+                pos_hint:{"center_x":.5}
+                
+            MDLabel:
+                valign:"middle"
+                markup:True
+                text:"[size=25][b]Не удалось загрузить страницу[/b][/size]\n\nПроверьте интернет и обновите страницу. Или вернитесь немного позже."
+                halign:"center"
+                adaptive_height:True
+
+            MDRaisedButton:
+                id:connection_error_retry
+                pos_hint:{"center_x":.5}
+                text: "Обновить"
+                md_bg_color: "#02714C"
+                
+
     MDScreen:
         name:"onboarding_sc"
         md_bg_color:"#02714C"

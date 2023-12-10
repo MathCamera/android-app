@@ -14,7 +14,7 @@ from kivy.uix.image import AsyncImage
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.button import MDFlatButton,MDRaisedButton
 from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
@@ -86,7 +86,8 @@ class app_main(MDApp):
             self.verify_message_at_startup()
             self.chooser = Chooser(self.chooser_callback)
 
-        Loader.loading_image = "media/loader.png"#f"media/loader-{self.theme_cls.theme_style.lower()}.png"
+        self.loader_image_path = "media/loader.png"
+        Loader.loading_image = self.loader_image_path
         Logger.info(f"App version: {__version__}")
 
     def on_stop(self):
@@ -98,27 +99,27 @@ class app_main(MDApp):
 
     def share_text(self,text):
         if platform == "android":
-            share_text(text, title="Поделиться", chooser=False, app_package=None,call_playstore=False, error_msg="Не удалось отправить сообщение")
+            share_text(text, title="Поделиться", chooser=True, app_package=None,call_playstore=False, error_msg="Не удалось отправить сообщение")
+
+    def show_error_screen(self,retry_func):
+        self.root.ids.connection_error_retry.on_release=lambda: retry_func
+        self.set_screen('loading_sc_error',root_=True)
 
     def update_config(self):
         def success(req,result):
+            self.root.current = "main_sc"
+
             for elem in result.keys():
                 self.config_[elem] = result[elem]
 
             check_update(__version__,result)
             Logger.info(f"Api server response: {result}")
+            
             if self.deeplink != "":
                 self.process_deep_link(self.deeplink)
         
         def error(req, result):
-            result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-            popup = MDDialog(title='Ошибка',text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету и повторите попытку{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss()),MDFlatButton(text="Повторить",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:retry())])
-            popup.open()  
-            
-            def retry():
-                popup.dismiss()
-                self.update_config()
+            self.show_error_screen(self.update_config())
 
         req = UrlRequest(self.config_['config_url'],on_success=success,on_failure=error,on_error=error,req_body=urllib.parse.urlencode({'version':self.version_}),req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
@@ -139,7 +140,7 @@ class app_main(MDApp):
             pass
 
     def process_deep_link(self, uri):
-        uri_data = str(uri).replace("http://","https://").replace("https://mathcamera.vercel.app/s/","").replace("mathcamera://solve/","")
+        uri_data = str(uri).replace("http://","https://").replace("https://mathcamera.vercel.app/input/?i=","").replace("mathcamera://solve/?i=","")
         Logger.info("Deeplink: "+str(uri_data))
         if uri_data != "":
             self.send_equation(uri_data)
@@ -187,29 +188,24 @@ class app_main(MDApp):
         else:pass
 
     def load_history(self):
-        loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
-        loading_popup.open()
         history_layout = self.root.ids.history_layout
         history_layout.clear_widgets()
         try:
-            history = dict(self.history)
             if self.history.count() != 0:
-                self.root.ids.history_clear_btn.disabled = False
                 history_sw = MDList()
+                self.root.ids.history_clear_btn.disabled = False
                 self.root.ids.history_layout.add_widget(history_sw)
 
-                for elem in reversed(history):
-                    equ_type = history[elem]['equ_type']
-                    equ_text = history[elem]['equation']
-                    f = lambda s:self.send_equation(s.secondary_text,from_history=True)
-                    history_sw.add_widget(TwoLineListItem(text=equ_type,secondary_text=equ_text,on_release=f))
+                for ind,elem in enumerate(self.history):
+                    list_item = TwoLineListItem(text=self.history[elem]['equ_type'],secondary_text=self.history[elem]['as_latex'],on_release=lambda s:self.send_equation(s.equ_main,from_history=True))
+                    list_item.equ_main=self.history[elem]['equation']
+                    history_sw.add_widget(list_item,ind)
+
             else:
                 self.root.ids.history_clear_btn.disabled = True
                 history_layout.add_widget(MDLabel(text="Пусто",halign="center",font_style="H5"))
-            loading_popup.dismiss()
             
         except Exception as e:
-            loading_popup.dismiss()
             Logger.error(f"History exception: {e}")
             self.history.clear()
             self.set_screen("sc_history")
@@ -300,19 +296,21 @@ class app_main(MDApp):
             params = urllib.parse.urlencode({'src':equation})
 
             def success(req, result):
-                loading_popup.dismiss()
+                self.root.current = "main_sc"
                 status_code = result['status_code']
 
                 if status_code == 0:
                     gamma_result = result['message']
                     self.root.ids.gl.clear_widgets()
-                    gamma_output = str(gamma_result[0]['output']) if 'output' in gamma_result[0].keys() else ""
-                    gamma_input = str(gamma_result[0]['input']) if 'input' in gamma_result[0].keys() else equation
-                    problem_main = ''.join(gamma_output.split(" "))
+                    equation_as_latex = str(gamma_result[0]['output']).replace(" ","")
+                    equation_main = str(gamma_result[0]['input'])
+                    has_plot = False
 
+                    #Загрузка карточек и графика
                     for card in gamma_result:
                         #valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
                         contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
+                        if contains_plot:has_plot=True
 
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6",bold=True)
@@ -320,10 +318,13 @@ class app_main(MDApp):
 
                         if contains_plot:
                             plot_url = self.config_["plotting_url"].format(str(card['input']).replace(" ",""))
-
+                            
                             def on_load(image_widget):
-                                plot_card = image_widget.parent
-                                self.root.ids.gl.add_widget(plot_card)
+                                if image_widget.texture.size != (1,1):
+                                    plot_card = image_widget.parent
+                                    self.root.ids.gl.add_widget(plot_card,len(self.root.ids.gl.ids)-1)
+                                loading_popup.dismiss()
+                                self.set_screen("sc_solve")
 
                             image_widget = AsyncImage(source=plot_url,on_load=on_load,fit_mode="cover")
                             kv_card.height = dp(kv_card.height*1.5)+dp(image_widget.height*1.5)
@@ -338,26 +339,30 @@ class app_main(MDApp):
 
                             self.root.ids.gl.add_widget(kv_card)
 
-                    self.root.ids.gl.problem_main = problem_main
+                    self.root.ids.gl.problem_main = equation_main
                     self.root.ids.gl.problem_input = equation
-                    self.root.ids.gl.share_url = self.config_['share_url'].format(gamma_input.replace(' ',''))
+                    self.root.ids.gl.share_url = self.config_['share_url'].format(equation_main)
 
                     if from_history == False:
-                        self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation}
-        
-                    
-                    self.set_screen("sc_solve")
+                        self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation,"as_latex":equation_as_latex}
+
+                    if not has_plot:
+                        loading_popup.dismiss()
+                        self.set_screen("sc_solve")
                 else:
+                    loading_popup.dismiss()
                     err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                     popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()   
 
             def error(req, result):
                 loading_popup.dismiss()
-                result = str(result).replace("\n","")
-                err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-                popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-                popup.open()
+                Logger.error("Send equation error: "+str(result))
+                self.show_error_screen(self.send_equation(equation))
+                #result = str(result).replace("\n","")
+                #err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
+                #popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+                #popup.open()
 
             if "math_solve_url" in self.config_.keys():
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
@@ -369,6 +374,7 @@ class app_main(MDApp):
         params = urllib.parse.urlencode({'src':b64})
 
         def success(req, result):
+            self.root.current = "main_sc"
             if result['status_code'] == 0:
                 loading_popup.dismiss()
                 if result['message'] == "":
@@ -383,10 +389,12 @@ class app_main(MDApp):
 
         def error(req, result):
             loading_popup.dismiss()
-            result = str(result).replace("\n","")
-            err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-            popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-            popup.open()
+            Logger.error("Send b64 error: "+str(result))
+            self.show_error_screen(self.send_b64(b64))
+            #result = str(result).replace("\n","")
+            #err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
+            #popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+            #popup.open()
 
         if "ocr_url" in self.config_.keys():
             ocr_url = self.config_["debug_server_url"] if self.settings["enable_test_server"]['mode'] == True else self.config_["ocr_url"]
