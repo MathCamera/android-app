@@ -66,6 +66,8 @@ class app_main(MDApp):
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
             self.set_screen("onboarding_sc",root_=True)
+        else:
+            self.update_config()
     
         self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
         self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
@@ -75,7 +77,7 @@ class app_main(MDApp):
 
         request_camera_permission()
         set_orientation()
-        self.update_config()
+        
         Window.bind(on_keyboard=self.key_handler)
         self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
         
@@ -107,7 +109,7 @@ class app_main(MDApp):
 
     def update_config(self):
         def success(req,result):
-            self.root.current = "main_sc"
+            self.set_screen("main_sc",root_=True)
 
             for elem in result.keys():
                 self.config_[elem] = result[elem]
@@ -140,7 +142,7 @@ class app_main(MDApp):
             pass
 
     def process_deep_link(self, uri):
-        uri_data = str(uri).replace("http://","https://").replace("https://mathcamera.vercel.app/input/?i=","").replace("mathcamera://solve/?i=","")
+        uri_data = str(uri).replace("http://","https://").replace("https://mathcamera.vercel.app/input/?i=","").replace("mathcamera://solve/","")
         Logger.info("Deeplink: "+str(uri_data))
         if uri_data != "":
             self.send_equation(uri_data)
@@ -283,7 +285,7 @@ class app_main(MDApp):
         adv_index = randint(1,len(self.config_['adv_urls']))
         self.root.ids.adv_card.on_release = lambda:self.open_browser(self.config_["adv_urls"][adv_index-1])
         self.root.ids.adv_image.source = self.config_['adv_url'].format(adv_index)
-
+    
     def send_equation(self,*args,from_history=False):
         equation = args[0] if args else self.root.ids.textarea.text
 
@@ -291,7 +293,8 @@ class app_main(MDApp):
             self.root.ids.textarea.focus = False
 
             loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
-            loading_popup.open()
+            if self.root.current != "loading_sc_error":
+                loading_popup.open()
 
             params = urllib.parse.urlencode({'src':equation})
 
@@ -368,8 +371,10 @@ class app_main(MDApp):
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     def send_b64(self,b64):
+        
         loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
-        loading_popup.open()
+        if self.root.current != "loading_sc_error":
+            loading_popup.open()
 
         params = urllib.parse.urlencode({'src':b64})
 

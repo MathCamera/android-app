@@ -13,13 +13,11 @@ ScreenManager:
     id:root_sm
     transition:NoTransition()
     MDScreen:
-        MDLabel:
-            text:"Загрузка..."
-            font_style:"H5"
-            bold:True
-            adaptive_height:True
-            halign:"center"
-            pos_hint:{"center_y":.5}
+        MDSpinner:
+            size_hint: None, None
+            size: dp(30), dp(30)
+            pos_hint: {'center_x': .5, 'center_y': .5}
+
     MDScreen:
         name:"main_sc"
         MDNavigationLayout:
@@ -422,19 +420,23 @@ ScreenManager:
         MDBoxLayout:
             orientation:"vertical"
             padding:50
-            spacing:25
+            spacing:30
             adaptive_height:True
             pos_hint:{"center_y":.5}
-            MDIcon:
+
+            MDIconButton:
                 icon: "wifi-alert"
                 pos_hint:{"center_x":.5}
+                icon_size: "64sp"
+                _no_ripple_effect:True
                 
             MDLabel:
                 valign:"middle"
                 markup:True
-                text:"[size=25][b]Не удалось загрузить страницу[/b][/size]\n\nПроверьте интернет и обновите страницу. Или вернитесь немного позже."
+                text:"[b]Не удалось загрузить страницу[/b]\n\nПроверьте интернет и обновите страницу. Или вернитесь немного позже."
                 halign:"center"
                 adaptive_height:True
+                font_style:"H5"
 
             MDRaisedButton:
                 id:connection_error_retry
@@ -518,4 +520,6 @@ ScreenManager:
                     md_bg_color:"white"
                     theme_icon_color: "Custom"
                     pos_hint:{"center_x":.5,"center_y":.08}
-                    on_release:root.current="main_sc"
+                    on_release:
+                        root.current="main_sc"
+                        app.update_config()
