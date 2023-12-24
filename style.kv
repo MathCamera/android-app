@@ -420,7 +420,7 @@ ScreenManager:
         MDBoxLayout:
             orientation:"vertical"
             padding:50
-            spacing:30
+            spacing:40
             adaptive_height:True
             pos_hint:{"center_y":.5}
 
@@ -433,10 +433,20 @@ ScreenManager:
             MDLabel:
                 valign:"middle"
                 markup:True
-                text:"[b]Не удалось загрузить страницу[/b]\n\nПроверьте интернет и обновите страницу. Или вернитесь немного позже."
+                text:"Не удалось загрузить страницу"
                 halign:"center"
                 adaptive_height:True
                 font_style:"H5"
+                bold:True
+
+            MDLabel:
+                valign:"middle"
+                markup:True
+                text:"Проверьте интернет и обновите страницу. Или вернитесь немного позже."
+                halign:"center"
+                adaptive_height:True
+                font_style:"Subtitle1"
+                bold:True
 
             MDRaisedButton:
                 id:connection_error_retry

@@ -14,11 +14,10 @@ from kivy.uix.image import AsyncImage
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton,MDRaisedButton
+from kivymd.uix.button import MDFlatButton
 from kivymd.uix.list import TwoLineListItem,MDList
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
-from kivymd.uix.fitimage import FitImage
 
 from modules.platform_api import request_camera_permission,set_orientation
 from modules.core.update import check_update
@@ -56,7 +55,7 @@ class app_main(MDApp):
         self.theme_cls.colors = json.load(open('data/themes.json'))
         self.theme_cls.material_style = "M3"
         self.main_colors = ["#02714C","#039866"]
-        self.last_screen,self.flashlight_mode,self.config_ = None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
+        self.last_screen,self.last_equation,self.flashlight_mode,self.config_ = None,None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
         self.deeplink=""
 
     def build(self):        
@@ -103,7 +102,8 @@ class app_main(MDApp):
         if platform == "android":
             share_text(text, title="Поделиться", chooser=True, app_package=None,call_playstore=False, error_msg="Не удалось отправить сообщение")
 
-    def show_error_screen(self,retry_func):
+        print(text)
+    def show_network_error(self,retry_func):
         self.root.ids.connection_error_retry.on_release=lambda: retry_func
         self.set_screen('loading_sc_error',root_=True)
 
@@ -121,7 +121,7 @@ class app_main(MDApp):
                 self.process_deep_link(self.deeplink)
         
         def error(req, result):
-            self.show_error_screen(self.update_config())
+            self.show_network_error(self.update_config())
 
         req = UrlRequest(self.config_['config_url'],on_success=success,on_failure=error,on_error=error,req_body=urllib.parse.urlencode({'version':self.version_}),req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
@@ -142,8 +142,11 @@ class app_main(MDApp):
             pass
 
     def process_deep_link(self, uri):
-        uri_data = str(uri).replace("http://","https://").replace("https://mathcamera.vercel.app/input/?i=","").replace("mathcamera://solve/","")
+        url = urllib.parse.urlparse(urllib.parse.unquote(url))
+        uri_data = url.path[1:] if url.scheme == "mathcamera" else url.query[url.query.index("=")+1:]
+        
         Logger.info("Deeplink: "+str(uri_data))
+
         if uri_data != "":
             self.send_equation(uri_data)
 
@@ -286,14 +289,14 @@ class app_main(MDApp):
         self.root.ids.adv_card.on_release = lambda:self.open_browser(self.config_["adv_urls"][adv_index-1])
         self.root.ids.adv_image.source = self.config_['adv_url'].format(adv_index)
     
-    def send_equation(self,*args,from_history=False):
+    def send_equation(self,*args,from_history=False):            
         equation = args[0] if args else self.root.ids.textarea.text
 
-        if equation != "":
+        if equation != "" and equation != self.last_equation:
             self.root.ids.textarea.focus = False
 
             loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
-            if self.root.current != "loading_sc_error":
+            if self.root.current != "loading_sc_error" :
                 loading_popup.open()
 
             params = urllib.parse.urlencode({'src':equation})
@@ -326,6 +329,8 @@ class app_main(MDApp):
                                 if image_widget.texture.size != (1,1):
                                     plot_card = image_widget.parent
                                     self.root.ids.gl.add_widget(plot_card,len(self.root.ids.gl.ids)-1)
+                                    image_widget.remove_from_cache()
+
                                 loading_popup.dismiss()
                                 self.set_screen("sc_solve")
 
@@ -344,7 +349,7 @@ class app_main(MDApp):
 
                     self.root.ids.gl.problem_main = equation_main
                     self.root.ids.gl.problem_input = equation
-                    self.root.ids.gl.share_url = self.config_['share_url'].format(equation_main)
+                    self.root.ids.gl.share_url = self.config_['share_url'].format(urllib.parse.quote_plus(equation.replace(" ","")))
 
                     if from_history == False:
                         self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation,"as_latex":equation_as_latex}
@@ -352,26 +357,32 @@ class app_main(MDApp):
                     if not has_plot:
                         loading_popup.dismiss()
                         self.set_screen("sc_solve")
+
+                    self.last_equation = equation
                 else:
                     loading_popup.dismiss()
                     err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
                     popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()   
 
+            def on_failure(req,res):
+                loading_popup.dismiss()
+                err = f"\n\n{res}" if self.settings["enable_debug_mode"]['mode'] == True else ""
+                popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+                popup.open()  
+
             def error(req, result):
+                print(req)
                 loading_popup.dismiss()
                 Logger.error("Send equation error: "+str(result))
-                self.show_error_screen(self.send_equation(equation))
-                #result = str(result).replace("\n","")
-                #err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-                #popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-                #popup.open()
+                self.show_network_error(self.send_equation(equation))
 
-            if "math_solve_url" in self.config_.keys():
-                req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+            if self.last_equation == equation:
+                self.set_screen("sc_solve")
+            else:
+                req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=on_failure,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     def send_b64(self,b64):
-        
         loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
         if self.root.current != "loading_sc_error":
             loading_popup.open()
@@ -395,15 +406,10 @@ class app_main(MDApp):
         def error(req, result):
             loading_popup.dismiss()
             Logger.error("Send b64 error: "+str(result))
-            self.show_error_screen(self.send_b64(b64))
-            #result = str(result).replace("\n","")
-            #err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-            #popup = MDDialog(text=f'Не удаётся получить ответ от сервера,\nпроверьте подключение к интернету{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-            #popup.open()
+            self.show_network_error(self.send_b64(b64))
 
-        if "ocr_url" in self.config_.keys():
-            ocr_url = self.config_["debug_server_url"] if self.settings["enable_test_server"]['mode'] == True else self.config_["ocr_url"]
-            req = UrlRequest(ocr_url,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
+        ocr_url = self.config_["debug_server_url"] if self.settings["enable_test_server"]['mode'] == True else self.config_["ocr_url"]
+        req = UrlRequest(ocr_url,on_success=success,on_failure=error,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
 if __name__ == '__main__':
     app_ = app_main()
