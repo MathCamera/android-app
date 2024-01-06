@@ -56,39 +56,13 @@ class app_main(MDApp):
         self.theme_cls.material_style = "M3"
         self.main_colors = ["#02714C","#039866"]
         self.last_screen,self.last_equation,self.config_ = None,None,{'config_url':"https://mathcamera-api.vercel.app/config"}
-        self.deeplink=""
+        self.deeplink="mathcamera://s/x**2-16"
 
     def build(self):        
         return Builder.load_file('style.kv')
     
     def on_start(self):
-        if not os.path.exists(self.data_dir):
-            os.makedirs(self.data_dir)
-            self.set_screen("onboarding_sc",root_=True)
-        else:
-            self.update_config()
-    
-        self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
-        self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
-
-        if list(json.load(open('data/settings.json')).keys()) != self.settings.keys():
-            self.set_settings(reset=True)
-
-        request_camera_permission()
-        set_orientation()
-        
-        Window.bind(on_keyboard=self.key_handler)
-        self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
-        
-        self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
-        navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
-
-        if platform == "android":
-            self.verify_message_at_startup()
-            self.chooser = Chooser(self.chooser_callback)
-
-        self.loader_image_path = "media/loader.png"
-        Loader.loading_image = self.loader_image_path
+        self.update_config()
         Logger.info(f"App version: {__version__}")
 
     def on_stop(self):
@@ -102,24 +76,47 @@ class app_main(MDApp):
         if platform == "android":
             share_text(text, title="Поделиться", chooser=True, app_package=None,call_playstore=False, error_msg="Не удалось отправить сообщение")
 
-        print(text)
     def show_network_error(self,retry_func):
         self.root.ids.connection_error_retry.on_release=lambda: retry_func
         self.set_screen('loading_sc_error',root_=True)
 
     def update_config(self):
         def success(req,result):
-            self.set_screen("main_sc",root_=True)
-
-            for elem in result.keys():
-                self.config_[elem] = result[elem]
-
-            check_update(__version__,result)
             Logger.info(f"Api server response: {result}")
-            
-            if self.deeplink != "":
-                self.process_deep_link(self.deeplink)
-        
+            if check_update(__version__,result,self):
+                for elem in result.keys():
+                    self.config_[elem] = result[elem]
+
+                if not os.path.exists(self.data_dir):
+                    os.makedirs(self.data_dir)
+    
+                self.settings = JsonStore(os.path.join(self.data_dir,'settings.json'))
+                self.history = JsonStore(os.path.join(self.data_dir,'history.json'))
+                
+                if list(json.load(open('data/settings.json')).keys()) != self.settings.keys():
+                    self.set_settings(reset=True)
+
+                Window.bind(on_keyboard=self.key_handler)
+                set_orientation()
+                
+                self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
+                navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
+
+                if platform == "android":
+                    self.verify_message_at_startup()
+                    self.chooser = Chooser(self.chooser_callback)
+
+                self.loader_image_path = "media/loader.png"
+                Loader.loading_image = self.loader_image_path
+
+                request_camera_permission()
+                self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
+
+                if self.deeplink != "":
+                    self.process_deep_link(self.deeplink)
+                else:
+                    self.set_screen("main_sc",root_=True)
+
         def error(req, result):
             self.show_network_error(self.update_config())
 

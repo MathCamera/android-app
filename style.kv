@@ -15,7 +15,7 @@ ScreenManager:
     MDScreen:
         MDSpinner:
             size_hint: None, None
-            size: dp(45), dp(45)
+            size: dp(40), dp(40)
             pos_hint: {'center_x': .5, 'center_y': .5}
 
     MDScreen:
@@ -414,6 +414,46 @@ ScreenManager:
                     DrawerClickableItem:
                         icon: "information"
                         text: "Версия "+app.version_
+
+    MDScreen:
+        name:"update_sc"
+        MDBoxLayout:
+            orientation:"vertical"
+            padding:50
+            spacing:40
+            adaptive_height:True
+            pos_hint:{"center_y":.5}
+
+            MDIconButton:
+                icon: "refresh"
+                pos_hint:{"center_x":.5}
+                icon_size: "64sp"
+                _no_ripple_effect:True
+                
+            MDLabel:
+                valign:"middle"
+                markup:True
+                text:"Версия приложения устарела"
+                halign:"center"
+                adaptive_height:True
+                font_style:"H5"
+                bold:True
+
+            MDLabel:
+                valign:"middle"
+                markup:True
+                text:"Необходимо обновить приложение до последней версии"
+                halign:"center"
+                adaptive_height:True
+                font_style:"Subtitle1"
+                bold:True
+
+            MDRaisedButton:
+                id:update_app_btn
+                pos_hint:{"center_x":.5}
+                text: "Обновить"
+                md_bg_color: "#02714C"
+
     MDScreen:
         name:"loading_sc_error"
         MDBoxLayout:
