@@ -56,7 +56,7 @@ class app_main(MDApp):
         self.theme_cls.material_style = "M3"
         self.main_colors = ["#02714C","#039866"]
         self.last_screen,self.last_equation,self.config_ = None,None,{'config_url':"https://mathcamera-api.vercel.app/config"}
-        self.deeplink="mathcamera://s/x**2-16"
+        self.deeplink=""
 
     def build(self):        
         return Builder.load_file('style.kv')
