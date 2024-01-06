@@ -35,15 +35,13 @@ if platform == "android":
     from kvdroid.tools.darkmode import dark_mode
     from kvdroid.tools import share_text
     change_statusbar_color("#02714C", "white")
+    navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
 else:
     def toast(text):
         print(text)
 
-    def navbar_color(color):
-        pass
-
     def dark_mode():
-        return False
+        return True
 
     Window.size = (400,700)
 
@@ -62,6 +60,11 @@ class app_main(MDApp):
         return Builder.load_file('style.kv')
     
     def on_start(self):
+        set_orientation()
+                
+        self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
+        Loader.loading_image = "media/loader.png"
+
         self.update_config()
         Logger.info(f"App version: {__version__}")
 
@@ -97,17 +100,10 @@ class app_main(MDApp):
                     self.set_settings(reset=True)
 
                 Window.bind(on_keyboard=self.key_handler)
-                set_orientation()
-                
-                self.theme_cls.theme_style = "Dark" if dark_mode() == True else "Light"
-                navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
 
                 if platform == "android":
                     self.verify_message_at_startup()
                     self.chooser = Chooser(self.chooser_callback)
-
-                self.loader_image_path = "media/loader.png"
-                Loader.loading_image = self.loader_image_path
 
                 request_camera_permission()
                 self.root.ids.preview.connect_camera(enable_video = False,filepath_callback=self.handle_image,enable_analyze_pixels=True,default_zoom=0)
