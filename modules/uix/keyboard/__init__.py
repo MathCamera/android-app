@@ -73,39 +73,27 @@ class MultiModeFlatButton(LongPressButton, MDFlatButton):
         super(MultiModeFlatButton, self).on_long_press()
 
 #функции для работы с полем ввода
-def edit_textfield(main,mode,text=None,move_cursor=0):
+def edit_textfield(main,mode,text="",do_cursor_moving=False):
+    textfield = main.root.ids.textarea
     if mode == "edit":
-        textfield = main.root.ids.textarea
-        main.root.ids.textarea.last_edit = main.root.ids.textarea.text
-        cursor_index = int(textfield.cursor[0])
-        textfield.text = textfield.text[:textfield.cursor[0]] + text + textfield.text[textfield.cursor[0]:]
-        textfield.cursor = (cursor_index+len(text)-move_cursor,0)
+        main.root.ids.textarea.last_edit = textfield.text
+        textfield.insert_text(text, from_undo=False)
+        if do_cursor_moving:
+            move_cursor(main,'left')
 
     if mode == "delete":
-        main.root.ids.textarea.last_edit = main.root.ids.textarea.text
-        textfield = main.root.ids.textarea
-        cursor_index = int(textfield.cursor[0])
-        if cursor_index > 0:
-            textfield.text = textfield.text[:(cursor_index-1)] + textfield.text[cursor_index:]
-        textfield.cursor = (cursor_index-1,0)
+        main.root.ids.textarea.last_edit = textfield.text
+        textfield.do_backspace(from_undo=False, mode='bkspc')
 
     if mode == "clear":
-        main.root.ids.textarea.text = ""
+        main.root.ids.textarea.last_edit = textfield.text
+        textfield.text = ""
 
     if mode == "undo":
-        main.root.ids.textarea.text = main.root.ids.textarea.last_edit
+        textfield.text = main.root.ids.textarea.last_edit
 
 def move_cursor(main,direction):
-    cursor = main.root.ids.textarea.cursor
-    max_index = len(main.root.ids.textarea.text)+1
-
-    if direction == "right":
-        cursor_pos = cursor[0]+1 if cursor[0]+1 < max_index else 0
-
-    if direction == "left":
-        cursor_pos = cursor[0]-1 if cursor[0]-1 >= 0 else max_index
-
-    main.root.ids.textarea.cursor = (cursor_pos,0)
+    main.root.ids.textarea.do_cursor_movement(f"cursor_{direction}", control=False, alt=False)
 
 def set_kb(main,kb_name):
     kb_manager = main.root.ids.kb.ids.kb_manager

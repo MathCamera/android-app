@@ -15,7 +15,7 @@ ScreenManager:
     MDScreen:
         MDSpinner:
             size_hint: None, None
-            size: dp(30), dp(30)
+            size: dp(45), dp(45)
             pos_hint: {'center_x': .5, 'center_y': .5}
 
     MDScreen:
@@ -36,7 +36,6 @@ ScreenManager:
                 MDScreen:
                     name:"sc_photo"
                     on_enter:
-                        app.handle_camera()
                         tb.title="Камера"
 
                     BoxLayout:
@@ -45,6 +44,7 @@ ScreenManager:
                         XCamera:
                             id:preview
                             aspect_ratio:"16:9"
+                            flashlight_mode:"off"
 
                     MDIconButton:
                         pos_hint: {"center_x":.2,"center_y":.1}
@@ -71,7 +71,7 @@ ScreenManager:
                         _no_ripple_effect: True
                         pos_hint: {"center_x":.8,"center_y":.1}
                         icon_size: "30sp"
-                        icon: "flash"
+                        icon: "flash-off"
                         icon_color:"white"
                         theme_icon_color: "Custom"
                         on_press:app.switch_flashlight_mode()
@@ -107,7 +107,6 @@ ScreenManager:
                                 TextInput:
                                     id:textarea
                                     size_hint: 1, 1
-                                    background_color: app.theme_cls.bg_normal
                                     hint_text:"Введите математическую задачу"
                                     keyboard_mode:"managed"
                                     use_bubble: False

@@ -30,7 +30,7 @@
 
     KeyboardFlatButton:
         text: '|□|'
-        on_press: edit_textfield(app,"edit","Abs()",1)
+        on_press: edit_textfield(app,"edit","Abs()",True)
 
     KeyboardFlatButton:
         text: '□!'
@@ -60,7 +60,7 @@
     MultiModeFlatButton:
         modes: ['√','³√','⁴√']
         values: ['√()','(3)^√()','(4)^√()']
-        on_short_press: edit_textfield(app,"edit",self.value,1)
+        on_short_press: edit_textfield(app,"edit",self.value,True)
 
     KeyboardFlatButton:
         text: '4'

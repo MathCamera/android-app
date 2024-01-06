@@ -2,7 +2,7 @@
 <intent-filter>
     <data android:scheme="https"/>
     <data android:scheme="http"/>
-    <data android:host="mathcamera.vercel.app" android:pathPrefix="/input/"/>
+    <data android:host="mathcamera.vercel.app" android:pathPrefix="/s/"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>
@@ -10,14 +10,16 @@
 <intent-filter>
     <data android:scheme="https"/>
     <data android:scheme="http"/>
-    <data android:host="mathcamera.ru" android:pathPrefix="/input/"/>
+    <data android:host="mathcamera.ru" android:pathPrefix="/s/"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>
 </intent-filter>
 <!-- direct app scheme mathcamera:// -->
 <intent-filter>
-    <data android:scheme="mathcamera" android:host="solve"/>
+    <data android:scheme="mathcamera"/>
+    <data android:host="s"/>
+    <data android:host="w"/>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.BROWSABLE"/>
     <category android:name="android.intent.category.DEFAULT"/>

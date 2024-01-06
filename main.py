@@ -55,7 +55,7 @@ class app_main(MDApp):
         self.theme_cls.colors = json.load(open('data/themes.json'))
         self.theme_cls.material_style = "M3"
         self.main_colors = ["#02714C","#039866"]
-        self.last_screen,self.last_equation,self.flashlight_mode,self.config_ = None,None,"off",{'config_url':"https://mathcamera-api.vercel.app/config"}
+        self.last_screen,self.last_equation,self.config_ = None,None,{'config_url':"https://mathcamera-api.vercel.app/config"}
         self.deeplink=""
 
     def build(self):        
@@ -142,9 +142,23 @@ class app_main(MDApp):
             pass
 
     def process_deep_link(self, uri):
-        url = urllib.parse.urlparse(urllib.parse.unquote(url))
-        uri_data = url.path[1:] if url.scheme == "mathcamera" else url.query[url.query.index("=")+1:]
+        Logger.info("Raw deeplink: "+str(uri))
+
+        url = urllib.parse.urlparse(urllib.parse.unquote(uri))
+        if url.scheme == "mathcamera":
+            if url.netloc == "s":
+                uri_data = url.path[1:]
+            
+            elif url.netloc == "w":
+                uri_data = url.path[1:][:-3]
+            
+            else:uri_data = ""
         
+        elif url.scheme in ['http','https'] and url.netloc in ['mathcamera.vercel.app','mathcamera.ru']:
+            uri_data = url.path.replace("/s/","")
+        
+        else:uri_data = ""
+
         Logger.info("Deeplink: "+str(uri_data))
 
         if uri_data != "":
@@ -234,7 +248,9 @@ class app_main(MDApp):
     def key_handler(self, window, keycode,*args):
         manager = self.root.ids.sm
         if keycode in [27, 1001]:
-            if manager.current != 'sc_photo':
+            if manager.current == 'sc_photo' or manager.current==self.last_screen:
+                self.stop()
+            else:
                 self.set_screen(self.last_screen)
             return True
         return False
@@ -242,17 +258,13 @@ class app_main(MDApp):
     def photo(self):
         self.root.ids.preview.capture_photo(location="private",subdir="camera_tmp")
 
-    def handle_camera(self):
-        if self.root.ids.preview.camera_connected == True:
-            flashlight_modes = {"on":"flash","off":"flash-off"}
-            state = self.root.ids.preview.flash(self.flashlight_mode)
-            self.root.ids.flashlight_btn.icon = flashlight_modes[state]
-
     def switch_flashlight_mode(self):
-        flashlight_modes = {"on":"flash","off":"flash-off"}
-        self.flashlight_mode = "on" if self.flashlight_mode == "off" else "off"
-        icon = self.root.ids.preview.flash(self.flashlight_mode)
-        self.root.ids.flashlight_btn.icon = flashlight_modes[icon]
+        camera = self.root.ids.preview
+        if camera.camera_connected == True:
+            flashlight_modes = {"on":"flash","off":"flash-off"}
+            camera.flashlight_mode = "on" if camera.flashlight_mode == "off" else "off"
+            icon = self.root.ids.preview.flash(camera.flashlight_mode)
+            self.root.ids.flashlight_btn.icon = flashlight_modes[icon]
 
     def open_browser(self,url):
         webbrowser.open(url)
@@ -276,11 +288,12 @@ class app_main(MDApp):
     def set_screen(self,screen_name,*screen_title,root_=False):
         self.root.ids['nav_drawer'].set_state("closed")
         self.root.ids.textarea.focus=False
-        if root_ == False:
+        if not root_:
             if self.root.current == "main_sc":
                 self.last_screen = self.root.ids['sm'].current
                 self.root.ids['sm'].current = screen_name
-                if screen_title:self.root.ids['tb'].title = screen_title[0]
+                if screen_title:
+                    self.root.ids['tb'].title = screen_title[0]
         else:
             self.root.current = screen_name
 
