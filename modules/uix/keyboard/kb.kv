@@ -19,14 +19,12 @@
     on_parent:self.font_size *= self.parent.button_font_size
     on_press:
         set_kb(app,"main_kb")
-        textarea.focus=True
 
 <CustomFlatIconButton>:
     size_hint:1,1
     md_bg_color:app.theme_cls.bg_light
     ripple_duration_in_fast: .1
     on_release:
-        textarea.focus=True
 
 <MultiModeFlatButton>:
     app:app
@@ -39,7 +37,6 @@
     ripple_duration_in_fast: .1
     on_short_press:
         set_kb(app,"main_kb")
-        textarea.focus=True
 
 <KB_MAIN@BoxLayout>:
     orientation:"vertical"

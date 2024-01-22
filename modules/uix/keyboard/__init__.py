@@ -85,6 +85,7 @@ class MultiModeFlatButton(LongPressButton, MDFlatButton):
 #функции для работы с полем ввода
 def edit_textfield(main,mode,text=""):
     textfield = main.root.ids.textarea
+    textfield.focus=True
     if mode == "edit":
         main.root.ids.textarea.last_edit = textfield.text
         textfield.insert_text(text, from_undo=False)
