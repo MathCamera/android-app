@@ -12,7 +12,7 @@
 #:include modules/uix/keyboard/trigonometry_kb.kv
 
 <KeyboardFlatButton@MDFlatButton>:
-    font_name:"media/fonts/ArialMT.ttf"
+    font_name:"media/fonts/FiraSans-Medium.ttf"
     md_bg_color:app.theme_cls.bg_light
     ripple_duration_in_fast: .1
     size_hint: self.parent.button_size_hint
@@ -26,16 +26,16 @@
     ripple_duration_in_fast: .1
 
 <MultiModeFlatButton>:
-    font_name:"media/fonts/ArialMT.ttf"
+    app:app
+    font_name:"media/fonts/FiraSans-Medium.ttf"
     text: self.modes[0]
     value: self.values[0]
     md_bg_color:app.theme_cls.divider_color
     size_hint: self.parent.button_size_hint
     on_parent:self.font_size *= self.parent.button_font_size
     ripple_duration_in_fast: .1
-    on_press:
+    on_short_press:
         set_kb(app,"main_kb")
-
 
 <KB_MAIN@BoxLayout>:
     orientation:"vertical"
@@ -46,7 +46,7 @@
         ScreenManager:
             id:kb_manager
             transition:NoTransition()
-            kb_list:["main_kb","trigonometry_kb","letters_kb"]
+            kb_list:["main_kb","trigonometry_kb","letters_kb","functions_kb"]
             MDScreen:
                 name:"main_kb"
                 MAIN_KB:

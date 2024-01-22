@@ -28,11 +28,11 @@ ScreenManager:
                 pos_hint: {"top": 1}
                 md_bg_color: "#02714C"
                 left_action_items: [["menu", lambda x: app.show_menu()]]
-                right_action_items:[["help-circle-outline", lambda x: app.set_screen("onboarding_sc",root_=True), "", "Справка"]]
+                right_action_items:[["history", lambda x: app.set_screen("sc_history")]]
 
             ScreenManager:
                 id:sm
-                transition:NoTransition()
+                #transition:NoTransition()
                 MDScreen:
                     name:"sc_photo"
                     on_enter:
@@ -50,7 +50,7 @@ ScreenManager:
                         pos_hint: {"center_x":.2,"center_y":.1}
                         #icon: "file-image"
                         icon:"calculator"
-                        icon_size: "30sp"
+                        icon_size: "32sp"
                         icon_color:"white"
                         theme_icon_color: "Custom"
                         _no_ripple_effect: True
@@ -62,7 +62,7 @@ ScreenManager:
                         pos_hint: {"center_x":.5,"center_y":.1}
                         icon: "camera-iris"
                         icon_color:"white"
-                        icon_size: "30sp"
+                        icon_size: "32sp"
                         theme_icon_color: "Custom"
                         on_press:app.photo()
 
@@ -70,7 +70,7 @@ ScreenManager:
                         id:flashlight_btn
                         _no_ripple_effect: True
                         pos_hint: {"center_x":.8,"center_y":.1}
-                        icon_size: "30sp"
+                        icon_size: "32sp"
                         icon: "flash-off"
                         icon_color:"white"
                         theme_icon_color: "Custom"
@@ -137,8 +137,7 @@ ScreenManager:
                         orientation:"vertical"
                         padding:[20,tb.height + dp(5),20,20]
                         id:sc_solve_layout
-                        MDGridLayout:
-                            cols:3
+                        MDBoxLayout:
                             adaptive_height:True
                             
                             MDIconButton:
@@ -228,83 +227,12 @@ ScreenManager:
                             do_scroll_x: False
                             do_scroll_y: True
                                 
-                            GridLayout:
-                                cols:1
+                            BoxLayout:
+                                orientation:'vertical'
                                 size_hint_y: None
                                 height: self.minimum_height
                                 padding:[50,50,50,40]
-                                #spacing:25
-
-                                MDLabel:
-                                    text:"Камера"
-                                    adaptive_height:True
-                                    theme_text_color:"Secondary"
-                                    padding:[0,0,0,20]
-
-                                MDGridLayout:
-                                    cols:2
-                                    spacing:15
-                                    adaptive_height:True
-
-                                    MDLabel:
-                                        text:"Вспомогательная рамка\n"
-                                        adaptive_height:True
-
-                                    MDSwitch:
-                                        widget_style: "ios"
-                                        adaptive_width:True
-                                        id:enable_help_frame
-                                        on_active: app.settings.put("enable_help_frame",mode=self.active)
-
-                                    MDLabel:
-                                        text:"Разрешение камеры\n"
-                                        adaptive_height:True
-
-                                    MDLabel:
-                                        text:preview.aspect_ratio+"\n"
-                                        size_hint_x:None
-                                        theme_text_color:"Secondary"
-                                        adaptive_width:True
-                                        adaptive_height:True
-
-                                    MDTextButton:
-                                        text: "Очистить кеш камеры"
-                                        line_color:0,0,0,0
-                                        on_release:app.clear_cache(['camera_tmp'])
-
-                                MDLabel:
-                                    text:"Основные"
-                                    padding:[0,60,0,30]
-                                    adaptive_height:True
-                                    theme_text_color:"Secondary"
-
-                                MDGridLayout:
-                                    cols:2
-                                    adaptive_height:True
-                                    spacing:15
-
-                                    MDLabel:
-                                        text:"Тема\n"
-                                        adaptive_height:True
-
-                                    MDLabel:
-                                        text:app.theme_cls.theme_style+"\n"
-                                        size_hint_x:None
-                                        theme_text_color:"Secondary"
-                                        adaptive_size:True
-
-                                    MDTextButton:
-                                        text: "Сбросить настройки"
-                                        line_color:0,0,0,0
-                                        on_release:
-                                            app.set_settings(reset=True)
-                                            app.setup()
-
-                                MDLabel:
-                                    padding:[0,60,0,20]
-                                    text:"Отладка"
-                                    adaptive_height:True
-                                    theme_text_color:"Secondary"
+                                spacing:45
 
                                 MDGridLayout:
                                     cols:2
@@ -322,7 +250,7 @@ ScreenManager:
                                         on_active: app.settings.put("enable_debug_mode",mode=self.active)
 
                                     MDLabel:
-                                        text:"Тестовый сервер\n"
+                                        text:"MathCamera OCR V2\n"
                                         adaptive_height:True
 
                                     MDSwitch:
@@ -331,25 +259,15 @@ ScreenManager:
                                         id:enable_test_server
                                         on_active: app.settings.put("enable_test_server",mode=self.active)
 
-                                    MDBoxLayout:
-                                        adaptive_height:True
-                                        orientation:"vertical"
-                                        spacing:70
-                                        padding:[0,10,0,0]
-                                        MDTextButton:
-                                            text: "Выгрузить логи"
-                                            line_color:0,0,0,0
-                                            on_release:app.get_logs()
+                                MDTextButton:
+                                    text: "Очистить кеш камеры"
+                                    on_release:app.clear_cache(['camera_tmp'])
 
-                                        MDTextButton:
-                                            text: "Очистить логи"
-                                            line_color:0,0,0,0
-                                            on_release:app.clear_cache(['.kivy/logs'])      
-
-                                        MDTextButton:
-                                            text: "Обновить данные"
-                                            line_color:0,0,0,0
-                                            on_release:app.update_config()
+                                MDTextButton:
+                                    text: "Сбросить настройки"
+                                    on_release:
+                                        app.set_settings(reset=True)
+                                        app.setup()
 
             MDNavigationDrawer:
                 id: nav_drawer

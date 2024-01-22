@@ -15,36 +15,40 @@
 
     KeyboardFlatButton:
         text: 'exp'
-        on_press: edit_textfield(app,"edit","exp()",True)
-
-    KeyboardFlatButton:
-        text: 'fct'
-        on_press: edit_textfield(app,"edit","fct()",True)
+        on_press: edit_textfield(app,"edit","exp()")
 
     KeyboardFlatButton:
         text: 'нод'
-        on_press: edit_textfield(app,"edit","gcd()",True)
+        on_press: edit_textfield(app,"edit","gcd()")
 
     KeyboardFlatButton:
         text: 'нок'
-        on_press: edit_textfield(app,"edit","lcm()",True)
+        on_press: edit_textfield(app,"edit","lcm()")
 
     KeyboardFlatButton:
-        text: 'огр'
-        on_press: edit_textfield(app,"edit","lmt()",True)
+        text: 'log'
+        on_press: edit_textfield(app,"edit","log()")
 
     KeyboardFlatButton:
-        text: 'srs'
-        on_press: edit_textfield(app,"edit","srs()",True)
+        text: 'log₂'
+        on_press: edit_textfield(app,"edit","log(,2)")
 
     KeyboardFlatButton:
-        text: 'srs'
-        on_press: edit_textfield(app,"edit","srs()",True)
+        text: 'log₁₀'
+        on_press: edit_textfield(app,"edit","log(,10)")
 
     KeyboardFlatButton:
-        text: 'Der'
-        on_press: edit_textfield(app,"edit","Derivative()",True)
+        text: "'"
+        on_press: edit_textfield(app,"edit","diff()")
 
     KeyboardFlatButton:
-        text: 'Int'
-        on_press: edit_textfield(app,"edit","Integral()",True)
+        text: '∫'
+        on_press: edit_textfield(app,"edit","integral()")
+
+    KeyboardFlatButton:
+        text: '∞'
+        on_press: edit_textfield(app,"edit","∞")
+
+    KeyboardFlatButton:
+        text: '!'
+        on_press: edit_textfield(app,"edit","!")

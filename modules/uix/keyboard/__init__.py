@@ -1,8 +1,8 @@
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.properties import StringProperty, ListProperty,DictProperty
-
+from kivy.properties import StringProperty, ListProperty,DictProperty,ObjectProperty
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.button import MDFlatButton
 
 Builder.load_string('''
@@ -27,7 +27,7 @@ Builder.load_string('''
 
 class LongPressButton(ButtonBehavior):
     __events__ = ('on_long_press', 'on_short_press')
-    long_press_time = .2
+    long_press_time = .15
     is_long_pressed = False
 
     def on_state(self, instance, value):
@@ -60,25 +60,35 @@ class CustomFlatIconButton(LongPressButton,MDFlatButton):
     bg_color = ListProperty((1, 1, 1, 0))
 
 class MultiModeFlatButton(LongPressButton, MDFlatButton):
-    modes = ListProperty(['', ''])
-    values = ListProperty(['',''])
-    mode = 0
+    modes = ListProperty(["",""])
+    values = ListProperty(["",""])
+    app = ObjectProperty()
 
     def on_long_press(self):
-        self.mode = (self.mode + 1) % len(self.modes)
+        elements = dict(zip(self.modes, self.values))
+        menu_items = [
+            {
+                "text": elem,
+                "on_release": lambda x=elements[elem]: handle_release(x),
+                "font_name":"media/fonts/ArialMT.ttf",
+            } for elem in elements
+        ]
 
-        self.text = self.modes[self.mode]
-        self.value = self.values[self.mode]
+        def handle_release(x):
+            menu.dismiss()
+
+        menu = MDDropdownMenu(items=menu_items,caller=self)
+        menu.open()
 
         super(MultiModeFlatButton, self).on_long_press()
 
 #функции для работы с полем ввода
-def edit_textfield(main,mode,text="",do_cursor_moving=False):
+def edit_textfield(main,mode,text=""):
     textfield = main.root.ids.textarea
     if mode == "edit":
         main.root.ids.textarea.last_edit = textfield.text
         textfield.insert_text(text, from_undo=False)
-        if do_cursor_moving:
+        if len(text) > 1 and text[-1:] in [")"]:
             move_cursor(main,'left')
 
     if mode == "delete":

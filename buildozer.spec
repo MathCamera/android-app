@@ -41,7 +41,7 @@ requirements = python3,
                certifi,
                pillow,
                kivy,
-               https://github.com/kivymd/KivyMD/archive/master.zip,
+               kivymd==1.2.0,
                androidstorage4kivy,camera4kivy,gestures4kivy,
                kvdroid
 
@@ -101,7 +101,7 @@ fullscreen = 0
 
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the supported syntaxes and properties)
-android.permissions = INTERNET,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+android.permissions = INTERNET,CAMERA
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host

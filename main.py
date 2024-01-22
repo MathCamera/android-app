@@ -1,16 +1,17 @@
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
-from kivy.lang import Builder
 from kivy.clock import mainthread
-from kivy.utils import platform
 from kivy.metrics import dp
+from kivy.utils import platform
+from kivy.lang import Builder
 from kivy.network.urlrequest import UrlRequest
 from kivy.core.window import Window
 from kivy.core.clipboard import Clipboard
-from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
 from kivy.logger import Logger
-from kivy.uix.image import AsyncImage
+from kivy.storage.jsonstore import JsonStore
+from kivy.uix.image import Image as KivyImage
+from kivy.core.image import Image as CoreImage
 
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
@@ -31,9 +32,8 @@ from random import randint
 
 if platform == "android":
     from androidstorage4kivy import Chooser,SharedStorage
-    from kvdroid.tools import change_statusbar_color,toast,navbar_color
+    from kvdroid.tools import change_statusbar_color,toast,navbar_color,share_text
     from kvdroid.tools.darkmode import dark_mode
-    from kvdroid.tools import share_text
 else:
     def toast(text):
         print(text)
@@ -272,12 +272,6 @@ class app_main(MDApp):
         
         toast("Кеш очищен")
 
-    def get_logs(self):
-        logs_path = shutil.make_archive('logs', 'zip', root_dir='.kivy/logs')
-        ss = SharedStorage()
-        ss.copy_to_shared(logs_path,filepath='/logs')
-        toast(f"Логи выгружены: Documents/MathCamera/logs")
-
     def set_screen(self,screen_name,*screen_title,root_=False):
         self.root.ids['nav_drawer'].set_state("closed")
         self.root.ids.textarea.focus=False
@@ -297,79 +291,56 @@ class app_main(MDApp):
     
     def send_equation(self,*args,from_history=False):            
         equation = args[0] if args else self.root.ids.textarea.text
-
-        if equation != "" and equation != self.last_equation:
+        
+        if equation != "":
             self.root.ids.textarea.focus = False
 
             loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
-            if self.root.current != "loading_sc_error" :
-                loading_popup.open()
-
             params = urllib.parse.urlencode({'src':equation})
 
             def success(req, result):
-                self.root.current = "main_sc"
+                self.set_screen("main_sc",root_=True)
                 status_code = result['status_code']
 
                 if status_code == 0:
                     gamma_result = result['message']
+                    equation_as_latex = gamma_result[0]['latex']
+                    equation_main = gamma_result[0]['output']
                     self.root.ids.gl.clear_widgets()
-                    equation_as_latex = str(gamma_result[0]['output']).replace(" ","")
-                    equation_main = str(gamma_result[0]['input'])
-                    has_plot = False
 
-                    #Загрузка карточек и графика
                     for card in gamma_result:
-                        #valid_card = ("title" in card.keys() and card['title'] != "") and ("output" in card.keys() and card['output'] != "")
-                        contains_plot = 'card' in list(card.keys()) and card['card'] == "plot"
-                        if contains_plot:has_plot=True
-
                         kv_card = MDCard(orientation="vertical",pos_hint={"top":1},md_bg_color="#039866",padding=[30,15,30,15],size_hint_y=None,spacing=10)
                         title_label = MDLabel(text=f"{card['title']}:",adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6",bold=True)
                         kv_card.add_widget(title_label)
 
-                        if contains_plot:
-                            plot_url = self.config_["plotting_url"].format(str(card['input']).replace(" ",""))
-                            
-                            def on_load(image_widget):
-                                if image_widget.texture.size != (1,1):
-                                    plot_card = image_widget.parent
-                                    self.root.ids.gl.add_widget(plot_card,len(self.root.ids.gl.ids)-1)
-                                    image_widget.remove_from_cache()
-
-                                loading_popup.dismiss()
-                                self.set_screen("sc_solve")
-
-                            image_widget = AsyncImage(source=plot_url,on_load=on_load,fit_mode="cover")
+                        if card['card']=='plot':
+                            buf = BytesIO(base64.b64decode(card['output'].replace("data:image/png;base64,","")))
+                            image_widget = KivyImage(texture=CoreImage(buf, ext='png').texture,fit_mode='cover')
                             kv_card.height = dp(kv_card.height*1.5)+dp(image_widget.height*1.5)
                             kv_card.add_widget(image_widget)
 
                         else:
                             kv_card.adaptive_height = True
                             result_text = card['output'] if 'output' in card.keys() else ""
-                            output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="Subtitle1")
-                            output_label.font_name = "media/fonts/NotoSansMath-Regular.ttf"
+                            output_label = MDLabel(text=result_text,adaptive_height=True,theme_text_color="Custom",text_color="white",font_style="H6")
+                            output_label.font_name = "media/fonts/FiraSans-Medium.ttf"
                             kv_card.add_widget(output_label)
 
-                            self.root.ids.gl.add_widget(kv_card)
+                        self.root.ids.gl.add_widget(kv_card)
 
                     self.root.ids.gl.problem_main = equation_main
-                    self.root.ids.gl.problem_input = equation
+                    self.root.ids.gl.problem_input = equation.replace(" ","")
                     self.root.ids.gl.share_url = self.config_['share_url'].format(urllib.parse.quote_plus(equation.replace(" ","")))
 
                     if from_history == False:
                         self.history[self.history.count()+1] = {"equ_type":gamma_result[0]['title'],"equation":equation,"as_latex":equation_as_latex}
 
-                    if not has_plot:
-                        loading_popup.dismiss()
-                        self.set_screen("sc_solve")
+                    loading_popup.dismiss()
+                    self.set_screen("sc_solve")
 
                     self.last_equation = equation
                 else:
-                    loading_popup.dismiss()
-                    err = f"\n\n{result}" if self.settings["enable_debug_mode"]['mode'] == True else ""
-                    popup = MDDialog(text=f'Не удалось решить задачу, проверьте правильность введённых данных{err}',buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
-                    popup.open()   
+                    on_failure(req,result)
 
             def on_failure(req,res):
                 loading_popup.dismiss()
@@ -378,7 +349,6 @@ class app_main(MDApp):
                 popup.open()  
 
             def error(req, result):
-                print(req)
                 loading_popup.dismiss()
                 Logger.error("Send equation error: "+str(result))
                 self.show_network_error(self.send_equation(equation))
@@ -386,6 +356,8 @@ class app_main(MDApp):
             if self.last_equation == equation:
                 self.set_screen("sc_solve")
             else:
+                if self.root.current != "loading_sc_error" :
+                    loading_popup.open()
                 req = UrlRequest(self.config_["math_solve_url"],on_success=success,on_failure=on_failure,on_error=error,req_body=params,req_headers={'Content-type': 'application/x-www-form-urlencoded','Accept': 'text/plain'},ca_file=certifi.where(),verify=True,method='POST')
 
     def send_b64(self,b64):

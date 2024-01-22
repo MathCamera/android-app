@@ -19,21 +19,20 @@
         on_short_press: edit_textfield(app,"edit",self.value)
 
     MultiModeFlatButton:
-        modes: ['(','[','{']
-        values: ['(','[','{']
+        modes: ['()','(',')']
+        values: ['()','(',')']
         on_short_press: edit_textfield(app,"edit",self.value)
 
-    MultiModeFlatButton:
-        modes: [')',']','}']
-        values: [')',']','}']
-        on_short_press: edit_textfield(app,"edit",self.value,1)
+    KeyboardFlatButton:
+        text: '/'
+        on_press: edit_textfield(app,"edit","/")
 
     KeyboardFlatButton:
-        text: '|□|'
-        on_press: edit_textfield(app,"edit","Abs()",True)
+        text: '|x|'
+        on_press: edit_textfield(app,"edit","Abs()")
 
     KeyboardFlatButton:
-        text: '□!'
+        text: '!'
         on_press: edit_textfield(app,"edit","!")
 
     MultiModeFlatButton:
@@ -58,9 +57,9 @@
         on_press: edit_textfield(app,"edit",self.text)
 
     MultiModeFlatButton:
-        modes: ['√','³√','⁴√']
-        values: ['√()','(3)^√()','(4)^√()']
-        on_short_press: edit_textfield(app,"edit",self.value,True)
+        modes: ['√','∛','∜']
+        values: ['√()','∛()','∜()']
+        on_short_press: edit_textfield(app,"edit",self.value)
 
     KeyboardFlatButton:
         text: '4'
@@ -79,7 +78,7 @@
         on_press: edit_textfield(app,"edit","*")
 
     MultiModeFlatButton:
-        modes: ['□²','□³','□⁴']
+        modes: ['²','³','⁴']
         values: ['^(2)','^(3)',"^(4)"]
         on_short_press: edit_textfield(app,"edit",self.value)
 
