@@ -75,9 +75,10 @@ class MultiModeFlatButton(LongPressButton, MDFlatButton):
         ]
 
         def handle_release(x):
+            edit_textfield(self.app,"edit",x)
             menu.dismiss()
 
-        menu = MDDropdownMenu(items=menu_items,caller=self)
+        menu = MDDropdownMenu(items=menu_items,caller=self,width=1)
         menu.open()
 
         super(MultiModeFlatButton, self).on_long_press()
@@ -89,8 +90,8 @@ def edit_textfield(main,mode,text=""):
     if mode == "edit":
         main.root.ids.textarea.last_edit = textfield.text
         textfield.insert_text(text, from_undo=False)
-        if len(text) > 1 and text[-1:] in [")"]:
-            move_cursor(main,'left')
+        #if len(text) > 1 and text[-1:] in [")"]:
+        #    move_cursor(main,'left')
 
     if mode == "delete":
         main.root.ids.textarea.last_edit = textfield.text
