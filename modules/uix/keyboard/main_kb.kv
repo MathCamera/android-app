@@ -57,8 +57,8 @@
         on_press: edit_textfield(app,"edit",self.text)
 
     MultiModeFlatButton:
-        modes: ['√','∛','∜']
-        values: ['√()','∛()','∜()']
+        modes: ['√','3^√','4^√']
+        values: ['√()','3^√()','4^√()']
         on_short_press: edit_textfield(app,"edit",self.value)
 
     KeyboardFlatButton:
@@ -78,7 +78,7 @@
         on_press: edit_textfield(app,"edit","*")
 
     MultiModeFlatButton:
-        modes: ['²','³','⁴']
+        modes: ['^2','^3','^4']
         values: ['^(2)','^(3)',"^(4)"]
         on_short_press: edit_textfield(app,"edit",self.value)
 

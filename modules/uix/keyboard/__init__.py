@@ -4,6 +4,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.properties import StringProperty, ListProperty,DictProperty,ObjectProperty
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.button import MDFlatButton
+from kivy.metrics import dp
 
 Builder.load_string('''
 #:import MDIcon kivymd.uix.label.MDIcon
@@ -78,7 +79,7 @@ class MultiModeFlatButton(LongPressButton, MDFlatButton):
             edit_textfield(self.app,"edit",x)
             menu.dismiss()
 
-        menu = MDDropdownMenu(items=menu_items,caller=self,width=1)
+        menu = MDDropdownMenu(items=menu_items,caller=self,width=dp(81))
         menu.open()
 
         super(MultiModeFlatButton, self).on_long_press()
