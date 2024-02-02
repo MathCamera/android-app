@@ -1,6 +1,7 @@
 ##:import ReportDialog modules.uix.reportdialog.ReportDialog
 #:include modules/uix/keyboard/kb.kv
 #:import NoTransition kivy.uix.screenmanager.NoTransition
+#:import SwapTransition kivy.uix.screenmanager.SwapTransition
 
 <DrawerClickableItem@MDNavigationDrawerItem>
     _no_ripple_effect: True
@@ -20,6 +21,7 @@ ScreenManager:
 
     MDScreen:
         name:"main_sc"
+        transition:SwapTransition()
         MDNavigationLayout:
 
             MDTopAppBar:
@@ -115,6 +117,7 @@ ScreenManager:
                                     foreground_color:app.theme_cls.text_color
                                     font_size:"24sp"
                                     cursor_color:app.theme_cls.secondary_text_color
+                                    font_name:"media/fonts/FiraSans-Medium.ttf"
 
                                 MDFloatingActionButton:
                                     pos_hint:{"center_x":.9,"center_y":.1}

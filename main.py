@@ -209,7 +209,7 @@ class app_main(MDApp):
                 self.root.ids.history_layout.add_widget(history_sw)
 
                 for ind,elem in enumerate(self.history):
-                    list_item = TwoLineListItem(text=self.history[elem]['equ_type'],secondary_text=self.history[elem]['as_latex'],on_release=lambda s:self.send_equation(s.equ_main,from_history=True))
+                    list_item = TwoLineListItem(text=self.history[elem]['equ_type'],secondary_text=self.history[elem]['equation'],on_release=lambda s:self.send_equation(s.equ_main,from_history=True))
                     list_item.equ_main=self.history[elem]['equation']
                     history_sw.add_widget(list_item,ind)
 
@@ -296,7 +296,7 @@ class app_main(MDApp):
             self.root.ids.textarea.focus = False
 
             loading_popup = LoadingDialog(title="Загрузка",auto_dismiss=False)
-            params = urllib.parse.urlencode({'src':equation})
+            params = urllib.parse.urlencode({'src':equation,"from_app":True})
 
             def success(req, result):
                 self.set_screen("main_sc",root_=True)
@@ -372,7 +372,7 @@ class app_main(MDApp):
             if result['status_code'] == 0:
                 loading_popup.dismiss()
                 if result['message'] == "":
-                    popup = MDDialog(text="Не удалось распознать задачу",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
+                    popup = MDDialog(text="Не удалось распознать задачу. Попробуйте улучшить освещение и убедитесь, что уравнение входит в рамку.",buttons=[MDFlatButton(text="Закрыть",theme_text_color="Custom",text_color="#02714C",on_release=lambda *args:popup.dismiss())])
                     popup.open()
                     
                 else:
