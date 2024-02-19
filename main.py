@@ -1,4 +1,4 @@
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 from kivy.clock import mainthread
 from kivy.metrics import dp
@@ -57,10 +57,13 @@ class app_main(MDApp):
     def build(self):        
         return Builder.load_file('style.kv')
     
+    def set_bars_colors(statusbar_bg_color,statusbar_text_color,navbar_bg_color):
+        if platform == 'android':
+            change_statusbar_color(statusbar_bg_color, statusbar_text_color)
+            navbar_color(navbar_bg_color)
+    
     def on_start(self):
         if platform == "android":
-            change_statusbar_color("#02714C", "white")
-            navbar_color("#121212" if dark_mode() == True else "#FFFFFF")
             self.verify_message_at_startup()
             self.chooser = Chooser(self.chooser_callback)
 
@@ -74,10 +77,6 @@ class app_main(MDApp):
 
     def on_stop(self):
         self.root.ids.preview.disconnect_camera()
-
-    def show_menu(self):
-        self.root.ids.nav_drawer.set_state("open")
-        self.root.ids.textarea.focus=False
 
     def share_text(self,text):
         if platform == "android":
@@ -273,14 +272,15 @@ class app_main(MDApp):
         toast("Кеш очищен")
 
     def set_screen(self,screen_name,*screen_title,root_=False):
-        self.root.ids['nav_drawer'].set_state("closed")
         self.root.ids.textarea.focus=False
         if not root_:
             if self.root.current == "main_sc":
-                self.last_screen = self.root.ids['sm'].current
-                self.root.ids['sm'].current = screen_name
-                if screen_title:
-                    self.root.ids['tb'].title = screen_title[0]
+                if screen_name in ['sc_photo',"sc_text","sc_history"]:
+                    self.root.ids.sm.current="sc_main"
+                    self.root.ids.tab_manager=screen_name
+                else:
+                    self.last_screen = self.root.ids['sm'].current
+                    self.root.ids['sm'].current = screen_name
         else:
             self.root.current = screen_name
 

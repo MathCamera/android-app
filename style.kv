@@ -21,321 +21,307 @@ ScreenManager:
 
     MDScreen:
         name:"main_sc"
-        transition:SwapTransition()
-        MDNavigationLayout:
+        ScreenManager:
+            id:sm
+            MDScreen:
+                name:"sc_main"
 
-            MDTopAppBar:
-                id:tb
-                title:"Камера"
-                pos_hint: {"top": 1}
-                md_bg_color: "#02714C"
-                left_action_items: [["menu", lambda x: app.show_menu()]]
-                right_action_items:[["history", lambda x: app.set_screen("sc_history")]]
+                MDBottomNavigation:
+                    id:tab_manager
+                    selected_color_background:0,0,0,0
+                    #use_text:False
+                    MDBottomNavigationItem:
+                        name: "sc_photo"
+                        text: 'Камера'
+                        icon: "text-recognition"
 
-            ScreenManager:
-                id:sm
-                #transition:NoTransition()
-                MDScreen:
-                    name:"sc_photo"
-                    on_enter:
-                        tb.title="Камера"
+                        BoxLayout:
+                            padding:[0,0,0,0]
+                            orientation:"vertical"
+                            XCamera:
+                                id:preview
+                                aspect_ratio:"16:9"
+                                flashlight_mode:"off"
 
-                    BoxLayout:
-                        padding:[0,tb.height,0,0]
-                        orientation:"vertical"
-                        XCamera:
-                            id:preview
-                            aspect_ratio:"16:9"
-                            flashlight_mode:"off"
+                        MDIconButton:
+                            pos_hint: {"center_x":.2,"center_y":.1}
+                            #icon: "file-image"
+                            icon:"calculator"
+                            icon_size: "32sp"
+                            icon_color:"white"
+                            theme_icon_color: "Custom"
+                            _no_ripple_effect: True
+                            #on_press:app.choose()
+                            on_press:app.set_screen("sc_text")
 
-                    MDIconButton:
-                        pos_hint: {"center_x":.2,"center_y":.1}
-                        #icon: "file-image"
-                        icon:"calculator"
-                        icon_size: "32sp"
-                        icon_color:"white"
-                        theme_icon_color: "Custom"
-                        _no_ripple_effect: True
-                        #on_press:app.choose()
-                        on_press:app.set_screen("sc_text")
+                        MDIconButton:
+                            _no_ripple_effect: True
+                            pos_hint: {"center_x":.5,"center_y":.1}
+                            icon: "camera-iris"
+                            icon_color:"white"
+                            icon_size: "32sp"
+                            theme_icon_color: "Custom"
+                            on_press:app.photo()
 
-                    MDIconButton:
-                        _no_ripple_effect: True
-                        pos_hint: {"center_x":.5,"center_y":.1}
-                        icon: "camera-iris"
-                        icon_color:"white"
-                        icon_size: "32sp"
-                        theme_icon_color: "Custom"
-                        on_press:app.photo()
+                        MDIconButton:
+                            id:flashlight_btn
+                            _no_ripple_effect: True
+                            pos_hint: {"center_x":.8,"center_y":.1}
+                            icon_size: "32sp"
+                            icon: "flash-off"
+                            icon_color:"white"
+                            theme_icon_color: "Custom"
+                            on_press:app.switch_flashlight_mode()
 
-                    MDIconButton:
-                        id:flashlight_btn
-                        _no_ripple_effect: True
-                        pos_hint: {"center_x":.8,"center_y":.1}
-                        icon_size: "32sp"
-                        icon: "flash-off"
-                        icon_color:"white"
-                        theme_icon_color: "Custom"
-                        on_press:app.switch_flashlight_mode()
+                        MDCard:
+                            size_hint:None,None
+                            pos_hint: {"center_x":.5,"center_y":.85}
+                            radius: (16, 16, 16, 16)
+                            width:camera_help.width
+                            height:camera_help.height
+                            md_bg_color:app.theme_cls.bg_dark
 
-                    MDCard:
-                        size_hint:None,None
-                        pos_hint: {"center_x":.5,"center_y":.85}
-                        radius: (16, 16, 16, 16)
-                        width:camera_help.width
-                        height:camera_help.height
-                        md_bg_color:app.theme_cls.bg_dark
-
-                        MDLabel:
-                            id:camera_help
-                            padding:[15,10,15,10]
-                            text: "Сфотографируйте математическую задачу"
-                            adaptive_size:True
-                            font_style:"Subtitle2"
+                            MDLabel:
+                                id:camera_help
+                                padding:[15,10,15,10]
+                                text: "Сфотографируйте математическую задачу"
+                                adaptive_size:True
+                                font_style:"Subtitle2"
                             
-                Screen:
-                    name:"sc_text"
-                    on_enter:
-                        tb.title="Калькулятор"
-                        textarea.focus=True
-
-                    MDBoxLayout:
-                        padding:[0,tb.height + dp(15),0,0]
-                        orientation:"vertical"
+                    MDBottomNavigationItem:
+                        name:"sc_text"
+                        text: 'Калькулятор'
+                        icon: 'calculator'
+                        on_tab_press:textarea.focus=True
 
                         MDBoxLayout:
-                            padding:[15,0,15,20]
-                            RelativeLayout:
-                                TextInput:
-                                    id:textarea
-                                    last_edit:""
-                                    size_hint: 1, 1
-                                    hint_text:"Введите математическую задачу"
-                                    keyboard_mode:"managed"
-                                    use_bubble: False
-                                    background_color: 0,0,0,0  
-                                    foreground_color:app.theme_cls.text_color
-                                    font_size:"24sp"
-                                    cursor_color:app.theme_cls.secondary_text_color
-                                    font_name:"media/fonts/FiraSans-Medium.ttf"
+                            padding:[0,0 + dp(15),0,0]
+                            orientation:"vertical"
 
-                                MDFloatingActionButton:
-                                    pos_hint:{"center_x":.9,"center_y":.1}
-                                    theme_icon_color: "Custom"
-                                    icon_color: "white"
-                                    md_bg_color:"#02714C"
-                                    icon: "send"
-                                    on_release:
-                                        app.send_equation(textarea.text)
+                            MDBoxLayout:
+                                padding:[15,0,15,20]
+                                RelativeLayout:
+                                    TextInput:
+                                        id:textarea
+                                        last_edit:""
+                                        size_hint: 1, 1
+                                        hint_text:"Введите математическую задачу"
+                                        keyboard_mode:"managed"
+                                        use_bubble: False
+                                        background_color: 0,0,0,0  
+                                        foreground_color:app.theme_cls.text_color
+                                        font_size:"24sp"
+                                        cursor_color:app.theme_cls.secondary_text_color
+                                        font_name:"media/fonts/FiraSans-Medium.ttf"
 
-                        KB_MAIN:
-                            id:kb
+                                    MDFloatingActionButton:
+                                        pos_hint:{"center_x":.9,"center_y":.1}
+                                        theme_icon_color: "Custom"
+                                        icon_color: "white"
+                                        md_bg_color:"#02714C"
+                                        icon: "send"
+                                        on_release:
+                                            app.send_equation(textarea.text)
 
-                Screen:
-                    on_enter:
-                        tb.title="Решение"
-                        app.show_adv()
-                    name:"sc_solve"
-
-                    BoxLayout:
-                        orientation:"vertical"
-                        padding:[20,tb.height + dp(5),20,20]
-                        id:sc_solve_layout
-                        MDBoxLayout:
-                            adaptive_height:True
+                            KB_MAIN:
+                                id:kb
                             
-                            MDIconButton:
-                                icon: "arrow-left"
-                                on_release:app.set_screen(app.last_screen)
+                    MDBottomNavigationItem:
+                        name:"sc_history"
+                        text: 'История'
+                        icon: 'history'
+                        on_tab_press:
+                            app.load_history()
 
-                            MDIconButton:
-                                icon: "pencil"
+                        BoxLayout:
+                            orientation:"vertical"
+                            padding:[15,0 + dp(5),15,30]
+                            spacing:10
+
+                            MDScrollView:
+                                id:history_layout
+                                MDLabel:
+                                    text:"Пусто"
+                                    halign:"center"
+                                    font_style:"H5"
+
+                            MDRectangleFlatIconButton:
+                                id:history_clear_btn
+                                disabled:True
+                                icon: "broom"
+                                text: "Очистить историю"
+                                pos_hint:{"center_x":.5}
+                                theme_text_color: "Custom"
+                                text_color: "white"
+                                md_bg_color:"#02714C"
+                                theme_icon_color: "Custom"
+                                icon_color: "white"
                                 on_release:
-                                    app.set_screen("sc_text")
-                                    textarea.text = gl.problem_input
+                                    app.history.clear()
+                                    app.load_history()
 
-                            MDRelativeLayout:
-                                MDIconButton:
-                                    pos_hint:{"center_x":.9}
-                                    icon: "share-variant"
-                                    on_release:app.share_text(gl.share_url)
 
-                        ScrollView:
-                            id:gl_sw
-                            do_scroll_x: False
-                            do_scroll_y: True
-                            
-                            GridLayout:
-                                id:gl
-                                cols:1
-                                spacing:10
-                                size_hint_y: None
-                                height: self.minimum_height
-                    
+                    MDBottomNavigationItem:
+                        name:"sc_more"
+                        text: 'Другое'
+                        icon: 'dots-horizontal'
+
+                        Image:
+                            pos_hint:{'center_x':.5,"center_y":.8}
+                            source:"media/app-favicon.png"
+                            size_hint: .3, .3
+
                         MDBoxLayout:
                             orientation:"vertical"
-                            height:sc_solve_layout.height/8
-                            size_hint_y:None
-                            padding:[0,10,0,0]
-                            MDCard:
-                                id:adv_card
-                                size_hint_y:1
-                                height:self.parent.parent.parent.height/5
-                                FitImage:
-                                    id:adv_image
+                            adaptive_height:True
+                            pos_hint:{"center_y":.4}
+                            spacing:10
+
+                            MDRectangleFlatIconButton:
+                                text: "Настройки"
+                                icon: "cog"
+                                line_color: 0, 0, 0, 0
+                                font_style:"H6"
+                                pos_hint: {"center_x": .5}
+                                on_release:app.set_screen("sc_settings")
+
+                            MDRectangleFlatIconButton:
+                                text: "Поддержка"
+                                icon: "message-badge"
+                                line_color: 0, 0, 0, 0
+                                font_style:"H6"
+                                pos_hint: {"center_x": .5}
+                                on_release:app.open_browser(app.config_['help_url'])
+
+                            MDRectangleFlatIconButton:
+                                text: "Сообщество"
+                                icon: "account-group"
+                                line_color: 0, 0, 0, 0
+                                font_style:"H6"
+                                pos_hint: {"center_x": .5}
+                                on_release:app.open_browser(app.config_['information_url'])
+
+                            MDRectangleFlatIconButton:
+                                text: "Оценить приложение"
+                                icon: "star"
+                                line_color: 0, 0, 0, 0
+                                font_style:"H6"
+                                pos_hint: {"center_x": .5}
+                                on_release:app.open_browser(app.config_['download_url'])
+
+                            MDRectangleFlatIconButton:
+                                text: "Поделиться приложением"
+                                icon: "share"
+                                line_color: 0, 0, 0, 0
+                                font_style:"H6"
+                                pos_hint: {"center_x": .5}
+                                on_release:app.share_text(app.config_['download_url'])
+
+                        Label:
+                            text: "Версия "+app.version_
+                            pos_hint:{'center_x':.5,"center_y":.1}
+                            color:app.theme_cls.text_color
+                            font_size:"20sp"
+
+            Screen:
+                on_enter:app.show_adv()
+                name:"sc_solve"
+                MDTopAppBar:
+                    id:solve_tb
+                    #md_bg_color:app.theme_cls.opposite_bg_normal
+                    pos_hint: {"top": 1}
+                    right_action_items:[["share-variant", lambda x: app.share_text(gl.share_url)]]
+                    left_action_items: [["arrow-left", lambda x: app.set_screen(app.last_screen)]]
+                
+                BoxLayout:
+                    orientation:"vertical"
+                    padding:[20,solve_tb.height+20 ,20,20]
+                    id:sc_solve_layout
+
+                    ScrollView:
+                        id:gl_sw
+                        do_scroll_x: False
+                        do_scroll_y: True
                             
-                Screen:
-                    name:"sc_history"
-                    on_enter:
-                        tb.title='История'
-                        app.load_history()
-
-                    BoxLayout:
+                        GridLayout:
+                            id:gl
+                            cols:1
+                            spacing:10
+                            size_hint_y: None
+                            height: self.minimum_height
+                    
+                    MDBoxLayout:
                         orientation:"vertical"
-                        padding:[15,tb.height + dp(5),15,30]
-                        spacing:10
+                        height:sc_solve_layout.height/8
+                        size_hint_y:None
+                        padding:[0,10,0,0]
+                        MDCard:
+                            id:adv_card
+                            size_hint_y:1
+                            height:self.parent.parent.parent.height/5
+                            FitImage:
+                                id:adv_image
 
-                        MDScrollView:
-                            id:history_layout
-                            MDLabel:
-                                text:"Пусто"
-                                halign:"center"
-                                font_style:"H5"
+            Screen:
+                name:"sc_settings"
+                on_enter:
+                    app.setup()
 
-                        MDRectangleFlatIconButton:
-                            id:history_clear_btn
-                            disabled:True
-                            icon: "broom"
-                            text: "Очистить историю"
-                            pos_hint:{"center_x":.5}
-                            theme_text_color: "Custom"
-                            text_color: "white"
-                            md_bg_color:"#02714C"
-                            theme_icon_color: "Custom"
-                            icon_color: "white"
-                            on_release:
-                                app.history.clear()
-                                app.load_history()
+                MDTopAppBar:
+                    id:settings_tb
+                    #md_bg_color:app.theme_cls.opposite_bg_normal
+                    pos_hint: {"top": 1}
+                    left_action_items: [["arrow-left", lambda x: app.set_screen(app.last_screen)]]
 
-                Screen:
-                    name:"sc_settings"
-                    on_enter:
-                        tb.title="Насторйки"
-                        app.setup()
+                BoxLayout:
+                    padding:[0,settings_tb.height,0,0]
+                    orientation:"vertical"
 
-                    BoxLayout:
-                        orientation:"vertical"
-                        padding:[0,tb.height,0,0]
-
-                        ScrollView:
-                            do_scroll_x: False
-                            do_scroll_y: True
+                    ScrollView:
+                        do_scroll_x: False
+                        do_scroll_y: True
                                 
-                            BoxLayout:
-                                orientation:'vertical'
-                                size_hint_y: None
-                                height: self.minimum_height
-                                padding:[50,50,50,40]
-                                spacing:45
+                        BoxLayout:
+                            orientation:'vertical'
+                            size_hint_y: None
+                            height: self.minimum_height
+                            padding:[50,50,50,40]
+                            spacing:45
 
-                                MDGridLayout:
-                                    cols:2
+                            MDGridLayout:
+                                cols:2
+                                adaptive_height:True
+                                spacing:15
+
+                                MDLabel:
+                                    text:"Режим отладки\n"
                                     adaptive_height:True
-                                    spacing:15
 
-                                    MDLabel:
-                                        text:"Режим отладки\n"
-                                        adaptive_height:True
+                                MDSwitch:
+                                    widget_style: "ios"
+                                    adaptive_width:True
+                                    id:enable_debug_mode
+                                    on_active: app.settings.put("enable_debug_mode",mode=self.active)
 
-                                    MDSwitch:
-                                        widget_style: "ios"
-                                        adaptive_width:True
-                                        id:enable_debug_mode
-                                        on_active: app.settings.put("enable_debug_mode",mode=self.active)
+                                MDLabel:
+                                    text:"MathCamera OCR V2\n"
+                                    adaptive_height:True
 
-                                    MDLabel:
-                                        text:"MathCamera OCR V2\n"
-                                        adaptive_height:True
+                                MDSwitch:
+                                    widget_style: "ios"
+                                    adaptive_width:True
+                                    id:enable_test_server
+                                    on_active: app.settings.put("enable_test_server",mode=self.active)
 
-                                    MDSwitch:
-                                        widget_style: "ios"
-                                        adaptive_width:True
-                                        id:enable_test_server
-                                        on_active: app.settings.put("enable_test_server",mode=self.active)
+                            MDTextButton:
+                                text: "Очистить кеш камеры"
+                                on_release:app.clear_cache(['camera_tmp'])
 
-                                MDTextButton:
-                                    text: "Очистить кеш камеры"
-                                    on_release:app.clear_cache(['camera_tmp'])
-
-                                MDTextButton:
-                                    text: "Сбросить настройки"
-                                    on_release:
-                                        app.set_settings(reset=True)
-                                        app.setup()
-
-            MDNavigationDrawer:
-                id: nav_drawer
-                radius: (0, 0, 0, 0)
-
-                MDNavigationDrawerMenu:
-                    MDNavigationDrawerHeader:
-                        title: "MathCamera"
-                        source: "media/app-favicon.png"
-                        spacing:"10dp"
-                        padding: "12dp", 0, 0, "12dp"
-
-                    MDNavigationDrawerDivider:
-
-                    DrawerClickableItem:
-                        icon: "text-recognition"
-                        text: "Камера"
-                        on_release:
-                            app.set_screen('sc_photo')
-
-                    DrawerClickableItem:
-                        icon: "calculator"
-                        text: "Калькулятор"
-                        on_release:
-                            app.set_screen('sc_text')
-
-                    MDNavigationDrawerDivider:
-
-                    DrawerClickableItem:
-                        icon: "history"
-                        text: "История"
-                        on_release:app.set_screen('sc_history')
-
-                    DrawerClickableItem:
-                        icon: "cog"
-                        text: "Настройки"
-                        on_release:
-                            app.set_screen('sc_settings')
-
-                    MDNavigationDrawerDivider:
-
-                    DrawerClickableItem:
-                        icon: "account-group"
-                        text: "Сообщество"
-                        on_release:
-                            app.open_browser(app.config_['information_url'])
-
-                    DrawerClickableItem:
-                        icon: "message-badge"
-                        text: "Обратная связь"
-                        on_release:
-                            app.open_browser(app.config_['report_url'])
-
-                    DrawerClickableItem:
-                        icon: "star"
-                        text: "Оставить отзыв"
-                        on_release:
-                            app.open_browser(app.config_['download_url'])
-
-                    MDNavigationDrawerDivider:
-
-                    DrawerClickableItem:
-                        icon: "information"
-                        text: "Версия "+app.version_
+                            MDTextButton:
+                                text: "Сбросить настройки"
+                                on_release:
+                                    app.set_settings(reset=True)
+                                    app.setup()
 
     MDScreen:
         name:"update_sc"
